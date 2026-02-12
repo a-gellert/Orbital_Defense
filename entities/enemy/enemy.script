@@ -1,0 +1,39 @@
+go.property("health", 30)
+go.property("speed", 50)
+
+function init(self)
+	-- Враг летит к центру (0,0,0)
+	-- Вычисляем вектор направления один раз при спавне
+	local pos = go.get_position()
+	local target = vmath.vector3(0, 0, 0)
+	self.dir = vmath.normalize(target - pos)
+end
+
+function update(self, dt)
+	local pos = go.get_position()
+	pos = pos + self.dir * self.speed * dt
+	go.set_position(pos)
+
+	-- Простейшая проверка: если долетел до центра
+	if vmath.length(pos) < 10 then
+		msg.post("/planet", "take_damage", { amount = 1 }) -- Если есть скрипт планеты
+		go.delete()
+	end
+end
+
+function on_message(self, message_id, message, sender)
+	if message_id == hash("take_damage") then
+		self.health = self.health - message.amount
+
+		-- Эффект попадания (мигание)
+		sprite.set_constant("#sprite", "tint", vmath.vector4(10, 10, 10, 1))
+		timer.delay(0.1, false, function() 
+			sprite.set_constant("#sprite", "tint", vmath.vector4(1, 1, 1, 1)) 
+		end)
+
+		if self.health <= 0 then
+			-- Можно добавить партиклы взрыва здесь
+			go.delete()
+		end
+	end
+end

@@ -1,0 +1,6 @@
+-- station.script
+function init(self)
+	-- Можно добавить эффект появления
+	go.set_scale(0.1)
+	go.animate(".", "scale", go.PLAYBACK_ONCE_FORWARD, 1.2, go.EASING_OUTELASTIC, 0.5)
+end

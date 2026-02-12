@@ -1,0 +1,72 @@
+local rendercam = require "rendercam.rendercam"
+
+-- 1. Сразу хешируем ID орбит, чтобы потом не путаться
+local ORBITS = {
+	inner =  { id = hash("/orbit_inner"),  radius = 50, speed = 1.0, slots = 4 },
+	middle = { id = hash("/orbit_middle"), radius = 75, speed = 0.6, slots = 6 },
+	outer =  { id = hash("/orbit_outer"),  radius = 100, speed = 0.3, slots = 8 }
+}
+
+-- Вспомогательная функция привязки
+local function set_parent(child, parent_id)
+	-- Теперь мы уверены, что parent_id — это hash
+	msg.post(child, "set_parent", { parent_id = parent_id, keep_world_transform = 0 })
+end
+
+-- Математика позиций (без изменений)
+local function get_slot_position(radius, index, total_slots)
+	local angle = (2 * math.pi / total_slots) * (index - 1)
+	return vmath.vector3(radius * math.cos(angle), radius * math.sin(angle), 0)
+end
+
+function init(self)
+	msg.post(".", "acquire_input_focus")
+	self.slot_map = {}
+
+	for key, orbit in pairs(ORBITS) do
+		-- Запускаем анимацию вращения, используя уже готовый хеш
+		go.animate(orbit.id, "euler.z", go.PLAYBACK_LOOP_FORWARD, 360, go.EASING_LINEAR, 10 / orbit.speed)
+
+		for i = 1, orbit.slots do
+			local pos = get_slot_position(orbit.radius, i, orbit.slots)
+			local slot_id = factory.create("#slot_factory", pos, nil, {}, 0.5)
+
+			-- Привязываем к хешу
+			set_parent(slot_id, orbit.id)
+
+			self.slot_map[slot_id] = { orbit_key = key, slot_index = i, occupied = false }
+		end
+	end
+end
+
+local function place_station(self, slot_id)
+	local slot_data = self.slot_map[slot_id]
+
+	if slot_data and not slot_data.occupied then
+		local pos = go.get_position(slot_id)
+		-- Достаем уже готовый хеш из таблицы ORBITS
+		local orbit_hash = ORBITS[slot_data.orbit_key].id
+
+		local station_id = factory.create("#station_factory", pos)
+
+		-- ПЕРЕДАЕМ ХЕШ: теперь ошибка "got string" исчезнет
+		set_parent(station_id, orbit_hash)
+
+		slot_data.occupied = true
+		print("Station placed on orbit: " .. slot_data.orbit_key)
+	end
+end
+
+function on_input(self, action_id, action)
+	if action_id == hash("touch") and action.pressed then
+		local world_pos = rendercam.screen_to_world_2d(action.screen_x, action.screen_y)
+
+		for id, data in pairs(self.slot_map) do
+			local slot_world_pos = go.get_world_position(id)
+			if vmath.length(slot_world_pos - world_pos) < 40 then
+				place_station(self, id)
+				break
+			end
+		end
+	end
+end

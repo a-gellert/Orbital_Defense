@@ -1,0 +1,16 @@
+images {
+  image: "/assets/sprites/tile_0068.png"
+}
+images {
+  image: "/assets/sprites/tile_0069.png"
+}
+images {
+  image: "/assets/sprites/tile_0070.png"
+}
+images {
+  image: "/assets/sprites/tile_0370.png"
+}
+images {
+  image: "/assets/sprites/tile_0375.png"
+}
+extrude_borders: 2
