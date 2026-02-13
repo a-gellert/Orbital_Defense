@@ -1,6 +1,37 @@
 -- station.script
+go.property("is_occupied", false) -- Занята ли база турелью?
+
 function init(self)
-	-- Можно добавить эффект появления
-	go.set_scale(0.1)
-	go.animate(".", "scale", go.PLAYBACK_ONCE_FORWARD, 1.2, go.EASING_OUTELASTIC, 0.5)
+	self.turret_id = nil
+end
+
+function on_message(self, message_id, message, sender)
+	-- Сообщение "построить турель"
+	if message_id == hash("build_turret") then
+		if not self.is_occupied then
+			self.is_occupied = true
+
+			-- 1. Спавним турель в позиции станции (локально 0,0)
+			local p = go.get_position()
+			local id = factory.create("#turret_factory", p)
+
+			-- 2. Делаем турель ДОЧЕРНИМ объектом станции
+			-- Теперь турель будет летать вместе со станцией по орбите автоматически!
+			msg.post(id, "set_parent", { parent_id = go.get_id(), keep_world_transform = false })
+
+			-- 3. Сохраняем ID турели, чтобы потом её апгрейдить или удалить
+			self.turret_id = id
+
+			-- 4. Можно передать турели параметры (например, тип)
+			-- msg.post(id, "set_type", { type = message.type })
+		end
+
+		-- Сообщение "продать/удалить"
+	elseif message_id == hash("sell_turret") then
+		if self.turret_id then
+			go.delete(self.turret_id)
+			self.turret_id = nil
+			self.is_occupied = false
+		end
+	end
 end

@@ -1,16 +1,17 @@
 components {
-  id: "turret"
-  component: "/entities/turret/turret.script"
+  id: "enemy"
+  component: "/entities/enemy/enemy.script"
 }
 embedded_components {
   id: "collisionobject"
   type: "collisionobject"
-  data: "type: COLLISION_OBJECT_TYPE_TRIGGER\n"
-  "mass: 0.0\n"
+  data: "type: COLLISION_OBJECT_TYPE_DYNAMIC\n"
+  "mass: 1.0\n"
   "friction: 0.1\n"
   "restitution: 0.5\n"
-  "group: \"sensor\"\n"
-  "mask: \"enemy\"\n"
+  "group: \"enemy\"\n"
+  "mask: \"bullet\"\n"
+  "mask: \"sensor\"\n"
   "embedded_collision_shape {\n"
   "  shapes {\n"
   "    shape_type: TYPE_SPHERE\n"
@@ -28,17 +29,11 @@ embedded_components {
 embedded_components {
   id: "sprite"
   type: "sprite"
-  data: "default_animation: \"tile_0068\"\n"
+  data: "default_animation: \"tile_0375\"\n"
   "material: \"/builtins/materials/sprite.material\"\n"
   "textures {\n"
   "  sampler: \"texture_sampler\"\n"
   "  texture: \"/assets/atlas.atlas\"\n"
   "}\n"
-  ""
-}
-embedded_components {
-  id: "bullet_factory"
-  type: "factory"
-  data: "prototype: \"/entities/bullet/bullet.go\"\n"
   ""
 }

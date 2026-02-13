@@ -9,3 +9,9 @@ embedded_components {
   "}\n"
   ""
 }
+embedded_components {
+  id: "turret_factory"
+  type: "factory"
+  data: "prototype: \"/entities/turret/turret.go\"\n"
+  ""
+}

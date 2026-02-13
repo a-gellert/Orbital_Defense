@@ -23,4 +23,6 @@ scale_mode = stretch
 [project]
 title = Orbital Defense
 dependencies#0 = https://github.com/rgrams/rendercam/archive/1.0.3.zip
+dependencies#1 = https://github.com/Insality/defold-event/archive/refs/tags/12.zip
+dependencies#2 = https://github.com/Insality/druid/archive/refs/tags/1.1.6.zip
 

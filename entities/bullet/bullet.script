@@ -1,0 +1,34 @@
+go.property("speed", 600)
+go.property("damage", 10)
+
+function init(self)
+	-- Пуля живет максимум 2 секунды, чтобы не засорять память
+	self.life = 2.0
+end
+
+function update(self, dt)
+	-- Двигаем пулю "вперед" относительно её поворота
+	-- В Defold ось Y локально часто используется как "верх/вперед" для 2D, 
+	-- но если мы вращаем через atan2(y, x), то "вперед" - это ось X.
+	-- Проверьте ориентацию вашего спрайта! (обычно пуля смотрит вправо -> X)
+	local dist = self.speed * dt
+
+	-- Получаем локальный вектор X с учетом вращения
+	local rot = go.get_rotation()
+	local direction = vmath.rotate(rot, vmath.vector3(1, 0, 0)) 
+
+	local pos = go.get_position()
+	go.set_position(pos + direction * dist)
+
+	self.life = self.life - dt
+	if self.life < 0 then go.delete() end
+end
+
+function on_message(self, message_id, message, sender)
+	if message_id == hash("trigger_response") and message.enter then
+		-- Наносим урон врагу
+		msg.post(message.other_id, "take_damage", { amount = self.damage })
+		-- Уничтожаем пулю
+		go.delete()
+	end
+end
