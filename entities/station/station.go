@@ -1,13 +1,22 @@
+components {
+  id: "turret"
+  component: "/entities/turret/turret.script"
+}
 embedded_components {
   id: "sprite"
   type: "sprite"
-  data: "default_animation: \"tile_0070\"\n"
+  data: "default_animation: \"s_blue\"\n"
   "material: \"/builtins/materials/sprite.material\"\n"
   "textures {\n"
   "  sampler: \"texture_sampler\"\n"
-  "  texture: \"/assets/atlas.atlas\"\n"
+  "  texture: \"/assets/all.atlas\"\n"
   "}\n"
   ""
+  scale {
+    x: 0.1
+    y: 0.1
+    z: 0.1
+  }
 }
 embedded_components {
   id: "turret_factory"

@@ -28,13 +28,21 @@ embedded_components {
 embedded_components {
   id: "sprite"
   type: "sprite"
-  data: "default_animation: \"tile_0068\"\n"
+  data: "default_animation: \"t_blaster\"\n"
   "material: \"/builtins/materials/sprite.material\"\n"
   "textures {\n"
   "  sampler: \"texture_sampler\"\n"
-  "  texture: \"/assets/atlas.atlas\"\n"
+  "  texture: \"/assets/all.atlas\"\n"
   "}\n"
   ""
+  position {
+    x: 8.0
+    z: 1.0
+  }
+  scale {
+    x: 0.1
+    y: 0.1
+  }
 }
 embedded_components {
   id: "bullet_factory"

@@ -1,19 +1,17 @@
 local rendercam = require "rendercam.rendercam"
 
--- 1. Сразу хешируем ID орбит, чтобы потом не путаться
+-- Настройки орбит
 local ORBITS = {
 	inner =  { id = hash("/orbit_inner"),  radius = 50, speed = 1.0, slots = 4 },
 	middle = { id = hash("/orbit_middle"), radius = 75, speed = 0.6, slots = 6 },
 	outer =  { id = hash("/orbit_outer"),  radius = 100, speed = 0.3, slots = 8 }
 }
 
--- Вспомогательная функция привязки
+-- Вспомогательная функция (чтобы не писать msg.post каждый раз)
 local function set_parent(child, parent_id)
-	-- Теперь мы уверены, что parent_id — это hash
 	msg.post(child, "set_parent", { parent_id = parent_id, keep_world_transform = 0 })
 end
 
--- Математика позиций (без изменений)
 local function get_slot_position(radius, index, total_slots)
 	local angle = (2 * math.pi / total_slots) * (index - 1)
 	return vmath.vector3(radius * math.cos(angle), radius * math.sin(angle), 0)
@@ -24,14 +22,15 @@ function init(self)
 	self.slot_map = {}
 
 	for key, orbit in pairs(ORBITS) do
-		-- Запускаем анимацию вращения, используя уже готовый хеш
+		-- Вращение орбиты
 		go.animate(orbit.id, "euler.z", go.PLAYBACK_LOOP_FORWARD, 360, go.EASING_LINEAR, 10 / orbit.speed)
 
 		for i = 1, orbit.slots do
 			local pos = get_slot_position(orbit.radius, i, orbit.slots)
+			-- Создаем слот
 			local slot_id = factory.create("#slot_factory", pos, nil, {}, 0.5)
 
-			-- Привязываем к хешу
+			-- Привязываем слот к орбите
 			set_parent(slot_id, orbit.id)
 
 			self.slot_map[slot_id] = { orbit_key = key, slot_index = i, occupied = false }
@@ -44,13 +43,17 @@ local function place_station(self, slot_id)
 
 	if slot_data and not slot_data.occupied then
 		local pos = go.get_position(slot_id)
-		-- Достаем уже готовый хеш из таблицы ORBITS
 		local orbit_hash = ORBITS[slot_data.orbit_key].id
 
+		-- 1. Создаем Станцию
 		local station_id = factory.create("#station_factory", pos)
 
-		-- ПЕРЕДАЕМ ХЕШ: теперь ошибка "got string" исчезнет
+		-- 2. Привязываем Станцию к Орбите
 		set_parent(station_id, orbit_hash)
+
+		-- 3. (НОВОЕ) Говорим станции создать турель
+		-- Станция сама решит, какую пушку поставить
+		msg.post(station_id, "build_default_turret")
 
 		slot_data.occupied = true
 		print("Station placed on orbit: " .. slot_data.orbit_key)

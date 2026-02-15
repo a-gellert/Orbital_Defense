@@ -1,39 +1,43 @@
-local config = require "main.game_config" -- Укажите правильный путь
+local config = require "main.game_config"
 
 go.property("turret_type", hash("blaster"))
 
 function init(self)
-	-- Загружаем статы
 	local type_str = "blaster"
 	if self.turret_type == hash("sniper") then type_str = "sniper" end
 
-	self.stats = config.turret_stats[type_str]
+	-- Проверка на наличие конфига, чтобы не падало
+	if config and config.turret_stats then
+		self.stats = config.turret_stats[type_str]
+	else
+		-- Фоллбэк статы, если конфиг не подключился
+		self.stats = { damage = 10, rate = 0.5, range = 200, bullet_speed = 600, turn_speed = 5.0 }
+	end
+
 	self.timer = 0
 	self.current_target = nil
-	self.targets_in_range = {} -- Список всех врагов в радиусе
+	self.targets_in_range = {} 
+	print(go.get_position()," " ,go.get_rotation())
 end
 
 local function find_nearest_target(self)
 	local my_pos = go.get_world_position()
 	local nearest_dist = math.huge
 	local nearest_id = nil
-
-	-- Чистим список от удаленных (мертвых) врагов
 	local valid_targets = {}
 
 	for id, _ in pairs(self.targets_in_range) do
 		if go.exists(id) then
 			valid_targets[id] = true
 			local enemy_pos = go.get_world_position(id)
-			local dist = vmath.length_sqr(enemy_pos - my_pos) -- Сравниваем квадраты расстояний (быстрее)
-
+			local dist = vmath.length_sqr(enemy_pos - my_pos)
 			if dist < nearest_dist then
 				nearest_dist = dist
 				nearest_id = id
 			end
 		end
 	end
-	self.targets_in_range = valid_targets -- Обновляем список
+	self.targets_in_range = valid_targets
 	return nearest_id
 end
 
@@ -48,19 +52,28 @@ function update(self, dt)
 		local my_pos = go.get_world_position()
 		local target_pos = go.get_world_position(self.current_target)
 
-		-- 2a. Поворот (LookAt)
+		-- 2a. Правильный поворот внутри вращающейся орбиты
 		local diff = target_pos - my_pos
 		local angle = math.atan2(diff.y, diff.x)
-		local target_rot = vmath.quat_rotation_z(angle)
+		local target_world_rot = vmath.quat_rotation_z(angle)
 
-		-- Плавная интерполяция поворота (slerp)
-		local current_rot = go.get_rotation()
-		local new_rot = vmath.slerp(dt * self.stats.turn_speed, current_rot, target_rot)
+		-- Получаем поворот родителя (станции/орбиты)
+		local parent_rot = go.get_world_rotation(go.get_parent())
+
+		-- Вычитаем поворот родителя из целевого поворота
+		-- (Формула: Local = ParentInverse * World)
+		local target_local_rot = vmath.conj(parent_rot) * target_world_rot
+
+		-- Плавно поворачиваем к локальной цели
+		local current_local_rot = go.get_rotation()
+		local new_rot = vmath.slerp(dt * self.stats.turn_speed, current_local_rot, target_local_rot)
+
 		go.set_rotation(new_rot)
 
 		-- 2b. Стрельба
 		if self.timer <= 0 then
-			factory.create("#bullet_factory", my_pos, new_rot, { 
+			-- Спавним пулю. Важно: пуля должна быть в мире, а не ребенком башни
+			factory.create("#bullet_factory", my_pos, target_world_rot, { 
 				damage = self.stats.damage, 
 				speed = self.stats.bullet_speed 
 			})
@@ -74,7 +87,6 @@ function update(self, dt)
 end
 
 function on_message(self, message_id, message, sender)
-	-- Физика сообщает нам, кто вошел/вышел из радиуса
 	if message_id == hash("trigger_response") then
 		if message.enter then
 			self.targets_in_range[message.other_id] = true

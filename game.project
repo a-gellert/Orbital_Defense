@@ -19,10 +19,14 @@ scale = 0.01
 
 [html5]
 scale_mode = stretch
+show_made_with_defold = 0
+show_fullscreen_button = 0
+show_console_banner = 0
 
 [project]
 title = Orbital Defense
 dependencies#0 = https://github.com/rgrams/rendercam/archive/1.0.3.zip
 dependencies#1 = https://github.com/Insality/defold-event/archive/refs/tags/12.zip
 dependencies#2 = https://github.com/Insality/druid/archive/refs/tags/1.1.6.zip
+dependencies#3 = https://github.com/defold/extension-poki-sdk/archive/refs/tags/3.4.1.zip
 

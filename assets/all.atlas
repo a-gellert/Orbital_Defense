@@ -1,0 +1,43 @@
+images {
+  image: "/assets/sprites/e_kamikaze.png"
+}
+images {
+  image: "/assets/sprites/e_shooter.png"
+}
+images {
+  image: "/assets/sprites/e_tank.png"
+}
+images {
+  image: "/assets/sprites/p_blue.png"
+}
+images {
+  image: "/assets/sprites/p_purple.png"
+}
+images {
+  image: "/assets/sprites/p_racket.png"
+}
+images {
+  image: "/assets/sprites/p_red.png"
+}
+images {
+  image: "/assets/sprites/s_blue.png"
+}
+images {
+  image: "/assets/sprites/s_green.png"
+}
+images {
+  image: "/assets/sprites/s_purple.png"
+}
+images {
+  image: "/assets/sprites/s_yellow.png"
+}
+images {
+  image: "/assets/sprites/t_blaster.png"
+}
+images {
+  image: "/assets/sprites/t_laser.png"
+}
+images {
+  image: "/assets/sprites/t_racket.png"
+}
+extrude_borders: 2
