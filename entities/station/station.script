@@ -1,24 +1,43 @@
 -- station.script
 
 function init(self)
-	-- 1. Создаем турель. Позиция 0,0,0.1 относительно родителя.
-	local target_pos = vmath.vector3(0, 0, 0.1)
-	self.turret_id = factory.create("#turret_factory", target_pos)
-
-	-- 2. Мгновенная привязка через функцию, а не через сообщение
-	-- Это сработает сразу в этом же кадре!
-	go.set_parent(self.turret_id, go.get_id(), false) 
-
-	-- Проверим теперь
-	print("Турель теперь точно тут:", go.get_world_position(self.turret_id))
+	print(">>> [STATION] Init started. ID:", go.get_id())
 end
 
 function on_message(self, message_id, message, sender)
-	if message_id == hash("build_default_turret") then
-		-- Станция создает турель прямо в своем центре (0,0)
-		self.turret_id = factory.create("#turret_factory")
+	print(">>> [STATION] Received message:", message_id)
 
-		-- Делаем турель ребенком станции
-		msg.post(self.turret_id, "set_parent", { parent_id = go.get_id(), keep_world_transform = 0 })
+	if message_id == hash("build_default_turret") then
+		print(">>> [STATION] Command received: build_default_turret")
+		-- ИСПРАВЛЕНО: вызываем как локальную функцию, передавая self первым аргументом
+		build_turret(self, "blaster")
+	end
+end
+
+-- Функция определена в_scope_ файла, поэтому вызывается без self:
+function build_turret(self, turret_type)
+	print(">>> [STATION] Attempting to create turret of type:", turret_type)
+
+	if self.turret_id and go.exists(self.turret_id) then
+		print(">>> [STATION] Warning: Turret already exists!")
+		return
+	end
+
+	local target_pos = vmath.vector3(0, 0, 0.5)
+
+	-- 1. Попытка создания
+	self.turret_id = factory.create("#turret_factory", target_pos)
+
+	-- 2. ГЛАВНАЯ ПРОВЕРКА
+	if self.turret_id then
+		print(">>> [STATION] SUCCESS: Turret created with ID:", self.turret_id)
+
+		-- 3. Привязка к родителю
+		go.set_parent(self.turret_id, go.get_id(), false)
+		print(">>> [STATION] Turret parented to station.")
+
+	else
+		print(">>> [STATION] ERROR: factory.create returned NIL!")
+		print(">>> [STATION] Check if '#turret_factory' exists in the SAME collection as station.")
 	end
 end

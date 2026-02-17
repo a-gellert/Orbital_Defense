@@ -1,6 +1,6 @@
 components {
-  id: "turret"
-  component: "/entities/turret/turret.script"
+  id: "station"
+  component: "/entities/station/station.script"
 }
 embedded_components {
   id: "sprite"

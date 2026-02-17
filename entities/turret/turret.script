@@ -1,23 +1,28 @@
+-- turret.script
 local config = require "main.game_config"
 
 go.property("turret_type", hash("blaster"))
 
 function init(self)
 	local type_str = "blaster"
+	-- Если вы планируете передавать тип через factory properties, раскомментируйте:
+	-- if self.turret_type then type_str = tostring(self.turret_type) end
+
 	if self.turret_type == hash("sniper") then type_str = "sniper" end
 
-	-- Проверка на наличие конфига, чтобы не падало
 	if config and config.turret_stats then
 		self.stats = config.turret_stats[type_str]
 	else
-		-- Фоллбэк статы, если конфиг не подключился
 		self.stats = { damage = 10, rate = 0.5, range = 200, bullet_speed = 600, turn_speed = 5.0 }
 	end
 
 	self.timer = 0
 	self.current_target = nil
 	self.targets_in_range = {} 
-	print(go.get_position()," " ,go.get_rotation())
+
+	-- Отладка: видим ли мы этот принт? Если нет - турель не создается.
+	print("Turret Init: Pos:", go.get_position(), "Rot:", go.get_rotation())
+	print(go.get_scale())
 end
 
 local function find_nearest_target(self)
@@ -31,7 +36,8 @@ local function find_nearest_target(self)
 			valid_targets[id] = true
 			local enemy_pos = go.get_world_position(id)
 			local dist = vmath.length_sqr(enemy_pos - my_pos)
-			if dist < nearest_dist then
+			-- Проверка дальности (опционально, но полезно)
+			if dist < nearest_dist and dist < (self.stats.range * self.stats.range) then
 				nearest_dist = dist
 				nearest_id = id
 			end
@@ -52,19 +58,22 @@ function update(self, dt)
 		local my_pos = go.get_world_position()
 		local target_pos = go.get_world_position(self.current_target)
 
-		-- 2a. Правильный поворот внутри вращающейся орбиты
 		local diff = target_pos - my_pos
 		local angle = math.atan2(diff.y, diff.x)
 		local target_world_rot = vmath.quat_rotation_z(angle)
 
-		-- Получаем поворот родителя (станции/орбиты)
-		local parent_rot = go.get_world_rotation(go.get_parent())
+		-- Получаем поворот родителя (станции)
+		local parent_id = go.get_parent()
+		local parent_rot = vmath.quat() -- Identity по умолчанию
 
-		-- Вычитаем поворот родителя из целевого поворота
-		-- (Формула: Local = ParentInverse * World)
+		if parent_id then
+			parent_rot = go.get_world_rotation(parent_id)
+		end
+
+		-- Вычисляем локальную ротацию
 		local target_local_rot = vmath.conj(parent_rot) * target_world_rot
 
-		-- Плавно поворачиваем к локальной цели
+		-- Плавно поворачиваем
 		local current_local_rot = go.get_rotation()
 		local new_rot = vmath.slerp(dt * self.stats.turn_speed, current_local_rot, target_local_rot)
 
@@ -72,7 +81,7 @@ function update(self, dt)
 
 		-- 2b. Стрельба
 		if self.timer <= 0 then
-			-- Спавним пулю. Важно: пуля должна быть в мире, а не ребенком башни
+			-- Спавним пулю в мировых координатах
 			factory.create("#bullet_factory", my_pos, target_world_rot, { 
 				damage = self.stats.damage, 
 				speed = self.stats.bullet_speed 

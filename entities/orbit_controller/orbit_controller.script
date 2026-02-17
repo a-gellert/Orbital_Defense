@@ -2,9 +2,9 @@ local rendercam = require "rendercam.rendercam"
 
 -- Настройки орбит
 local ORBITS = {
-	inner =  { id = hash("/orbit_inner"),  radius = 50, speed = 1.0, slots = 4 },
-	middle = { id = hash("/orbit_middle"), radius = 75, speed = 0.6, slots = 6 },
-	outer =  { id = hash("/orbit_outer"),  radius = 100, speed = 0.3, slots = 8 }
+	inner =  { id = hash("/orbit_inner"),  radius = 100, speed = 1.0, slots = 4 },
+	middle = { id = hash("/orbit_middle"), radius = 150, speed = 0.6, slots = 6 },
+	outer =  { id = hash("/orbit_outer"),  radius = 200, speed = 0.3, slots = 8 }
 }
 
 -- Вспомогательная функция (чтобы не писать msg.post каждый раз)
@@ -37,6 +37,7 @@ function init(self)
 		end
 	end
 end
+-- ... (начало файла без изменений) ...
 
 local function place_station(self, slot_id)
 	local slot_data = self.slot_map[slot_id]
@@ -48,17 +49,23 @@ local function place_station(self, slot_id)
 		-- 1. Создаем Станцию
 		local station_id = factory.create("#station_factory", pos)
 
-		-- 2. Привязываем Станцию к Орбите
-		set_parent(station_id, orbit_hash)
+		if station_id then
+			-- 2. Привязываем Станцию к Орбите (асинхронно)
+			set_parent(station_id, orbit_hash)
 
-		-- 3. (НОВОЕ) Говорим станции создать турель
-		-- Станция сама решит, какую пушку поставить
-		msg.post(station_id, "build_default_turret")
+			-- 3. Отправляем сообщение на постройку турели
+			-- Теперь station.script имеет on_message и обработает это
+			msg.post(station_id, "build_default_turret")
 
-		slot_data.occupied = true
-		print("Station placed on orbit: " .. slot_data.orbit_key)
+			slot_data.occupied = true
+			print("Station placed on orbit: " .. slot_data.orbit_key)
+		else
+			print("ERROR: Failed to create station!")
+		end
 	end
 end
+
+-- ... (остальной код без изменений) ...
 
 function on_input(self, action_id, action)
 	if action_id == hash("touch") and action.pressed then

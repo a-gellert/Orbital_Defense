@@ -5,13 +5,17 @@ components {
 embedded_components {
   id: "sprite"
   type: "sprite"
-  data: "default_animation: \"ui_circle_8\"\n"
+  data: "default_animation: \"p_blue\"\n"
   "material: \"/builtins/materials/sprite.material\"\n"
   "textures {\n"
   "  sampler: \"texture_sampler\"\n"
-  "  texture: \"/druid/druid.atlas\"\n"
+  "  texture: \"/assets/all.atlas\"\n"
   "}\n"
   ""
+  scale {
+    x: 0.075
+    y: 0.075
+  }
 }
 embedded_components {
   id: "collisionobject"
