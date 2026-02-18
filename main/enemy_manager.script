@@ -1,0 +1,32 @@
+-- enemy_manager.script
+
+local SPAWN_RADIUS = 600 -- За пределами экрана
+local ENEMY_TYPES = { hash("kamikaze"), hash("shooter"), hash("sinuous") }
+
+function init(self)
+	self.timer = 2
+end
+
+local function spawn_enemy(self)
+	-- Случайный угол для появления вокруг центра
+	local angle = math.random() * math.pi * 2
+	local pos = vmath.vector3(
+	math.cos(angle) * SPAWN_RADIUS,
+	math.sin(angle) * SPAWN_RADIUS,
+	0.2 -- Чуть выше фона
+)
+
+-- Выбираем случайный тип
+local random_type = ENEMY_TYPES[math.random(#ENEMY_TYPES)]
+
+-- Создаем врага и передаем ему тип
+factory.create("/enemy_manager#enemy_factory", pos, nil, { type = random_type })
+end
+
+function update(self, dt)
+self.timer = self.timer - dt
+if self.timer <= 0 then
+	spawn_enemy(self)
+	self.timer = math.random(2, 5) -- Интервал между врагами
+end
+end

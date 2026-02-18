@@ -24,3 +24,17 @@ embedded_instances {
   id: "orbit_outer"
   data: ""
 }
+embedded_instances {
+  id: "enemy_manager"
+  data: "components {\n"
+  "  id: \"enemy_manager\"\n"
+  "  component: \"/main/enemy_manager.script\"\n"
+  "}\n"
+  "embedded_components {\n"
+  "  id: \"enemy_factory\"\n"
+  "  type: \"factory\"\n"
+  "  data: \"prototype: \\\"/entities/enemy/enemy.go\\\"\\n"
+  "\"\n"
+  "}\n"
+  ""
+}

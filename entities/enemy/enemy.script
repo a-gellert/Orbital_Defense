@@ -1,39 +1,122 @@
-go.property("health", 30)
-go.property("speed", 50)
+-- enemy.script
+go.property("type", hash("kamikaze"))
+go.property("health", 20)
+
+local types = {
+	KAMIKAZE = hash("kamikaze"),
+	SHOOTER = hash("shooter"),
+	SINUOUS = hash("sinuous")
+}
 
 function init(self)
-	-- Враг летит к центру (0,0,0)
-	-- Вычисляем вектор направления один раз при спавне
-	local pos = go.get_position()
-	local target = vmath.vector3(0, 0, 0)
-	self.dir = vmath.normalize(target - pos)
+	self.target_pos = vmath.vector3(0, 0, 0) -- Центр (планета/станция)
+	self.speed = 0.01
+	self.shoot_timer = 2
+	self.sin_timer = 0 -- Для петляющего движения
+
+	-- Настройки в зависимости от типа
+	if self.type == types.KAMIKAZE then
+		self.speed = 100
+	elseif self.type == types.SHOOTER then
+		self.speed = 40
+		self.stop_distance = 100 -- На каком расстоянии остановится, чтобы стрелять
+	elseif self.type == types.SINUOUS then
+		self.speed = 40
+		self.amplitude = 100 -- Ширина петляния
+		self.frequency = 2   -- Скорость петляния
+	end
+end
+
+local function rotate_to_target(self, target_pos)
+	local my_pos = go.get_position()
+	local angle = math.atan2(target_pos.y - my_pos.y, target_pos.x - my_pos.x)
+	go.set_rotation(vmath.quat_rotation_z(angle))
 end
 
 function update(self, dt)
-	local pos = go.get_position()
-	pos = pos + self.dir * self.speed * dt
-	go.set_position(pos)
+	local my_pos = go.get_position()
+	local dir = vmath.normalize(self.target_pos - my_pos)
+	local dist = vmath.length(self.target_pos - my_pos)
 
-	-- Простейшая проверка: если долетел до центра
-	if vmath.length(pos) < 10 then
-		msg.post("/planet", "take_damage", { amount = 1 }) -- Если есть скрипт планеты
-		go.delete()
+	if self.type == types.KAMIKAZE then
+		-- 1. КАМИКАДЗЕ: Просто летит в центр
+		go.set_position(my_pos + dir * self.speed * dt)
+		rotate_to_target(self, self.target_pos)
+
+	elseif self.type == types.SHOOTER then
+		-- 2. СТРЕЛОК: Подлетает и останавливается
+		if dist > self.stop_distance then
+			go.set_position(my_pos + dir * self.speed * dt)
+		end
+		rotate_to_target(self, self.target_pos)
+
+		-- Логика стрельбы
+		self.shoot_timer = self.shoot_timer - dt
+		if self.shoot_timer <= 0 then
+			factory.create("#bullet_factory", my_pos, go.get_rotation())
+			self.shoot_timer = 2.5
+		end
+
+	elseif self.type == types.SINUOUS then
+		-- 3. ПЕТЛЯЮЩИЙ: Летит вперед + смещение по синусу
+		self.sin_timer = self.sin_timer + dt
+
+		-- Перпендикулярный вектор для петляния
+		local side_dir = vmath.vector3(-dir.y, dir.x, 0)
+		local offset = side_dir * math.sin(self.sin_timer * self.frequency) * self.amplitude
+
+		-- Движение = (базовая позиция к центру) + (смещение)
+		-- Чтобы не дергалось, двигаем "виртуальную" точку
+		self.base_pos = (self.base_pos or my_pos) + dir * self.speed * dt
+		go.set_position(self.base_pos + offset)
+
+		rotate_to_target(self, self.target_pos)
+
+		-- Тоже стреляет
+		self.shoot_timer = self.shoot_timer - dt
+		if self.shoot_timer <= 0 then
+			factory.create("#bullet_factory", my_pos, go.get_rotation())
+			self.shoot_timer = 3
+		end
 	end
 end
 
 function on_message(self, message_id, message, sender)
-	if message_id == hash("take_damage") then
-		self.health = self.health - message.amount
+	if message_id == hash("trigger_response") and message.enter then
+		-- Если попала пуля игрока
+		if message.other_group == hash("bullet") then
+			self.health = self.health - 10 -- Урон
 
-		-- Эффект попадания (мигание)
-		sprite.set_constant("#sprite", "tint", vmath.vector4(10, 10, 10, 1))
-		timer.delay(0.1, false, function() 
-			sprite.set_constant("#sprite", "tint", vmath.vector4(1, 1, 1, 1)) 
-		end)
+			-- === НАЧАЛО БЛОКА МИГАНИЯ ===
 
-		if self.health <= 0 then
-			-- Можно добавить партиклы взрыва здесь
-			go.delete()
+			-- 1. Отменяем предыдущую анимацию мигания, если в нас попали очень быстро дважды
+			go.cancel_animations("#sprite", "tint.w")
+
+			-- 2. Сбрасываем альфу в 1.0 (на всякий случай)
+			go.set("#sprite", "tint.w", 1.0)
+
+			-- 3. Запускаем быстрое мигание (например, до 60% прозрачности за 0.2 секунды)
+			-- Используем PINGPONG, чтобы оно само вернулось к единице
+			go.animate("#sprite", "tint.w", go.PLAYBACK_ONCE_PINGPONG, 0.6, go.EASING_OUTQUAD, 0.2, 0, function()
+				-- Эта функция выполнится, когда анимация закончится.
+				-- Убеждаемся, что спрайт остался полностью видимым.
+				go.set("#sprite", "tint.w", 1.0)
+			end)
+
+			-- === КОНЕЦ БЛОКА МИГАНИЯ ===
+
+			go.delete(message.other_id) -- Удаляем пулю
+
+			if self.health <= 0 then
+				-- Важно: если враг умирает, анимация tint сама прервется.
+				go.delete()
+			end
+			-- Если врезался в станцию
+		elseif message.other_group == hash("station") then
+			if self.type == types.KAMIKAZE then
+				-- Взрыв (можно добавить эффект)
+				go.delete()
+			end
 		end
 	end
 end

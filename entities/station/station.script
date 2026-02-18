@@ -1,9 +1,14 @@
 -- station.script
-
+go.property("min_alpha", 0.8) -- Минимальная прозрачность (80%)
+go.property("speed", 1.0)     -- Время одного цикла "туда-обратно" в секундах
 function init(self)
 	print(">>> [STATION] Init started. ID:", go.get_id())
+	go.animate("#sprite", "tint.w", go.PLAYBACK_LOOP_PINGPONG, self.min_alpha, go.EASING_INOUTSINE, self.speed)
 end
 
+function update(self, dt)
+
+end
 function on_message(self, message_id, message, sender)
 	print(">>> [STATION] Received message:", message_id)
 

@@ -5,7 +5,7 @@ components {
 embedded_components {
   id: "sprite"
   type: "sprite"
-  data: "default_animation: \"p_blue\"\n"
+  data: "default_animation: \"p_red\"\n"
   "material: \"/builtins/materials/sprite.material\"\n"
   "textures {\n"
   "  sampler: \"texture_sampler\"\n"
@@ -13,8 +13,8 @@ embedded_components {
   "}\n"
   ""
   scale {
-    x: 0.03
-    y: 0.03
+    x: 0.02
+    y: 0.02
   }
 }
 embedded_components {
@@ -25,7 +25,7 @@ embedded_components {
   "friction: 0.1\n"
   "restitution: 0.5\n"
   "group: \"bullet\"\n"
-  "mask: \"enemy\"\n"
+  "mask: \"turret\"\n"
   "embedded_collision_shape {\n"
   "  shapes {\n"
   "    shape_type: TYPE_SPHERE\n"

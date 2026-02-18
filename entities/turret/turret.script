@@ -54,41 +54,36 @@ function update(self, dt)
 	end
 
 	-- 2. Логика боя
+	-- В функции update, замени блок поворота на этот:
 	if self.current_target then
 		local my_pos = go.get_world_position()
 		local target_pos = go.get_world_position(self.current_target)
 
 		local diff = target_pos - my_pos
-		local angle = math.atan2(diff.y, diff.x)
-		local target_world_rot = vmath.quat_rotation_z(angle)
+		-- Проверка: если враг прямо в нас, не дергаемся
+		if vmath.length_sqr(diff) > 0.0001 then 
+			local angle = math.atan2(diff.y, diff.x)
+			local target_world_rot = vmath.quat_rotation_z(angle)
 
-		-- Получаем поворот родителя (станции)
-		local parent_id = go.get_parent()
-		local parent_rot = vmath.quat() -- Identity по умолчанию
+			local parent_id = go.get_parent()
+			local parent_rot = parent_id and go.get_world_rotation(parent_id) or vmath.quat()
 
-		if parent_id then
-			parent_rot = go.get_world_rotation(parent_id)
-		end
+			local target_local_rot = vmath.conj(parent_rot) * target_world_rot
 
-		-- Вычисляем локальную ротацию
-		local target_local_rot = vmath.conj(parent_rot) * target_world_rot
+			local current_local_rot = go.get_rotation()
+			local new_rot = vmath.slerp(dt * self.stats.turn_speed, current_local_rot, target_local_rot)
+			go.set_rotation(new_rot)
 
-		-- Плавно поворачиваем
-		local current_local_rot = go.get_rotation()
-		local new_rot = vmath.slerp(dt * self.stats.turn_speed, current_local_rot, target_local_rot)
-
-		go.set_rotation(new_rot)
-
-		-- 2b. Стрельба
-		if self.timer <= 0 then
-			-- Спавним пулю в мировых координатах
-			factory.create("#bullet_factory", my_pos, target_world_rot, { 
-				damage = self.stats.damage, 
-				speed = self.stats.bullet_speed 
-			})
-			self.timer = self.stats.rate
+			-- Стреляем, только если почти довернулись к цели (угол отклонения небольшой)
+			-- Это защитит от стрельбы "спиной", пока турель разворачивается
+			local dot = vmath.dot(vmath.rotate(current_local_rot, vmath.vector3(1,0,0)), vmath.normalize(diff))
+			if dot > 0.9 and self.timer <= 0 then 
+				factory.create("#bullet_factory", my_pos, target_world_rot, { damage = self.stats.damage, speed = self.stats.bullet_speed })
+				self.timer = self.stats.rate
+			end
 		end
 	end
+
 
 	if self.timer > 0 then
 		self.timer = self.timer - dt

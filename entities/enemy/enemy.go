@@ -5,8 +5,8 @@ components {
 embedded_components {
   id: "collisionobject"
   type: "collisionobject"
-  data: "type: COLLISION_OBJECT_TYPE_DYNAMIC\n"
-  "mass: 1.0\n"
+  data: "type: COLLISION_OBJECT_TYPE_TRIGGER\n"
+  "mass: 0.0\n"
   "friction: 0.1\n"
   "restitution: 0.5\n"
   "group: \"enemy\"\n"
@@ -29,11 +29,21 @@ embedded_components {
 embedded_components {
   id: "sprite"
   type: "sprite"
-  data: "default_animation: \"tile_0375\"\n"
+  data: "default_animation: \"e_kamikaze\"\n"
   "material: \"/builtins/materials/sprite.material\"\n"
   "textures {\n"
   "  sampler: \"texture_sampler\"\n"
-  "  texture: \"/assets/atlas.atlas\"\n"
+  "  texture: \"/assets/all.atlas\"\n"
   "}\n"
+  ""
+  scale {
+    x: 0.05
+    y: 0.05
+  }
+}
+embedded_components {
+  id: "bullet_factory"
+  type: "factory"
+  data: "prototype: \"/entities/bullet/enemy_bullet.go\"\n"
   ""
 }
