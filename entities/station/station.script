@@ -1,48 +1,79 @@
 -- station.script
-go.property("min_alpha", 0.8) -- Минимальная прозрачность (80%)
-go.property("speed", 1.0)     -- Время одного цикла "туда-обратно" в секундах
+go.property("min_alpha", 0.8)
+go.property("speed", 1.0)
+go.property("detection_range", 200) -- Радиус обнаружения врагов
+
 function init(self)
-	print(">>> [STATION] Init started. ID:", go.get_id())
+	self.enemies_in_range = {} -- Список всех врагов в зоне
+	self.turret_id = nil -- ID созданной турели
+
+	-- Анимация станции
 	go.animate("#sprite", "tint.w", go.PLAYBACK_LOOP_PINGPONG, self.min_alpha, go.EASING_INOUTSINE, self.speed)
+
+	-- Подписка на сообщения от триггера
+	msg.post(".", "acquire_input_focus")
+end
+
+local function get_closest_enemy(self)
+	local my_pos = go.get_world_position()
+	local nearest_id = nil
+	local min_dist = self.detection_range
+
+	for id, _ in pairs(self.enemies_in_range) do
+		if go.exists(id) then
+			local dist = vmath.length(go.get_world_position(id) - my_pos)
+			if dist < min_dist then
+				min_dist = dist
+				nearest_id = id
+			end
+		else
+			-- Враг умер, удаляем из списка
+			self.enemies_in_range[id] = nil
+		end
+	end
+	return nearest_id
 end
 
 function update(self, dt)
-
-end
-function on_message(self, message_id, message, sender)
-	print(">>> [STATION] Received message:", message_id)
-
-	if message_id == hash("build_default_turret") then
-		print(">>> [STATION] Command received: build_default_turret")
-		-- ИСПРАВЛЕНО: вызываем как локальную функцию, передавая self первым аргументом
-		build_turret(self, "blaster")
-	end
-end
-
--- Функция определена в_scope_ файла, поэтому вызывается без self:
-function build_turret(self, turret_type)
-	print(">>> [STATION] Attempting to create turret of type:", turret_type)
-
+	-- Если турель построена, передаем ей ближайшую цель
 	if self.turret_id and go.exists(self.turret_id) then
-		print(">>> [STATION] Warning: Turret already exists!")
-		return
+		local target = get_closest_enemy(self)
+		if target then
+		end
+		msg.post(self.turret_id, "set_target", { target_id = target })
 	end
+end
 
-	local target_pos = vmath.vector3(0, 0, 0.5)
+function on_message(self, message_id, message, sender)
+	-- Обработка входа/выхода врагов в зону триггера Станции
+	if message_id == hash("trigger_response") then
+		if message.enter then
+			if message.other_group == hash("enemy") then
+				self.enemies_in_range[message.other_id] = true
+			end
+		else
+			self.enemies_in_range[message.other_id] = nil
+		end
 
-	-- 1. Попытка создания
-	self.turret_id = factory.create("#turret_factory", target_pos)
+	elseif message_id == hash("build_default_turret") then
+		build_turret(self, hash("blaster"))
+	end
+end
 
-	-- 2. ГЛАВНАЯ ПРОВЕРКА
+function build_turret(self, turret_type)
+	if self.turret_id and go.exists(self.turret_id) then return end
+
+	-- Это будут ЛОКАЛЬНЫЕ координаты относительно центра станции
+	local local_pos = vmath.vector3(0, 0, 0.5)
+
+	self.turret_id = factory.create("#turret_factory", nil, nil, {
+		turret_type = turret_type or hash("blaster"),
+		level = 1
+	})
+
 	if self.turret_id then
-		print(">>> [STATION] SUCCESS: Turret created with ID:", self.turret_id)
-
-		-- 3. Привязка к родителю
+		-- false означает: "не сохраняй мировое положение, прими мою позицию как локальную"
 		go.set_parent(self.turret_id, go.get_id(), false)
-		print(">>> [STATION] Turret parented to station.")
-
-	else
-		print(">>> [STATION] ERROR: factory.create returned NIL!")
-		print(">>> [STATION] Check if '#turret_factory' exists in the SAME collection as station.")
+		go.set_position(local_pos, self.turret_id)
 	end
 end

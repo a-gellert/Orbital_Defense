@@ -2,103 +2,92 @@
 local config = require "main.game_config"
 
 go.property("turret_type", hash("blaster"))
+go.property("level", 1)
+go.property("turn_speed", 0.0)        -- радианы/с; 0.0 = мгновенная поворотка
+go.property("fire_angle_threshold", 0.2) -- порог (рад) для точности перед выстрелом, если нужен
 
 function init(self)
-	local type_str = "blaster"
-	-- Если вы планируете передавать тип через factory properties, раскомментируйте:
-	-- if self.turret_type then type_str = tostring(self.turret_type) end
-
-	if self.turret_type == hash("sniper") then type_str = "sniper" end
-
-	if config and config.turret_stats then
-		self.stats = config.turret_stats[type_str]
-	else
-		self.stats = { damage = 10, rate = 0.5, range = 200, bullet_speed = 600, turn_speed = 5.0 }
+	local stats = config.turret_stats[self.turret_type]
+	if not stats then
+		stats = config.turret_stats.blaster
+		self.turret_type = hash("blaster")
 	end
 
-	self.timer = 0
+	self.stats = stats
+	self.cooldown = 0
 	self.current_target = nil
-	self.targets_in_range = {} 
+	self.damage = stats.damage * config.level_multiplier(self.level)
 
-	-- Отладка: видим ли мы этот принт? Если нет - турель не создается.
-	print("Turret Init: Pos:", go.get_position(), "Rot:", go.get_rotation())
-	print(go.get_scale())
+	-- Визуал цвета: убедитесь, что у вас node называется "sprite" (как в вашем примере)
+	go.set("#sprite", "tint", vmath.vector4(unpack(stats.color)))
 end
 
-local function find_nearest_target(self)
-	local my_pos = go.get_world_position()
-	local nearest_dist = math.huge
-	local nearest_id = nil
-	local valid_targets = {}
+function build_turret(self, turret_type)
+	if self.turret_id and go.exists(self.turret_id) then return end
 
-	for id, _ in pairs(self.targets_in_range) do
-		if go.exists(id) then
-			valid_targets[id] = true
-			local enemy_pos = go.get_world_position(id)
-			local dist = vmath.length_sqr(enemy_pos - my_pos)
-			-- Проверка дальности (опционально, но полезно)
-			if dist < nearest_dist and dist < (self.stats.range * self.stats.range) then
-				nearest_dist = dist
-				nearest_id = id
-			end
-		end
+	local local_pos = vmath.vector3(0, 0, 0.5)
+
+	self.turret_id = factory.create("#turret_factory", nil, nil, {
+		turret_type = turret_type or hash("blaster"),
+		level = 1
+	})
+
+	if self.turret_id then
+		go.set_parent(self.turret_id, go.get_id(), false)
+		go.set_position(local_pos, self.turret_id)
 	end
-	self.targets_in_range = valid_targets
-	return nearest_id
 end
 
+-- Простая функция выстрела (ваша оригинальная)
+function fire(self, pos, rot)
+	self.cooldown = self.stats.rate
+
+	factory.create("#bullet_factory", pos, rot, {
+		damage = self.damage,
+		speed = self.stats.bullet_speed,
+		is_enemy = false
+	})
+end
+
+-- Вспомогательная: безопасно получить мировую позицию/вращение цели
+local function valid_target(id)
+	return id and go.exists(id)
+end
 function update(self, dt)
-	-- 1. Поиск цели
-	if not self.current_target or not go.exists(self.current_target) then
-		self.current_target = find_nearest_target(self)
+
+	if self.cooldown > 0 then
+		self.cooldown = self.cooldown - dt
 	end
 
-	-- 2. Логика боя
-	-- В функции update, замени блок поворота на этот:
-	if self.current_target then
+	if self.current_target and go.exists(self.current_target) then
+
 		local my_pos = go.get_world_position()
 		local target_pos = go.get_world_position(self.current_target)
 
-		local diff = target_pos - my_pos
-		-- Проверка: если враг прямо в нас, не дергаемся
-		if vmath.length_sqr(diff) > 0.0001 then 
-			local angle = math.atan2(diff.y, diff.x)
-			local target_world_rot = vmath.quat_rotation_z(angle)
+		local dir = target_pos - my_pos
+		local angle = math.atan2(dir.y, dir.x)
 
-			local parent_id = go.get_parent()
-			local parent_rot = parent_id and go.get_world_rotation(parent_id) or vmath.quat()
+		-- МГНОВЕННЫЙ поворот (самый стабильный вариант)
+		go.set_rotation(vmath.quat_rotation_z(angle))
 
-			local target_local_rot = vmath.conj(parent_rot) * target_world_rot
-
-			local current_local_rot = go.get_rotation()
-			local new_rot = vmath.slerp(dt * self.stats.turn_speed, current_local_rot, target_local_rot)
-			go.set_rotation(new_rot)
-
-			-- Стреляем, только если почти довернулись к цели (угол отклонения небольшой)
-			-- Это защитит от стрельбы "спиной", пока турель разворачивается
-			local dot = vmath.dot(vmath.rotate(current_local_rot, vmath.vector3(1,0,0)), vmath.normalize(diff))
-			if dot > 0.9 and self.timer <= 0 then 
-				factory.create("#bullet_factory", my_pos, target_world_rot, { damage = self.stats.damage, speed = self.stats.bullet_speed })
-				self.timer = self.stats.rate
-			end
+		-- Стрельба
+		if self.cooldown <= 0 then
+			fire(self, my_pos, go.get_rotation())
 		end
-	end
 
-
-	if self.timer > 0 then
-		self.timer = self.timer - dt
+	else
+		self.current_target = nil
 	end
 end
 
 function on_message(self, message_id, message, sender)
-	if message_id == hash("trigger_response") then
-		if message.enter then
-			self.targets_in_range[message.other_id] = true
-		else
-			self.targets_in_range[message.other_id] = nil
-			if self.current_target == message.other_id then
-				self.current_target = nil
-			end
-		end
+	if message_id == hash("set_target") then
+		-- message.target_id может быть nil — это валидный сигнал снять цель
+		self.current_target = message.target_id
+	end
+
+	if message_id == hash("upgrade_turret") then
+		self.level = self.level + 1
+		self.damage = self.stats.damage * config.level_multiplier(self.level)
 	end
 end

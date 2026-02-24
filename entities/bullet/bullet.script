@@ -1,24 +1,18 @@
+-- bullet.script
 go.property("speed", 300)
 go.property("damage", 10)
+go.property("is_enemy", false)
 
 function init(self)
-	-- Пуля живет максимум 2 секунды, чтобы не засорять память
-	self.life = 2.0
+	self.life = 3.0
 end
 
 function update(self, dt)
-	-- Двигаем пулю "вперед" относительно её поворота
-	-- В Defold ось Y локально часто используется как "верх/вперед" для 2D, 
-	-- но если мы вращаем через atan2(y, x), то "вперед" - это ось X.
-	-- Проверьте ориентацию вашего спрайта! (обычно пуля смотрит вправо -> X)
-	local dist = self.speed * dt
-
-	-- Получаем локальный вектор X с учетом вращения
 	local rot = go.get_rotation()
 	local direction = vmath.rotate(rot, vmath.vector3(1, 0, 0)) 
-
 	local pos = go.get_position()
-	go.set_position(pos + direction * dist)
+
+	go.set_position(pos + direction * self.speed * dt)
 
 	self.life = self.life - dt
 	if self.life < 0 then go.delete() end
@@ -26,9 +20,17 @@ end
 
 function on_message(self, message_id, message, sender)
 	if message_id == hash("trigger_response") and message.enter then
-		-- Наносим урон врагу
-		msg.post(message.other_id, "take_damage", { amount = self.damage })
-		-- Уничтожаем пулю
-		go.delete()
+		local target_group = message.other_group
+
+		-- Пуля игрока бьет врагов
+		if not self.is_enemy and target_group == hash("enemy") then
+			msg.post(message.other_id, "take_damage", { amount = self.damage })
+			go.delete()
+
+			-- Пуля врага бьет станцию/игрока
+		elseif self.is_enemy and (target_group == hash("station") or target_group == hash("player")) then
+			msg.post("@render:", "player_take_damage", { amount = self.damage })
+			go.delete()
+		end
 	end
 end

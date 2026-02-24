@@ -4,7 +4,7 @@ local SPAWN_RADIUS = 600 -- За пределами экрана
 local ENEMY_TYPES = { hash("kamikaze"), hash("shooter"), hash("sinuous") }
 
 function init(self)
-	self.timer = 2
+	self.timer = 1
 end
 
 local function spawn_enemy(self)
@@ -27,6 +27,6 @@ function update(self, dt)
 self.timer = self.timer - dt
 if self.timer <= 0 then
 	spawn_enemy(self)
-	self.timer = math.random(2, 5) -- Интервал между врагами
+	self.timer = math.random(0.5, 1) -- Интервал между врагами
 end
 end
