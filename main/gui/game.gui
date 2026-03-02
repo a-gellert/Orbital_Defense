@@ -1,0 +1,321 @@
+script: "/main/gui/game.gui_script"
+fonts {
+  name: "druid_text_bold"
+  font: "/druid/fonts/druid_text_bold.font"
+}
+nodes {
+  position {
+    x: 680.0
+    y: 1800.0
+  }
+  size {
+    x: 1024.0
+    y: 100.0
+  }
+  type: TYPE_BOX
+  id: "root"
+  inherit_alpha: true
+  alpha: 0.0
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    y: 50.0
+  }
+  size {
+    x: 768.0
+    y: 10.0
+  }
+  type: TYPE_BOX
+  id: "tabs"
+  parent: "root"
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    x: -200.0
+    y: -60.0
+  }
+  size {
+    x: 190.0
+    y: 100.0
+  }
+  type: TYPE_BOX
+  id: "btn_tab_orbits"
+  parent: "tabs"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    y: -60.0
+  }
+  size {
+    x: 190.0
+    y: 100.0
+  }
+  type: TYPE_BOX
+  id: "btn_tab_turrets"
+  parent: "tabs"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    x: 200.0
+    y: -60.0
+  }
+  size {
+    x: 190.0
+    y: 100.0
+  }
+  type: TYPE_BOX
+  id: "btn_tab_economy"
+  parent: "tabs"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    y: -571.0
+  }
+  size {
+    x: 768.0
+    y: 1024.0
+  }
+  type: TYPE_BOX
+  id: "view_port"
+  parent: "root"
+  clipping_mode: CLIPPING_MODE_STENCIL
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    x: -278.0
+    y: 456.0
+  }
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  color {
+    y: 0.0
+    z: 0.0
+  }
+  type: TYPE_BOX
+  id: "content_node"
+  pivot: PIVOT_NW
+  parent: "view_port"
+  inherit_alpha: true
+  alpha: 0.0
+}
+nodes {
+  size {
+    x: 100.0
+    y: 100.0
+  }
+  type: TYPE_BOX
+  id: "templates"
+  inherit_alpha: true
+  alpha: 0.0
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  size {
+    x: 200.0
+    y: 200.0
+  }
+  color {
+    x: 0.0
+    y: 0.0
+    z: 0.5019608
+  }
+  type: TYPE_BOX
+  id: "upgrade_template"
+  parent: "templates"
+  alpha: 0.0
+  enabled: false
+}
+nodes {
+  size {
+    x: 180.0
+    y: 180.0
+  }
+  color {
+    x: 0.3019608
+    y: 0.4
+    z: 0.8
+  }
+  type: TYPE_BOX
+  id: "box"
+  parent: "upgrade_template"
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    y: 58.0
+  }
+  size {
+    x: 50.0
+    y: 50.0
+  }
+  color {
+    x: 0.8745098
+    y: 0.69803923
+    z: 0.07058824
+  }
+  type: TYPE_BOX
+  id: "icon"
+  parent: "box"
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    y: -37.0
+  }
+  scale {
+    x: 0.5
+    y: 0.5
+  }
+  size {
+    x: 165.0
+    y: 100.0
+  }
+  type: TYPE_TEXT
+  text: "\320\243\321\200\320\276\320\275 \320\221\320\273\320\260\321\201\321\202\320\265\321\200\320\260\n"
+  ""
+  font: "druid_text_bold"
+  id: "label_price"
+  parent: "box"
+}
+nodes {
+  scale {
+    x: 0.5
+    y: 0.5
+  }
+  size {
+    x: 165.0
+    y: 100.0
+  }
+  type: TYPE_TEXT
+  text: "\320\243\321\200\320\276\320\275 \320\221\320\273\320\260\321\201\321\202\320\265\321\200\320\260\n"
+  ""
+  font: "druid_text_bold"
+  id: "label_title"
+  parent: "box"
+}
+nodes {
+  position {
+    x: 128.0
+    y: 1561.0
+  }
+  size {
+    x: 200.0
+    y: 600.0
+  }
+  type: TYPE_BOX
+  id: "left_panel"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    y: 228.0
+  }
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  color {
+    y: 0.2
+    z: 0.33333334
+  }
+  type: TYPE_BOX
+  id: "btn_toggle_menu"
+  parent: "left_panel"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  type: TYPE_TEXT
+  text: "<text>"
+  font: "druid_text_bold"
+  id: "text"
+  parent: "btn_toggle_menu"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    y: 90.0
+  }
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  color {
+    y: 0.2
+    z: 0.33333334
+  }
+  type: TYPE_BOX
+  id: "btn_buy_turret"
+  parent: "left_panel"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    x: 36.0
+    y: 25.0
+  }
+  size {
+    x: 128.0
+    y: 50.0
+  }
+  type: TYPE_TEXT
+  text: "blaster"
+  font: "druid_text_bold"
+  id: "turret_name"
+  parent: "btn_buy_turret"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    x: -60.0
+  }
+  size {
+    x: 64.0
+    y: 64.0
+  }
+  color {
+    x: 0.6
+    y: 0.8
+    z: 0.6
+  }
+  type: TYPE_BOX
+  id: "box1"
+  parent: "btn_buy_turret"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    x: 36.0
+    y: -25.0
+  }
+  size {
+    x: 128.0
+    y: 50.0
+  }
+  type: TYPE_TEXT
+  text: "300"
+  font: "druid_text_bold"
+  id: "turret_price"
+  parent: "btn_buy_turret"
+  inherit_alpha: true
+}
+material: "/builtins/materials/gui.material"
+adjust_reference: ADJUST_REFERENCE_PARENT
