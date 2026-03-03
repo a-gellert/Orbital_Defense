@@ -11,7 +11,7 @@ local types = {
 
 function init(self)
 	self.target_pos = vmath.vector3(0, 0, 0)
-	self.speed = 40
+	self.speed = 10
 	self.shoot_timer = 0
 	self.sin_timer = 0
 	self.base_pos = nil
@@ -19,7 +19,7 @@ function init(self)
 
 	-- Настройка типа
 	if self.type == types.KAMIKAZE then
-		self.speed = 120
+		self.speed = 50
 		self.health = 15
 	elseif self.type == types.SHOOTER then
 		self.speed = 60
@@ -83,6 +83,7 @@ function update(self, dt)
 	if dist < 20 then
 		msg.post("@render:", "player_take_damage", { amount = 10 })
 		go.delete()
+		msg.post("/enemy_manager", "enemy_died")
 	end
 end
 
@@ -98,6 +99,7 @@ function on_message(self, message_id, message, sender)
 		if self.health <= 0 and not self.is_dead then
 			self.is_dead = true
 			msg.post("@render:", "enemy_died", { pos = go.get_position(), reward = 5 })
+			msg.post("/enemy_manager", "enemy_died")
 			go.delete()
 		end
 	end
