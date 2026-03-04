@@ -1,4 +1,6 @@
 -- turret.script
+local poki = require "main.poki" -- Путь к твоему новому файлу
+
 local config = require "main.game_config"
 go.property("turret_type", hash("blaster"))
 go.property("level", 1)
@@ -11,7 +13,7 @@ function init(self)
 		stats = config.turret_stats.blaster
 		self.turret_type = hash("blaster")
 	end
-	poki_sdk.gameplay_start()
+	poki.gameplay_start()
 	self.stats = stats
 	self.cooldown = 0
 	self.current_target = nil

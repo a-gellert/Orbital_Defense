@@ -95,8 +95,8 @@ nodes {
     y: 456.0
   }
   size {
-    x: 200.0
-    y: 100.0
+    x: 1.0
+    y: 1.0
   }
   color {
     y: 0.0
@@ -106,7 +106,6 @@ nodes {
   id: "content_node"
   pivot: PIVOT_NW
   parent: "view_port"
-  inherit_alpha: true
   alpha: 0.0
 }
 nodes {
@@ -205,54 +204,6 @@ nodes {
   parent: "box"
 }
 nodes {
-  position {
-    x: 128.0
-    y: 1561.0
-  }
-  size {
-    x: 200.0
-    y: 600.0
-  }
-  type: TYPE_BOX
-  id: "left_panel"
-  inherit_alpha: true
-  size_mode: SIZE_MODE_AUTO
-  enabled: false
-}
-nodes {
-  position {
-    y: 228.0
-  }
-  size {
-    x: 200.0
-    y: 100.0
-  }
-  color {
-    y: 0.2
-    z: 0.33333334
-  }
-  type: TYPE_BOX
-  id: "btn_toggle_menu"
-  parent: "left_panel"
-  inherit_alpha: true
-  size_mode: SIZE_MODE_AUTO
-}
-nodes {
-  size {
-    x: 200.0
-    y: 100.0
-  }
-  type: TYPE_TEXT
-  text: "<text>"
-  font: "druid_text_bold"
-  id: "text"
-  parent: "btn_toggle_menu"
-  inherit_alpha: true
-}
-nodes {
-  position {
-    y: 90.0
-  }
   size {
     x: 200.0
     y: 100.0
@@ -263,9 +214,7 @@ nodes {
   }
   type: TYPE_BOX
   id: "btn_buy_turret"
-  parent: "left_panel"
-  inherit_alpha: true
-  size_mode: SIZE_MODE_AUTO
+  parent: "templates"
 }
 nodes {
   position {
@@ -316,6 +265,50 @@ nodes {
   font: "druid_text_bold"
   id: "turret_price"
   parent: "btn_buy_turret"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    x: 128.0
+    y: 1561.0
+  }
+  size {
+    x: 200.0
+    y: 600.0
+  }
+  type: TYPE_BOX
+  id: "left_panel"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    y: 228.0
+  }
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  color {
+    y: 0.2
+    z: 0.33333334
+  }
+  type: TYPE_BOX
+  id: "btn_toggle_menu"
+  parent: "left_panel"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  type: TYPE_TEXT
+  text: "<text>"
+  font: "druid_text_bold"
+  id: "text"
+  parent: "btn_toggle_menu"
   inherit_alpha: true
 }
 nodes {
@@ -371,6 +364,7 @@ nodes {
   id: "pause"
   inherit_alpha: true
   size_mode: SIZE_MODE_AUTO
+  enabled: false
 }
 material: "/builtins/materials/gui.material"
 adjust_reference: ADJUST_REFERENCE_PARENT
