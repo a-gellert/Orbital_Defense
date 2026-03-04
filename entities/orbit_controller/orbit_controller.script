@@ -2,9 +2,11 @@ local rendercam = require "rendercam.rendercam"
 
 -- Настройки орбит
 local ORBITS = {
-	inner =  { id = hash("/orbit_inner"),  radius = 100, speed = 1.0, slots = 4 },
-	middle = { id = hash("/orbit_middle"), radius = 150, speed = 0.6, slots = 6 },
-	outer =  { id = hash("/orbit_outer"),  radius = 200, speed = 0.3, slots = 8 }
+	inner =  { id = hash("/orbit_inner"),  radius = 75, speed = 1.0, slots = 4 },
+	middle = { id = hash("/orbit_middle"), radius = 105, speed = 0.6, slots = 6 },
+	middle1 = { id = hash("/orbit_middle1"), radius = 135, speed = 0.5, slots = 8 },
+	outer =  { id = hash("/orbit_outer"),  radius = 165, speed = 0.3, slots = 12 },
+	outer2 =  { id = hash("/orbit_outer2"),  radius = 195, speed = 0.2, slots = 20 }
 }
 
 -- Вспомогательная функция (чтобы не писать msg.post каждый раз)

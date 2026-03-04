@@ -1,9 +1,9 @@
 local druid = require "druid.druid"
 local prog = require "main.progression"
 
-local dims = 200
+local DIMS = 200 -- Константа размера элемента
 
---- 1. ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ---
+--- 1. ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ (ОЧИСТКА И СОЗДАНИЕ) ---
 
 local function clear_content(self)
 	for _, nodes in ipairs(self.spawned_nodes or {}) do
@@ -21,7 +21,19 @@ local function clear_content(self)
 	self.upgrade_buttons = {}
 end
 
--- Создание кнопки турели
+-- Функция динамического изменения размера текста (Scale Hack)
+local function fit_text(node, max_width)
+	local text = gui.get_text(node)
+	local metrics = gui.get_text_metrics(gui.get_font(node), text).width
+	if metrics > max_width then
+		local s = max_width / metrics
+		gui.set_scale(node, vmath.vector3(s, s, 1))
+	else
+		gui.set_scale(node, vmath.vector3(1, 1, 1))
+	end
+end
+
+-- Создание кнопки турели (для вкладки Turrets)
 local function add_turret_button(self, turret_id, turret_data, index)
 	local template_node = gui.get_node("btn_buy_turret")
 	if not template_node then return end
@@ -31,231 +43,193 @@ local function add_turret_button(self, turret_id, turret_data, index)
 
 	local root = nodes[hash("btn_buy_turret")]
 	local name_node = nodes[hash("turret_name")]
-	local icon_node = nodes[hash("turret_icon")]
 	local price_node = nodes[hash("turret_price")]
 
-	local left_panel = gui.get_node("left_panel")
-	if not left_panel or not root then return end
-
-	gui.set_parent(root, left_panel)
+	local content_node = gui.get_node("content_node")
+	gui.set_parent(root, content_node)
 	gui.set_enabled(root, true)
 
-	-- Установка данных
-	if name_node then gui.set_text(name_node, turret_id:upper()) end
-	if price_node then 
-		local price_text = turret_data.price .. " 💰"
-		gui.set_text(price_node, price_text)
+	-- Установка текста и авто-фит
+	if name_node then 
+		gui.set_text(name_node, turret_id:upper())
+		fit_text(name_node, 160)
 	end
 
-	-- Позиционирование
-	local x = self.item_offset_x
-	local y = -(self.item_offset_y + index * dims + dims/3)
-	gui.set_position(root, vmath.vector3(x, y, 0))
+	if price_node then 
+		gui.set_text(price_node, prog.format_num(turret_data.price) .. " 💰")
+	end
 
-	-- Сохраняем ссылки на узлы для обновления цвета
+	-- Позиционирование в скролле
+	local y = -(self.item_offset_y + index * DIMS)
+	gui.set_position(root, vmath.vector3(0, y, 0))
+
+	-- Сохраняем ссылки для апдейта цвета
 	self.turret_buttons[turret_id] = {
 		root = root,
 		price_node = price_node,
 		name_node = name_node,
-		data = turret_data,
-		index = index
+		data = turret_data
 	}
 
-	-- Кнопка покупки
 	local btn = self.druid:new_button(root, function()
 		self:buy_turret(turret_id)
 	end)
 	table.insert(self.upgrade_buttons, btn)
 end
 
--- Покупка турели
-local function buy_turret(self, turret_id)
-	local turret = self.turret_buttons[turret_id]
-	if not turret then return end
+-- Универсальная функция для простых апгрейдов (Economy/Orbits)
+local function add_upgrade_item(self, title, price, callback, index)
+	local nodes = gui.clone_tree(gui.get_node("btn_buy_turret")) -- Используем тот же шаблон
+	table.insert(self.spawned_nodes, nodes)
 
-	local price = turret.data.price
-	local currency_type = turret.data.currency or "gold"
+	local root = nodes[hash("btn_buy_turret")]
+	local name_node = nodes[hash("turret_name")]
+	local price_node = nodes[hash("turret_price")]
 
-	if currency_type == "gold" then
-		if prog.data.gold >= price then
-			prog.data.gold = prog.data.gold - price
-			turret.data.unlocked = true
-			turret.data.owned = true
-			self:update_turret_buttons()
-			self:update_balance()
-		end
-	elseif currency_type == "emerald" then
-		if prog.data.emeralds >= price then
-			prog.data.emeralds = prog.data.emeralds - price
-			turret.data.unlocked = true
-			turret.data.owned = true
-			self:update_turret_buttons()
-		--	self:update_balance()
-		end
-	end
+	gui.set_parent(root, gui.get_node("content_node"))
+	gui.set_enabled(root, true)
+	gui.set_text(name_node, title)
+	gui.set_text(price_node, prog.format_num(price) .. " 💰")
+
+	fit_text(name_node, 160)
+
+	local y = -(self.item_offset_y + index * DIMS)
+	gui.set_position(root, vmath.vector3(0, y, 0))
+
+	local btn = self.druid:new_button(root, callback)
+	table.insert(self.upgrade_buttons, btn)
 end
 
--- Обновление цвета кнопок (красный если недостаточно денег)
-local function update_turret_buttons(self)
-	for turret_id, turret in pairs(self.turret_buttons) do
-		local price = turret.data.price
-		local currency_type = turret.data.currency or "gold"
-		local can_afford = false
+--- 2. ЛОГИКА ВКЛАДОК ---
 
-		if currency_type == "gold" then
-			can_afford = prog.data.gold >= price
-		elseif currency_type == "emerald" then
-			can_afford = prog.data.emeralds >= price
-		end
-
-		-- Изменение цвета текста
-		local color = can_afford and vmath.vector4(1, 1, 1, 1) or vmath.vector4(1, 0, 0, 1)
-
-		if turret.price_node then
---			gui.set_color(turret.price_node, color)
-		end
-		if turret.name_node then
-			gui.set_color(turret.name_node, color)
-		end
-
-		-- Если турель ещё не разблокирована - скрываем кнопку
-		if turret.data.unlocked then
-			gui.set_enabled(turret.root, true)
-			gui.set_visible(turret.root, true)
-		else
-			gui.set_enabled(turret.root, false)
-			gui.set_visible(turret.root, false)
-		end
-	end
-end
-
--- Обновление баланса
-local function update_balance(self)
-	local coin_node = gui.get_node("coin_balance_txt")
-	local emerald_node = gui.get_node("emerald_balance_txt")
-
-	if coin_node then
-		gui.set_text(coin_node, prog.format_num(prog.data.gold or 0) .. " 💰")
-	end
-	if emerald_node then
-		gui.set_text(emerald_node, prog.format_num(prog.data.emeralds or 0) .. " 💎")
-	end
-end
-
--- Построение панели турелей
 local function build_turrets_panel(self)
 	clear_content(self)
 	self.turret_buttons = {}
-
-	local unlocked_count = 0
+	local count = 0
 	for id, turret in pairs(prog.data.turrets) do
-		if turret.unlocked or unlocked_count == 0 then
-			add_turret_button(self, id, turret, unlocked_count)
-			unlocked_count = unlocked_count + 1
-		end
+		add_turret_button(self, id, turret, count)
+		count = count + 1
 	end
 end
 
---- 2. ФУНКЦИИ МЕНЮ ---
+local function build_economy_panel(self)
+	clear_content(self)
+	local gpk_lvl = prog.data.economy.level_gpk or 1
+	local gpk_price = math.floor(50 * (1.15 ^ gpk_lvl))
 
-local function update_toggle_button_text(self)
-	local text_node = gui.get_node("btn_toggle_menu/text")
-	if not text_node then
-		text_node = gui.get_node("btn_toggle_menu")
-	end
-
-	if text_node then
-		if self.is_menu_open then
-			gui.set_text(text_node, "×")
-		else
-			gui.set_text(text_node, "UPGRADES")
+	add_upgrade_item(self, "GOLD PER KILL", gpk_price, function()
+		if prog.data.gold >= gpk_price then
+			prog.data.gold = prog.data.gold - gpk_price
+			prog.data.economy.level_gpk = gpk_lvl + 1
+			self:refresh_tab("economy")
 		end
+	end, 0)
+end
+
+local function build_orbits_panel(self)
+	clear_content(self)
+	local orbit_price = 1000 * (prog.data.orbits.count or 1)
+	add_upgrade_item(self, "ADD ORBIT", orbit_price, function()
+		if prog.data.gold >= orbit_price then
+			prog.data.gold = prog.data.gold - orbit_price
+			prog.data.orbits.count = (prog.data.orbits.count or 1) + 1
+			msg.post("/logic#game_manager", "add_orbit")
+			self:refresh_tab("orbits")
+		end
+	end, 0)
+end
+
+--- 3. СИСТЕМНЫЕ ФУНКЦИИ ---
+
+local function update_balance(self)
+	local coin_node = gui.get_node("coin_balance_txt")
+	if coin_node then
+		gui.set_text(coin_node, prog.format_num(prog.data.gold or 0) .. " 💰")
+	end
+end
+
+
+local function buy_turret(self, turret_id)
+	local turret = prog.data.turrets[turret_id]
+	if not turret then return end
+
+	if prog.data.gold >= turret.price then
+		prog.data.gold = prog.data.gold - turret.price
+		turret.unlocked = true
+		msg.post("/logic#game_manager", "upgrade_purchased", { id = turret_id })
+		self:update_balance()
+		self:refresh_tab("turrets")
 	end
 end
 
 local function toggle_menu(self)
 	self.is_menu_open = not self.is_menu_open
-
-	local root_node = gui.get_node("root")
-	gui.set_enabled(root_node, self.is_menu_open)
-	gui.set_visible(root_node, self.is_menu_open)
-
-	--self:update_toggle_button_text()
+	local root = gui.get_node("root")
+	gui.set_enabled(root, self.is_menu_open)
+	gui.set_visible(root, self.is_menu_open)
 
 	if self.is_menu_open then
-		--self:update_balance()
-		self:build_turrets_panel()
+		self:refresh_tab(self.current_tab or "turrets")
 	end
+end
+local function pause(self)
+	self.is_pause = not self.is_pause
+
+	if self.is_pause then poki_sdk.gameplay_stop()
+	elseif  not self.is_pause then poki_sdk.gameplay_start()
+	end
+	
 end
 
 local function refresh_tab(self, tab_name)
-	clear_content(self)
+	self.current_tab = tab_name
+	if tab_name == "turrets" then build_turrets_panel(self)
+	elseif tab_name == "economy" then build_economy_panel(self)
+	elseif tab_name == "orbits" then build_orbits_panel(self) end
 
-	if tab_name == "turrets" then
-		build_turret_tab(self)
-	elseif tab_name == "economy" then
-		build_economy_tab(self)
-	elseif tab_name == "orbits" then
-		build_orbits_tab(self)
-	end
-
-	local item_height = 200
-	local total_height = #self.spawned_nodes * item_height
-	local container_size = vmath.vector3(400, math.max(total_height, 1), 0)
-
-	self.scroll:set_size(container_size) 
+	local total_height = #self.spawned_nodes * DIMS
+	self.scroll:set_size(vmath.vector3(400, math.max(total_height, 1), 0))
 end
 
---- 3. ИНИЦИАЛИЗАЦИЯ ---
+--- 4. ИНИЦИАЛИЗАЦИЯ И СОБЫТИЯ ---
 
 function init(self)
+	-- Привязка методов к self
 	self.refresh_tab = refresh_tab
 	self.toggle_menu = toggle_menu
-	self.update_toggle_button_text = update_toggle_button_text
+	self.pause = pause
 	self.update_balance = update_balance
-	self.update_turret_buttons = update_turret_buttons
 	self.buy_turret = buy_turret
-	self.build_turrets_panel = build_turrets_panel
-
 	self.druid = druid.new(self)
 	self.scroll = self.druid:new_scroll("view_port", "content_node")
 
 	self.spawned_nodes = {}
-	self.upgrade_buttons = {} 
+	self.upgrade_buttons = {}
 	self.turret_buttons = {}
-
-	--- НАСТРОЙКИ ОТСТУПОВ ---
-	self.item_offset_x = 20
-	self.item_offset_y = 20
-	self.item_spacing = 200
-	self.content_padding = 20
 	self.is_menu_open = false
-	---------------------------
+	self.is_pause = false
+	self.item_offset_y = 20
 
+	-- Кнопки вкладок
 	self.druid:new_button("btn_tab_orbits", function() self:refresh_tab("orbits") end)
 	self.druid:new_button("btn_tab_turrets", function() self:refresh_tab("turrets") end)
 	self.druid:new_button("btn_tab_economy", function() self:refresh_tab("economy") end)
-
-	self.druid:new_button("btn_toggle_menu", function() 
-		self:toggle_menu() 
-	end)
+	self.druid:new_button("btn_toggle_menu", function() self:toggle_menu() end)
+	self.druid:new_button("pause", function() self:pause() end)
 
 	gui.set_enabled(gui.get_node("root"), false)
-	gui.set_visible(gui.get_node("root"), false)
-	--self:update_toggle_button_text()
-
-	-- Обновляем баланс при старте
---	self:update_balance()
+	self:update_balance()
 end
 
 function update(self, dt)
 	self.druid:update(dt)
+end
 
-	-- Периодическая проверка доступности кнопок (каждые 0.5 сек)
-	self.check_timer = (self.check_timer or 0) + dt
-	if self.check_timer >= 0.5 and self.is_menu_open then
-		self.check_timer = 0
-		self:update_turret_buttons()
+function on_message(self, message_id, message, sender)
+	if message_id == hash("refresh_balance") then
+		self:update_balance()
+		-- Опционально: если меню открыто, обновляем цвета
+		if self.is_menu_open then self:refresh_tab(self.current_tab) end
 	end
 end
 

@@ -8,7 +8,35 @@ local types = {
 	SHOOTER = hash("shooter"),
 	SINUOUS = hash("sinuous")
 }
+-- Внутри логики смерти врага
+function die(self)
+	-- Отправляем в спавнер (чтобы он считал живых)
+	msg.post("/enemy_manager", "enemy_died")
 
+	msg.post("@render:", "player_take_damage", { amount = 10 })
+	-- Отправляем менеджеру (чтобы он начислил деньги)
+	msg.post("/logic#game_manager", "enemy_defeated", { reward = self.reward })
+
+	go.delete()
+end
+function play_hit_animation(self)
+	-- 1. Сбросим масштаб в 1, если предыдущая анимация еще шла
+	go.set_scale(vmath.vector3(1, 1, 1))
+
+	-- 2. Цепочка анимаций:
+	-- Сначала сжимаем (0.05 сек)
+	go.animate(".", "scale", go.PLAYBACK_ONCE_FORWARD, vmath.vector3(0.8, 0.8, 1), go.EASING_OUTCUBIC, 0.05, 0, function()
+		-- Затем раздуваем чуть больше нормы (0.07 сек)
+		go.animate(".", "scale", go.PLAYBACK_ONCE_FORWARD, vmath.vector3(1.1, 1.1, 1), go.EASING_OUTBACK, 0.07, 0, function()
+			-- Возвращаем в исходный размер (0.05 сек)
+			go.animate(".", "scale", go.PLAYBACK_ONCE_FORWARD, vmath.vector3(1, 1, 1), go.EASING_INSINE, 0.05)
+		end)
+	end)
+
+	-- Дополнительно: можно "мигнуть" красным цветом, если у тебя стоит спрайт
+	go.set("#sprite", "tint", vmath.vector4(2, 0.5, 0.5, 1)) -- Усиливаем красный канал
+	go.animate("#sprite", "tint", go.PLAYBACK_ONCE_FORWARD, vmath.vector4(1, 1, 1, 1), go.EASING_INSINE, 0.2)
+end
 function init(self)
 	self.target_pos = vmath.vector3(0, 0, 0)
 	self.speed = 10
@@ -16,7 +44,8 @@ function init(self)
 	self.sin_timer = 0
 	self.base_pos = nil
 	self.is_dead = false
-
+	self.reward = 3
+	
 	-- Настройка типа
 	if self.type == types.KAMIKAZE then
 		self.speed = 50
@@ -81,9 +110,7 @@ function update(self, dt)
 
 	-- Проверка столкновения с центром
 	if dist < 20 then
-		msg.post("@render:", "player_take_damage", { amount = 10 })
-		go.delete()
-		msg.post("/enemy_manager", "enemy_died")
+		die(self)
 	end
 end
 
@@ -95,12 +122,11 @@ function on_message(self, message_id, message, sender)
 		go.cancel_animations("#sprite", "tint")
 		go.set("#sprite", "tint", vmath.vector4(1, 0.5, 0.5, 1))
 		go.animate("#sprite", "tint", go.PLAYBACK_ONCE_FORWARD, vmath.vector4(1, 1, 1, 1), go.EASING_OUTQUAD, 0.3)
-
+		play_hit_animation(self)
 		if self.health <= 0 and not self.is_dead then
 			self.is_dead = true
-			msg.post("@render:", "enemy_died", { pos = go.get_position(), reward = 5 })
-			msg.post("/enemy_manager", "enemy_died")
-			go.delete()
+			die(self)
 		end
 	end
 end
+

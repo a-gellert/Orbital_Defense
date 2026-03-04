@@ -39,8 +39,9 @@ function update(self, dt)
 	if self.state == "SPAWNING" then
 		self.timer = self.timer - dt
 		if self.timer <= 0 then
+			
 			spawn_enemy(self)
-
+			
 			-- Ускоряем спавн с каждой волной (но не быстрее 0.2 сек)
 			self.timer = math.max(0.2, 0.8 - (self.current_wave * 0.02))
 

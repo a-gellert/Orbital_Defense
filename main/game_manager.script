@@ -1,0 +1,18 @@
+local prog = require "main.progression"
+
+function on_message(self, message_id, message, sender)
+	-- 1. Кто-то убил врага
+	if message_id == hash("enemy_defeated") then
+		prog.data.gold = prog.data.gold + (message.reward or 0)
+		-- Сообщаем GUI, что нужно обновить цифры
+		msg.post("main:/gui#game", "refresh_balance")
+	end
+
+	-- 2. Игрок купил что-то в GUI
+	if message_id == hash("upgrade_purchased") then
+		-- Здесь можно добавить общую логику (звук покупки, частицы)
+		print("Purchased: " .. message.id)
+		-- Если нужно уведомить систему стрельбы:
+		msg.post("/turrets#controller", "update_stats")
+	end
+end

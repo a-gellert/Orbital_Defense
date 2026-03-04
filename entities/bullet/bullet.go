@@ -1,6 +1,11 @@
 components {
   id: "bullet"
   component: "/entities/bullet/bullet.script"
+  properties {
+    id: "speed"
+    value: "400.0"
+    type: PROPERTY_TYPE_NUMBER
+  }
 }
 embedded_components {
   id: "sprite"

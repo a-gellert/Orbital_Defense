@@ -79,3 +79,19 @@ embedded_instances {
   "}\n"
   ""
 }
+embedded_instances {
+  id: "logic"
+  data: "components {\n"
+  "  id: \"game_manager\"\n"
+  "  component: \"/main/game_manager.script\"\n"
+  "}\n"
+  ""
+}
+embedded_instances {
+  id: "orbit_outer2"
+  data: ""
+}
+embedded_instances {
+  id: "orbit_middle1"
+  data: ""
+}

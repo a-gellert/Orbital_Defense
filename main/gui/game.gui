@@ -6,7 +6,7 @@ fonts {
 nodes {
   position {
     x: 680.0
-    y: 1800.0
+    y: 1700.0
   }
   size {
     x: 1024.0
@@ -217,6 +217,7 @@ nodes {
   id: "left_panel"
   inherit_alpha: true
   size_mode: SIZE_MODE_AUTO
+  enabled: false
 }
 nodes {
   position {
@@ -316,6 +317,60 @@ nodes {
   id: "turret_price"
   parent: "btn_buy_turret"
   inherit_alpha: true
+}
+nodes {
+  position {
+    x: 680.0
+    y: 1820.0
+  }
+  size {
+    x: 768.0
+    y: 100.0
+  }
+  color {
+    x: 0.9019608
+    y: 0.9019608
+    z: 0.7019608
+  }
+  type: TYPE_BOX
+  id: "header"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    x: -282.0
+  }
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  color {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  }
+  type: TYPE_TEXT
+  text: "100\n"
+  ""
+  font: "druid_text_bold"
+  id: "coin_balance_txt"
+  parent: "header"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    x: 118.0
+    y: 1800.0
+  }
+  size {
+    x: 100.0
+    y: 100.0
+  }
+  type: TYPE_BOX
+  id: "pause"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
 }
 material: "/builtins/materials/gui.material"
 adjust_reference: ADJUST_REFERENCE_PARENT
