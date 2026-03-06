@@ -1,18 +1,108 @@
+-- game_manager.script
 local prog = require "main.progression"
 
+function init(self)
+	self.slots = {} -- Таблица для хранения данных о слотах
+end
+
 function on_message(self, message_id, message, sender)
-	-- 1. Кто-то убил врага
-	if message_id == hash("enemy_defeated") then
-		prog.data.gold = prog.data.gold + (message.reward or 0)
-		-- Сообщаем GUI, что нужно обновить цифры
-		msg.post("main:/gui#game", "refresh_balance")
+	-- 1. Регистрация слота при старте
+	if message_id == hash("register_slot") then
+		table.insert(self.slots, {
+			slot_id = message.slot_id,
+			occupied = false,
+			turret_id = nil
+		})
+		print("📍 Slot registered:", message.slot_id)
 	end
 
-	-- 2. Игрок купил что-то в GUI
-	if message_id == hash("upgrade_purchased") then
-		-- Здесь можно добавить общую логику (звук покупки, частицы)
-		print("Purchased: " .. message.id)
-		-- Если нужно уведомить систему стрельбы:
-		msg.post("/turrets#controller", "update_stats")
+	-- 2. Запрос состояния слотов (для поиска свободного)
+	if message_id == hash("get_free_slot") then
+		for _, slot in ipairs(self.slots) do
+			if not slot.occupied then
+				msg.post(sender, "free_slot_found", {
+					slot_id = slot.slot_id
+				})
+				return
+			end
+		end
+		msg.post(sender, "no_free_slots")
 	end
+
+	-- 3. Покупка турели из GUI
+	if message_id == hash("upgrade_purchased") then
+		self:spawn_turret_on_free_slot(message.id)
+	end
+
+	-- 4. Спавн турели на конкретный слот
+	if message_id == hash("spawn_turret") then
+		local slot_data = self:get_slot_data(message.slot_id)
+		if slot_data then
+			-- Создаём турель
+			local turret_props = {
+				turret_type = message.turret_id,
+				level = 1
+			}
+
+			local turret_pos = go.get_world_position(message.slot_id)
+			local turret_id = factory.create("#turret_factory", turret_pos, nil, turret_props)
+
+			if turret_id then
+				-- Помечаем слот как занятый
+				slot_data.occupied = true
+				slot_data.turret_id = turret_id
+				msg.post(message.slot_id, "occupy_slot", { turret_id = turret_id })
+
+				print("✅ Spawned turret", message.turret_id)
+			end
+		end
+	end
+
+	-- 5. Уничтожение врага (для золота)
+	if message_id == hash("enemy_defeated") then
+		prog.data.gold = prog.data.gold + (message.reward or 0)
+		msg.post("main:/gui#game", "refresh_balance")
+	end
+end
+
+-- Поиск свободного слота
+function spawn_turret_on_free_slot(self, turret_id)
+	-- Запрашиваем свободный слот у самой себя через message (для синхронизации)
+	msg.post_with_response(go.get_id(), "get_free_slot", go.get_id())
+end
+
+function on_message(self, message_id, message, sender)
+	-- ... (код выше) ...
+
+	-- Ответ на запрос свободного слота
+	if message_id == hash("free_slot_found") then
+		msg.post("main:/logic#game_manager", "spawn_turret", {
+			turret_id = self.pending_turret_id,
+			slot_id = message.slot_id
+		})
+	end
+
+	if message_id == hash("no_free_slots") then
+		print("⚠️ No free slots available!")
+		msg.post("main:/gui#game", "show_no_slots_message")
+	end
+	if message_id == hash("enemy_killed") then
+		-- 1. Добавляем золото в таблицу данных
+		prog.data.gold = prog.data.gold + (message.amount or 0)
+
+		-- 2. Уведомляем GUI, что пора обновить текст на экране
+		msg.post("main:/gui#game", "refresh_balance")
+
+		-- 3. Сохраняем прогресс (по желанию)
+		-- prog.save() 
+	end
+end
+
+function get_slot_data(self, slot_id)
+	for _, slot in ipairs(self.slots) do
+		if slot.slot_id == slot_id then
+			return slot
+		end
+	end
+	return nil
 end

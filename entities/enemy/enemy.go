@@ -12,6 +12,7 @@ embedded_components {
   "group: \"enemy\"\n"
   "mask: \"bullet\"\n"
   "mask: \"sensor\"\n"
+  "mask: \"planet\"\n"
   "embedded_collision_shape {\n"
   "  shapes {\n"
   "    shape_type: TYPE_SPHERE\n"

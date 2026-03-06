@@ -5,7 +5,7 @@ local WAVE_DELAY = 3.0 -- Пауза между волнами
 
 function init(self)
 	self.current_wave = 1
-	self.enemies_to_spawn = 5 -- Количество мобов в первой волне
+	self.enemies_to_spawn = 222 -- Количество мобов в первой волне
 	self.spawned_count = 0
 	self.active_enemies = 0 -- Счетчик живых врагов на поле
 	self.timer = 1.0
@@ -69,5 +69,8 @@ function on_message(self, message_id, message, sender)
 	-- Когда враг умирает, он присылает сообщение менеджеру
 	if message_id == hash("enemy_died") then
 		self.active_enemies = self.active_enemies - 1
-	end
+	elseif message_id == hash("enemy_defeated") then
+		self.active_enemies = self.active_enemies - 1
+		
+end
 end

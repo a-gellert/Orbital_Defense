@@ -1,7 +1,7 @@
 local M = {}
 
 M.data = {
-	gold = 1000, -- Дадим немного денег на старт для теста
+	gold = 10, -- Дадим немного денег на старт для теста
 	diamonds = 0,
 
 	-- Состояние турелей
@@ -11,6 +11,8 @@ M.data = {
 		rocket  = { unlocked = false, level_dmg = 1, level_rate = 1, price = 2500 },
 		laser   = { unlocked = false, level_dmg = 1, level_rate = 1, price = 10000 },
 		plasma  = { unlocked = false, level_dmg = 1, level_rate = 1, price = 50000 },
+		laser2   = { unlocked = false, level_dmg = 1, level_rate = 1, price = 10000 },
+		plasma2  = { unlocked = false, level_dmg = 1, level_rate = 1, price = 50000 },
 	},
 
 	-- Орбиты (Этого блока не хватало!)
@@ -21,12 +23,12 @@ M.data = {
 
 	-- Планета и Экономика
 	economy = {
-		level_gpk = 1,     -- Уровень золота за убийство
+		level_gpk = 1,     
 		level_hp = 1,      -- Уровень здоровья планеты
-		gold_per_kill = 1,
+		gold_per_kill = 10,
 		passive_income = 0,
 		planet_hp = 100,
-		planet_dmg = 5
+		planet_dmg = 10
 	}
 }
 

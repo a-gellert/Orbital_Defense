@@ -40,6 +40,10 @@ instances {
     }
   }
 }
+instances {
+  id: "planet1"
+  prototype: "/entities/planet/planet.go"
+}
 scale_along_z: 0
 embedded_instances {
   id: "planet"

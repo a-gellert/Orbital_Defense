@@ -215,14 +215,15 @@ nodes {
   type: TYPE_BOX
   id: "btn_buy_turret"
   parent: "templates"
+  enabled: false
 }
 nodes {
   position {
-    x: 36.0
+    x: -2.0
     y: 25.0
   }
   size {
-    x: 128.0
+    x: 100.0
     y: 50.0
   }
   type: TYPE_TEXT
@@ -234,26 +235,6 @@ nodes {
 }
 nodes {
   position {
-    x: -60.0
-  }
-  size {
-    x: 64.0
-    y: 64.0
-  }
-  color {
-    x: 0.6
-    y: 0.8
-    z: 0.6
-  }
-  type: TYPE_BOX
-  id: "box1"
-  parent: "btn_buy_turret"
-  inherit_alpha: true
-  size_mode: SIZE_MODE_AUTO
-}
-nodes {
-  position {
-    x: 36.0
     y: -25.0
   }
   size {
@@ -298,6 +279,7 @@ nodes {
   parent: "left_panel"
   inherit_alpha: true
   size_mode: SIZE_MODE_AUTO
+  enabled: false
 }
 nodes {
   size {
@@ -310,6 +292,21 @@ nodes {
   id: "text"
   parent: "btn_toggle_menu"
   inherit_alpha: true
+}
+nodes {
+  position {
+    y: 128.0
+  }
+  size {
+    x: 1.0
+    y: 1.0
+  }
+  type: TYPE_BOX
+  id: "left_panel_node"
+  parent: "left_panel"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+  visible: false
 }
 nodes {
   position {
@@ -350,6 +347,42 @@ nodes {
   id: "coin_balance_txt"
   parent: "header"
   inherit_alpha: true
+}
+nodes {
+  size {
+    x: 200.0
+    y: 50.0
+  }
+  color {
+    x: 0.5019608
+    y: 0.5019608
+    z: 0.5019608
+  }
+  type: TYPE_BOX
+  id: "health_bg"
+  parent: "header"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    x: -97.5
+  }
+  size {
+    x: 158.0
+    y: 45.0
+  }
+  color {
+    x: 0.7019608
+    y: 0.101960786
+    z: 0.101960786
+  }
+  type: TYPE_BOX
+  id: "health_fill"
+  pivot: PIVOT_W
+  parent: "health_bg"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
 }
 nodes {
   position {

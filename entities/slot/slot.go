@@ -1,3 +1,7 @@
+components {
+  id: "slot"
+  component: "/entities/slot/slot.script"
+}
 embedded_components {
   id: "sprite"
   type: "sprite"

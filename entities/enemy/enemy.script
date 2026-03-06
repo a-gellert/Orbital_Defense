@@ -1,8 +1,9 @@
 -- enemy.script
+local prog = require "main.progression"
+
 go.property("type", hash("kamikaze"))
 go.property("health", 20)
 go.property("max_health", 20)
-
 local types = {
 	KAMIKAZE = hash("kamikaze"),
 	SHOOTER = hash("shooter"),
@@ -12,10 +13,7 @@ local types = {
 function die(self)
 	-- Отправляем в спавнер (чтобы он считал живых)
 	msg.post("/enemy_manager", "enemy_died")
-
 	msg.post("@render:", "player_take_damage", { amount = 10 })
-	-- Отправляем менеджеру (чтобы он начислил деньги)
-	msg.post("/logic#game_manager", "enemy_defeated", { reward = self.reward })
 
 	go.delete()
 end
@@ -48,8 +46,8 @@ function init(self)
 	
 	-- Настройка типа
 	if self.type == types.KAMIKAZE then
-		self.speed = 50
-		self.health = 15
+		self.speed = 70
+		self.health = 10
 	elseif self.type == types.SHOOTER then
 		self.speed = 60
 		self.stop_distance = 150
@@ -125,8 +123,15 @@ function on_message(self, message_id, message, sender)
 		play_hit_animation(self)
 		if self.health <= 0 and not self.is_dead then
 			self.is_dead = true
+			msg.post("main:/logic#game_manager", "enemy_killed", { amount = prog.data.economy.gold_per_kill })
 			die(self)
 		end
+	end
+	if message_id == hash("die_from_crash") then
+		-- Враг умирает, но НЕ дает золото, так как он нанес урон планете
+
+		msg.post("/enemy_manager", "enemy_died") 
+		go.delete()
 	end
 end
 
