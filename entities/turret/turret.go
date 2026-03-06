@@ -28,7 +28,7 @@ embedded_components {
 embedded_components {
   id: "sprite"
   type: "sprite"
-  data: "default_animation: \"t_laser\"\n"
+  data: "default_animation: \"t_racket\"\n"
   "material: \"/builtins/materials/sprite.material\"\n"
   "textures {\n"
   "  sampler: \"texture_sampler\"\n"
@@ -36,11 +36,15 @@ embedded_components {
   "}\n"
   ""
   position {
-    x: 8.0
+    y: 6.0
+  }
+  rotation {
+    z: 0.70710677
+    w: 0.70710677
   }
   scale {
-    x: 0.05
-    y: 0.05
+    x: 0.06
+    y: 0.06
   }
 }
 embedded_components {

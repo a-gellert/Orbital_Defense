@@ -9,12 +9,17 @@ local MAX_TEXT_WIDTH = 150 -- Максимальная ширина текста
 --- 1. ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ---
 local function update_progress_bar(node_name, current, max)
 	local progress_node = gui.get_node(node_name)
-
+	if node_name == "health_fill" then
+		local health_node = gui.get_node("health_txt")
+		if health_node then
+			gui.set_text(health_node, current .. "/" .. max)
+		end
+	end
 	-- Вычисляем процент заполнения (от 0 до 1)
 	local ratio = current / max
 	if ratio < 0 then ratio = 0 end
 	if ratio > 1 then ratio = 1 end
-
+	print(ratio)
 	-- Анимируем изменение полоски для плавности
 	gui.animate(progress_node, "scale.x", ratio, gui.EASING_OUTQUAD, 0.3)
 
@@ -307,12 +312,15 @@ function on_message(self, message_id, message, sender)
 		self:update_balance()
 		if self.is_menu_open then 
 			self:refresh_tab(self.current_tab) 
+		end
 		elseif message_id == hash("update_planet_hp") then
 			-- Допустим, данные лежат в prog.data.economy
 			local hp = prog.data.economy.planet_hp
 			local max_hp = 100 -- Твой максимум
-			print(hp)
+
 			update_progress_bar("health_fill", hp, max_hp)
+		elseif message_id == hash("update_wave_progress") then
+			local node = gui.get_node("wave_fill")
+			gui.animate(node, "scale.x", message.ratio, gui.EASING_OUTQUAD, 0.5)
 		end
-	end
 end

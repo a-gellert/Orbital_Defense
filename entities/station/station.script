@@ -69,16 +69,17 @@ end
 function build_turret(self, turret_type)
 	if self.turret_id and go.exists(self.turret_id) then return end
 
-	local local_pos = vmath.vector3(0, 0, 0.5)
-
-	-- Передаем тип турели в саму турель
-	self.turret_id = factory.create("#turret_factory", nil, nil, {
-		turret_type = turret_type, -- Теперь это hash, ошибки не будет
+	-- Создаем турель в мировых координатах станции
+	local world_pos = go.get_world_position()
+	self.turret_id = factory.create("#turret_factory", world_pos, nil, {
+		turret_type = turret_type,
 		level = 1
 	})
 
 	if self.turret_id then
-		go.set_parent(self.turret_id, go.get_id(), false)
-		go.set_position(local_pos, self.turret_id)
+		-- keep_world_transform = true (четвертый аргумент)
+		-- Это критично: турель будет двигаться за станцией, 
+		-- но её вращение в коде будет считаться от "мира", а не от "станции"
+		go.set_parent(self.turret_id, go.get_id(), true)
 	end
 end

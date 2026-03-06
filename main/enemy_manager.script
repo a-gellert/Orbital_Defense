@@ -1,76 +1,86 @@
-local balance = require "main.balance" -- Путь к нашему модулю баланса
+-- wave_manager.script
+local balance = require "main.balance" 
 
 local SPAWN_RADIUS = 600 
-local WAVE_DELAY = 3.0 -- Пауза между волнами
+local WAVE_DELAY = 3.0
 
 function init(self)
 	self.current_wave = 1
-	self.enemies_to_spawn = 222 -- Количество мобов в первой волне
+	self.enemies_to_spawn = 5 
 	self.spawned_count = 0
-	self.active_enemies = 0 -- Счетчик живых врагов на поле
-	self.timer = 1.0
-	self.state = "SPAWNING" -- Состояния: SPAWNING, WAITING, BOSS
+	self.active_enemies = 0 
+	self.timer = 0.5
+	self.state = "SPAWNING" 
+
+	-- Проверка GUI перед отправкой
+	if msg.url("main:/gui#game") then
+		msg.post("main:/gui#game", "update_wave_number", { wave = self.current_wave })
+		msg.post("main:/gui#game", "update_wave_progress", { ratio = 0 })
+	end
 end
 
 local function spawn_enemy(self)
 	local angle = math.random() * math.pi * 2
 	local pos = vmath.vector3(math.cos(angle) * SPAWN_RADIUS, math.sin(angle) * SPAWN_RADIUS, 0.2)
 
-	-- Берем статы из нашего модуля баланса
 	local hp, reward = balance.get_enemy_stats(self.current_wave)
-
-	-- Проверка на Босса (каждая 10-я волна)
 	local is_boss = (self.current_wave % 10 == 0)
-	local scale = is_boss and 2.5 or 1.0 -- Босс визуально больше
 
-	-- Создаем врага и передаем ему ВСЕ данные
 	local enemy_id = factory.create("#enemy_factory", pos, nil, { 
 		hp = hp, 
 		reward = reward, 
-		is_boss = is_boss 
-	}, scale)
+		is_boss = is_boss,
+		scale = is_boss and 2.5 or 1.0  -- Передаем масштаб в свойствах
+	})
 
 	self.spawned_count = self.spawned_count + 1
 	self.active_enemies = self.active_enemies + 1
 end
 
 function update(self, dt)
-	print(self.state)
 	if self.state == "SPAWNING" then
 		self.timer = self.timer - dt
 		if self.timer <= 0 then
-			
 			spawn_enemy(self)
-			
-			-- Ускоряем спавн с каждой волной (но не быстрее 0.2 сек)
+			-- Уменьшаем интервал с каждой волной, но не быстрее 0.2 сек
 			self.timer = math.max(0.2, 0.8 - (self.current_wave * 0.02))
 
-			-- Если всех заспавнили — ждем пока их добьют
 			if self.spawned_count >= self.enemies_to_spawn then
 				self.state = "WAITING"
+				print("🌊 Wave " .. self.current_wave .. " spawning complete. Waiting for cleanup...")
 			end
 		end
 	elseif self.state == "WAITING" then
-		-- Если все враги мертвы — начинаем новую волну
 		if self.active_enemies <= 0 then
-			self.current_wave = self.current_wave + 1
-			self.spawned_count = 0
-			self.enemies_to_spawn = 10 + (self.current_wave * 2) -- Мобье растет числом
-			self.state = "SPAWNING"
-			self.timer = WAVE_DELAY -- Даем игроку передохнуть 3 сек
+			-- Небольшая пауза перед следующей волной
+			self.timer = self.timer - dt
+			if self.timer <= 0 then
+				self.current_wave = self.current_wave + 1
+				self.spawned_count = 0
+				self.enemies_to_spawn = 5 + (self.current_wave * 2)
+				self.state = "SPAWNING"
+				self.timer = 0.5 -- Быстрый старт следующей волны
 
-			-- ТУТ ВСТАВЛЯЕМ ВЫЗОВ GUI: "Wave Cleared! Choose Upgrade"
-		--	msg.post("/gui#main", "show_upgrade_cards")
+				if msg.url("main:/gui#game") then
+					msg.post("main:/gui#game", "update_wave_number", { wave = self.current_wave })
+					msg.post("main:/gui#game", "update_wave_progress", { ratio = 0 })
+				end
+				print("🚀 Starting Wave " .. self.current_wave)
+			end
 		end
 	end
 end
 
 function on_message(self, message_id, message, sender)
-	-- Когда враг умирает, он присылает сообщение менеджеру
-	if message_id == hash("enemy_died") then
-		self.active_enemies = self.active_enemies - 1
-	elseif message_id == hash("enemy_defeated") then
-		self.active_enemies = self.active_enemies - 1
-		
-end
+	if message_id == hash("enemy_died") or message_id == hash("enemy_defeated") then
+		self.active_enemies = math.max(0, self.active_enemies - 1)
+
+		local killed_count = self.spawned_count - self.active_enemies
+		local progress = self.enemies_to_spawn > 0 and (killed_count / self.enemies_to_spawn) or 0
+		progress = math.min(math.max(progress, 0), 1)
+
+		if msg.url("main:/gui#game") then
+			msg.post("main:/gui#game", "update_wave_progress", { ratio = progress })
+		end
+	end
 end

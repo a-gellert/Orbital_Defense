@@ -40,13 +40,30 @@ function update(self, dt)
 	if self.current_target and go.exists(self.current_target) then
 		local my_pos = go.get_world_position()
 		local target_pos = go.get_world_position(self.current_target)
-		local dir = target_pos - my_pos
-		local angle = math.atan2(dir.y, dir.x)
 
-		go.set_rotation(vmath.quat_rotation_z(angle))
+		-- 1. Вычисляем направление
+		local dir = target_pos - my_pos
+
+		-- 2. Считаем угол. 
+		-- Если пушка в редакторе смотрит ВВЕРХ, добавь: - math.pi / 2
+		-- Если пушка в редакторе смотрит ВНИЗ, добавь: + math.pi / 2
+		-- Если пушка смотрит ВЛЕВО, добавь: + math.pi
+		local target_angle = math.atan2(dir.y, dir.x) 
+
+		-- ПОПРАВКА: если пушка изначально смотрит вверх, вычитаем 90 градусов (pi/2)
+		local offset = - math.pi / 2 
+		local target_quat = vmath.quat_rotation_z(target_angle + offset)
+
+		-- 3. Компенсируем вращение родителя (станции)
+		local parent_quat = go.get_world_rotation(go.get_parent())
+		local local_quat = vmath.conj(parent_quat) * target_quat
+
+		-- 4. Применяем
+		go.set_rotation(local_quat)
 
 		if self.cooldown <= 0 then
-			fire(self, my_pos, go.get_rotation())
+			-- ПУЛЯ должна лететь по чистому target_angle (без офсета спрайта!)
+			fire(self, my_pos, vmath.quat_rotation_z(target_angle))
 		end
 	else
 		self.current_target = nil

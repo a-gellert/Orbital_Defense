@@ -369,7 +369,7 @@ nodes {
     x: -97.5
   }
   size {
-    x: 158.0
+    x: 195.0
     y: 45.0
   }
   color {
@@ -385,6 +385,18 @@ nodes {
   size_mode: SIZE_MODE_AUTO
 }
 nodes {
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  type: TYPE_TEXT
+  text: "<text>"
+  font: "druid_text_bold"
+  id: "health_txt"
+  parent: "health_bg"
+  inherit_alpha: true
+}
+nodes {
   position {
     x: 118.0
     y: 1800.0
@@ -398,6 +410,45 @@ nodes {
   inherit_alpha: true
   size_mode: SIZE_MODE_AUTO
   enabled: false
+}
+nodes {
+  position {
+    x: 540.0
+    y: 50.0
+  }
+  size {
+    x: 720.0
+    y: 70.0
+  }
+  type: TYPE_BOX
+  id: "wave_bg"
+  xanchor: XANCHOR_LEFT
+  yanchor: YANCHOR_BOTTOM
+  adjust_mode: ADJUST_MODE_STRETCH
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    x: -355.0
+  }
+  size {
+    x: 710.0
+    y: 65.0
+  }
+  color {
+    x: 0.101960786
+    y: 0.0
+    z: 0.40784314
+  }
+  type: TYPE_BOX
+  id: "wave_fill"
+  xanchor: XANCHOR_LEFT
+  pivot: PIVOT_W
+  adjust_mode: ADJUST_MODE_STRETCH
+  parent: "wave_bg"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
 }
 material: "/builtins/materials/gui.material"
 adjust_reference: ADJUST_REFERENCE_PARENT
