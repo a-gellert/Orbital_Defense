@@ -14,7 +14,8 @@ function die(self)
 	-- Отправляем в спавнер (чтобы он считал живых)
 	msg.post("/enemy_manager", "enemy_died")
 	msg.post("@render:", "player_take_damage", { amount = 10 })
-
+	factory.create("#fx_factory", go.get_position())
+	msg.post("main:/camera_root#camera_shake", "shake", { intensity = 2, duration = 0.1 })
 	go.delete()
 end
 function play_hit_animation(self)
@@ -46,7 +47,7 @@ function init(self)
 	
 	-- Настройка типа
 	if self.type == types.KAMIKAZE then
-		self.speed = 70
+		self.speed = 90
 		self.health = 10
 	elseif self.type == types.SHOOTER then
 		self.speed = 60
@@ -65,12 +66,11 @@ end
 
 function update(self, dt)
 	if self.is_dead then return end
-
+	if prog.is_paused then return end
 	local my_pos = go.get_position()
 	local to_target = self.target_pos - my_pos
 	local dist = vmath.length(to_target)
 	local dir = dist > 0.1 and vmath.normalize(to_target) or vmath.vector3(1,0,0)
-
 	if self.type == types.SHOOTER then
 		-- Движение
 		if dist > self.stop_distance then

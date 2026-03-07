@@ -6,7 +6,7 @@ function init(self)
 	self.enemies_in_range = {}
 	self.cooldown = 0
 	self.current_target = nil
-
+	print("🌍 Game world INIT inside proxy")
 	go.set_scale(vmath.vector3(1, 1, 1)) -- Начальное состояние
 	go.animate(".", "scale", go.PLAYBACK_LOOP_PINGPONG, vmath.vector3(1.05, 1.05, 1), go.EASING_INOUTSINE, 2.0)
 
@@ -50,10 +50,11 @@ local function fire(self, target_id)
 end
 
 function update(self, dt)
+	if prog.is_paused then return end
 	if self.cooldown > 0 then
 		self.cooldown = self.cooldown - dt
 	end
-
+	print(prog.data.economy.planet_hp)
 	self.current_target = get_closest_enemy(self)
 
 	if self.current_target and self.cooldown <= 0 then
@@ -88,11 +89,13 @@ function on_message(self, message_id, message, sender)
 			go.set("#sprite", "tint", vmath.vector4(2, 0.5, 0.5, 1))
 			go.animate("#sprite", "tint", go.PLAYBACK_ONCE_FORWARD, vmath.vector4(1,1,1,1), go.EASING_LINEAR, 0.2)
 
+			msg.post("main:/camera_root#camera_shake", "shake", { intensity = 7, duration = 0.3 })
 			-- Убиваем врага
 			msg.post(message.other_id, "die_from_crash")
 			msg.post("main:/gui#game", "update_planet_hp")
 
 			if prog.data.economy.planet_hp <= 0 then
+				msg.post("main:/gui#game", "show_defeat")
 				print("GAME OVER!")
 			end
 		end

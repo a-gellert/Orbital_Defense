@@ -1,0 +1,32 @@
+-- loader.script
+function init(self)
+	msg.post(".", "acquire_input_focus")
+	print("📡 Загрузка игры...")
+	msg.post("#game_proxy", "load")
+end
+
+local prog = require "main.progression"
+
+function on_message(self, message_id, message, sender)
+	if message_id == hash("proxy_loaded") then
+		msg.post(sender, "init")
+		msg.post(sender, "enable")
+		print("🚀 Мир активирован!")
+
+	elseif message_id == hash("restart_game") then
+		print("🔄 Выгрузка для рестарта...")
+		-- СБРАСЫВАЕМ HP И ЗОЛОТО ЗДЕСЬ!
+		if prog.reset_progress then 
+			prog.reset_progress() 
+		else
+			-- Если функции нет, хотя бы вручную:
+			prog.data.economy.planet_hp = 100
+			prog.is_paused = false
+		end
+		msg.post("#game_proxy", "unload")
+
+	elseif message_id == hash("proxy_unloaded") then
+		print("♻️ Мир выгружен. Перезапуск...")
+		msg.post("#game_proxy", "load")
+	end
+end

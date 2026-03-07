@@ -48,3 +48,9 @@ embedded_components {
   data: "prototype: \"/entities/bullet/enemy_bullet.go\"\n"
   ""
 }
+embedded_components {
+  id: "fx_factory"
+  type: "factory"
+  data: "prototype: \"/assets/particles/destroy.go\"\n"
+  ""
+}

@@ -1,5 +1,5 @@
 [bootstrap]
-main_collection = /main/main.collectionc
+main_collection = /main/loader.collectionc
 render = /rendercam/rendercam.renderc
 
 [script]
@@ -27,6 +27,10 @@ scale_mode = stretch
 show_made_with_defold = 0
 show_fullscreen_button = 0
 show_console_banner = 0
+wasm_streaming = 1
+htmlfile = /builtins/manifests/web/engine_template.html
+heap_size = 128
+cssfile = /builtins/manifests/web/dark_theme.css
 
 [project]
 title = Orbital Defense

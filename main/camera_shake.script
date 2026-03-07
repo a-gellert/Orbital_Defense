@@ -1,0 +1,36 @@
+-- camera_shake.script
+
+local function shake(self, intensity, duration)
+	-- Сохраняем исходную позицию, чтобы камера не "уехала" навсегда
+	local initial_pos = vmath.vector3(0, 0, 0) 
+	local elapsed = 0
+	local interval = 0.02 -- Частота встряски
+
+	-- Запускаем повторяющийся таймер
+	timer.delay(interval, true, function(self, handle, time_elapsed)
+		elapsed = elapsed + interval
+
+		if elapsed >= duration then
+			-- Время вышло: возвращаем камеру в ноль и удаляем таймер
+			go.set_position(initial_pos)
+			timer.cancel(handle) -- Теперь это сработает, так как мы передаем handle правильно
+		else
+			-- Генерируем случайное смещение
+			local offset = vmath.vector3(
+			math.random(-intensity, intensity),
+			math.random(-intensity, intensity),
+			0
+		)
+		go.set_position(initial_pos + offset)
+
+		-- Постепенно уменьшаем силу тряски к концу (затухание)
+		intensity = intensity * 0.9 
+	end
+end)
+end
+
+function on_message(self, message_id, message, sender)
+if message_id == hash("shake") then
+	shake(self, message.intensity or 5, message.duration or 0.2)
+end
+end

@@ -82,6 +82,29 @@ embedded_components {
   ""
   scale {
     x: 0.1
-    y: 0.1
+    y: 0.15
+  }
+}
+embedded_components {
+  id: "sprite2"
+  type: "sprite"
+  data: "default_animation: \"p_blue\"\n"
+  "material: \"/builtins/materials/sprite.material\"\n"
+  "size {\n"
+  "  x: 253.0\n"
+  "  y: 256.0\n"
+  "}\n"
+  "textures {\n"
+  "  sampler: \"texture_sampler\"\n"
+  "  texture: \"/assets/all.atlas\"\n"
+  "}\n"
+  ""
+  rotation {
+    z: 0.70710677
+    w: 0.70710677
+  }
+  scale {
+    x: 0.1
+    y: 0.15
   }
 }

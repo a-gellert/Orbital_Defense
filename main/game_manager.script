@@ -60,7 +60,7 @@ function on_message(self, message_id, message, sender)
 
 	-- 5. Уничтожение врага (для золота)
 	if message_id == hash("enemy_defeated") then
-		prog.data.gold = prog.data.gold + (message.reward or 0)
+		prog.data.gold = prog.data.gold + (message.reward or 10)
 		msg.post("main:/gui#game", "refresh_balance")
 	end
 end

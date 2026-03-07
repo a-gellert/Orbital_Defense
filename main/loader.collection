@@ -1,0 +1,53 @@
+name: "loader"
+instances {
+  id: "camera"
+  prototype: "/rendercam/camera.go"
+  component_properties {
+    id: "script"
+    properties {
+      id: "fixedAspectRatio"
+      value: "false"
+      type: PROPERTY_TYPE_BOOLEAN
+    }
+    properties {
+      id: "aspectRatio"
+      value: "9.0, 16.0, 0.0"
+      type: PROPERTY_TYPE_VECTOR3
+    }
+    properties {
+      id: "useViewArea"
+      value: "false"
+      type: PROPERTY_TYPE_BOOLEAN
+    }
+    properties {
+      id: "expandView"
+      value: "true"
+      type: PROPERTY_TYPE_BOOLEAN
+    }
+    properties {
+      id: "fixedWidth"
+      value: "true"
+      type: PROPERTY_TYPE_BOOLEAN
+    }
+    properties {
+      id: "fixedHeight"
+      value: "false"
+      type: PROPERTY_TYPE_BOOLEAN
+    }
+  }
+}
+scale_along_z: 0
+embedded_instances {
+  id: "loader"
+  data: "components {\n"
+  "  id: \"loader\"\n"
+  "  component: \"/main/loader.script\"\n"
+  "}\n"
+  "embedded_components {\n"
+  "  id: \"game_proxy\"\n"
+  "  type: \"collectionproxy\"\n"
+  "  data: \"collection: \\\"/main/main.collection\\\"\\n"
+  "\"\n"
+  "}\n"
+  ""
+}

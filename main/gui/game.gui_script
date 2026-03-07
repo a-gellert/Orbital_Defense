@@ -4,9 +4,22 @@ local poki = require "main.poki"
 
 local DIMS = 180
 local DIMS_LEFTPANEL = 110
-local MAX_TEXT_WIDTH = 150 -- Максимальная ширина текста внутри кнопки
+local MAX_TEXT_WIDTH = 150 
 
 --- 1. ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ---
+local function update_tab_highlights(self)
+	for name, node in pairs(self.tab_nodes) do
+		if name == self.current_tab then
+			gui.set_color(node, self.color_active)
+			-- Можно даже немного увеличить активную кнопку
+			gui.animate(node, "scale", vmath.vector3(1.1, 1.1, 1), gui.EASING_OUTQUAD, 0.2)
+		else
+			gui.set_color(node, self.color_inactive)
+			gui.animate(node, "scale", vmath.vector3(1, 1, 1), gui.EASING_OUTQUAD, 0.2)
+		end
+	end
+end
+
 local function update_progress_bar(node_name, current, max)
 	local progress_node = gui.get_node(node_name)
 	if node_name == "health_fill" then
@@ -15,23 +28,17 @@ local function update_progress_bar(node_name, current, max)
 			gui.set_text(health_node, current .. "/" .. max)
 		end
 	end
-	-- Вычисляем процент заполнения (от 0 до 1)
-	local ratio = current / max
-	if ratio < 0 then ratio = 0 end
-	if ratio > 1 then ratio = 1 end
-	print(ratio)
-	-- Анимируем изменение полоски для плавности
-	gui.animate(progress_node, "scale.x", ratio, gui.EASING_OUTQUAD, 0.3)
 
-	-- Можно менять цвет: чем меньше ХП, тем краснее
-	local color = vmath.vector4(1 - ratio, ratio, 0, 1) -- От красного к зеленому
+	local ratio = current / max
+	ratio = math.min(math.max(ratio, 0), 1)
+
+	gui.animate(progress_node, "scale.x", ratio, gui.EASING_OUTQUAD, 0.3)
+	local color = vmath.vector4(1 - ratio, ratio, 0, 1) 
 	gui.set_color(progress_node, color)
 end
--- Подгонка текста под ширину кнопки
-local function fit_text(text_node, max_width)
-	-- ИСПОЛЬЗУЕМ ПРАВИЛЬНОЕ ИМЯ: gui.get_text_metrics
-	local metrics = gui.get_text_metrics(gui.get_font(text_node), gui.get_text(text_node))
 
+local function fit_text(text_node, max_width)
+	local metrics = gui.get_text_metrics(gui.get_font(text_node), gui.get_text(text_node))
 	if metrics.width > max_width then
 		local scale_factor = max_width / metrics.width
 		gui.set_scale(text_node, vmath.vector3(scale_factor, scale_factor, 1))
@@ -44,16 +51,12 @@ end
 
 local function clear_tab_content(self)
 	if self.upgrade_buttons then
-		for _, btn in ipairs(self.upgrade_buttons) do 
-			self.druid:remove(btn) 
-		end
+		for _, btn in ipairs(self.upgrade_buttons) do self.druid:remove(btn) end
 	end
 	self.upgrade_buttons = {}
 
 	for _, nodes in ipairs(self.spawned_upgrade_nodes or {}) do
-		for _, node in pairs(nodes) do 
-			gui.delete_node(node) 
-		end
+		for _, node in pairs(nodes) do gui.delete_node(node) end
 	end
 	self.spawned_upgrade_nodes = {}
 	self.upgrade_items = {}
@@ -61,16 +64,12 @@ end
 
 local function clear_purchase_panel(self)
 	if self.purchase_buttons then
-		for _, btn in ipairs(self.purchase_buttons) do 
-			self.druid:remove(btn) 
-		end
+		for _, btn in ipairs(self.purchase_buttons) do self.druid:remove(btn) end
 	end
 	self.purchase_buttons = {}
 
 	for _, nodes in ipairs(self.spawned_purchase_nodes or {}) do
-		for _, node in pairs(nodes) do 
-			gui.delete_node(node) 
-		end
+		for _, node in pairs(nodes) do gui.delete_node(node) end
 	end
 	self.spawned_purchase_nodes = {}
 	self.turret_buy_data = {}
@@ -80,20 +79,14 @@ end
 
 local function add_purchase_button(self, turret_id, turret_data, index)
 	local template = gui.get_node("btn_buy_turret")
-	if not template then return end
-
 	local nodes = gui.clone_tree(template)
 	table.insert(self.spawned_purchase_nodes, nodes)
 
 	local root = nodes[hash("btn_buy_turret")]
-	local left_panel = gui.get_node("left_panel_node")
-	if not left_panel or not root then return end
-
-	gui.set_parent(root, left_panel)
+	gui.set_parent(root, gui.get_node("left_panel_node"))
 	gui.set_enabled(root, true)
 	gui.set_visible(root, true)
 
-	-- Текст и подгонка
 	local name_node = nodes[hash("turret_name")]
 	gui.set_text(name_node, "BUY " .. turret_id:upper())
 	fit_text(name_node, MAX_TEXT_WIDTH)
@@ -103,28 +96,20 @@ local function add_purchase_button(self, turret_id, turret_data, index)
 
 	self.turret_buy_data[turret_id] = { nodes = nodes, price = turret_data.price }
 
-	local btn = self.druid:new_button(root, function() 
-		self:buy_turret(turret_id) 
-	end)
+	local btn = self.druid:new_button(root, function() self:buy_turret(turret_id) end)
 	table.insert(self.purchase_buttons, btn)
 end
 
 local function add_upgrade_item(self, title, price, callback, index)
 	local template = gui.get_node("btn_buy_turret")
-	if not template then return end
-
 	local nodes = gui.clone_tree(template)
 	table.insert(self.spawned_upgrade_nodes, nodes)
-
+	poki.gameplay_start()
 	local root = nodes[hash("btn_buy_turret")]
-	local content_node = gui.get_node("content_node")
-	if not content_node or not root then return end
-
-	gui.set_parent(root, content_node)
+	gui.set_parent(root, gui.get_node("content_node"))
 	gui.set_enabled(root, true)
 	gui.set_visible(root, true)
 
-	-- Текст и подгонка
 	local name_node = nodes[hash("turret_name")]
 	gui.set_text(name_node, title)
 	fit_text(name_node, MAX_TEXT_WIDTH)
@@ -141,9 +126,8 @@ end
 --- 4. ЛОГИКА ПАНЕЛЕЙ ---
 
 local function update_purchase_panel(self)
-	--clear_purchase_panel(self)
-	local turret_order = {"blaster", "sniper", "rocket", "laser", "plasma", "laser2"}
 
+	local turret_order = {"blaster", "sniper", "rocket", "laser", "plasma", "laser2"}
 	for i, id in ipairs(turret_order) do
 		local turret = prog.data.turrets[id]
 		if turret and not turret.owned then
@@ -158,7 +142,6 @@ local function build_turret_upgrades(self)
 	local count = 0
 	for id, turret in pairs(prog.data.turrets) do
 		if turret.owned then
-			-- Апгрейд Урона
 			local dmg_price = math.floor(turret.price * 0.5 * (1.2 ^ (turret.level_dmg or 1)))
 			add_upgrade_item(self, id:upper() .. " DMG Lvl." .. (turret.level_dmg or 1), dmg_price, function()
 				if prog.data.gold >= dmg_price then
@@ -169,56 +152,59 @@ local function build_turret_upgrades(self)
 				end
 			end, count)
 			count = count + 1
+		end
+	end
+end
 
-			-- Апгрейд Скорострельности
-			local rate_price = math.floor(turret.price * 0.4 * (1.25 ^ (turret.level_rate or 1)))
-			add_upgrade_item(self, id:upper() .. " RATE Lvl." .. (turret.level_rate or 1), rate_price, function()
-				if prog.data.gold >= rate_price then
-					prog.data.gold = prog.data.gold - rate_price
-					turret.level_rate = (turret.level_rate or 1) + 1
-					self:refresh_tab("turrets")
+-- НОВАЯ ПАНЕЛЬ ОРБИТ
+local function build_orbits_panel(self)
+	clear_tab_content(self)
+	local count = 0
+	-- Ищем первую закрытую орбиту
+	local orbit_order = {"or1", "or2", "or3", "or4", "or5", "or6"}
+	for _, key in ipairs(orbit_order) do
+		local orbit = prog.data.orbits_data[key]
+		if orbit and not orbit.unlocked then
+			add_upgrade_item(self, "UNLOCK ORBIT " .. key:upper(), orbit.price, function()
+				if prog.data.gold >= orbit.price then
+					prog.data.gold = prog.data.gold - orbit.price
+					msg.post("main:/orbit_controller#orbit_controller", "unlock_orbit", { key = key })
+					self:refresh_tab("orbits")
 					self:update_balance()
 				end
 			end, count)
 			count = count + 1
+			break -- Показываем только следующую по очереди
 		end
 	end
 end
 
 local function update_button_colors(self)
 	local gold = prog.data.gold or 0
-
 	for id, data in pairs(self.turret_buy_data or {}) do
-		local can_afford = gold >= data.price
-		local color = can_afford and vmath.vector4(1, 1, 1, 1) or vmath.vector4(1, 0, 0, 1)
-		if data.nodes and data.nodes[hash("turret_price")] then
-			gui.set_color(data.nodes[hash("turret_price")], color)
-		end
+		local color = gold >= data.price and vmath.vector4(1, 1, 1, 1) or vmath.vector4(1, 0, 0, 1)
+		gui.set_color(data.nodes[hash("turret_price")], color)
 	end
-
 	for _, item in ipairs(self.upgrade_items or {}) do
-		local can_afford = gold >= item.price
-		local color = can_afford and vmath.vector4(1, 1, 1, 1) or vmath.vector4(1, 0, 0, 1)
-		if item.nodes and item.nodes[hash("turret_price")] then
-			gui.set_color(item.nodes[hash("turret_price")], color)
-		end
+		local color = gold >= item.price and vmath.vector4(1, 1, 1, 1) or vmath.vector4(1, 0, 0, 1)
+		gui.set_color(item.nodes[hash("turret_price")], color)
 	end
 end
 
 local function update_balance(self)
 	local coin_node = gui.get_node("coin_balance_txt")
-	if coin_node then
-		gui.set_text(coin_node, prog.format_num(prog.data.gold or 0) .. " 💰")
-	end
+	if coin_node then gui.set_text(coin_node, prog.format_num(prog.data.gold or 0) .. " 💰") end
 	self:update_button_colors()
 end
 
 local function toggle_menu(self)
 	self.is_menu_open = not self.is_menu_open
 	local root = gui.get_node("root")
-
 	gui.set_enabled(root, self.is_menu_open)
 	gui.set_visible(root, self.is_menu_open)
+
+	-- Пауза при открытии меню (опционально)
+	-- msg.post("@system:", "set_time_step", {factor = self.is_menu_open and 0 or 1, mode = 0})
 
 	if self.is_menu_open then
 		self:update_purchase_panel() 
@@ -229,27 +215,20 @@ end
 
 local function refresh_tab(self, tab_name)
 	self.current_tab = tab_name
-
-	if tab_name == "turrets" then
-		build_turret_upgrades(self)
-	elseif tab_name == "economy" then
-		clear_tab_content(self)
-		-- build_economy_panel(self)
-	elseif tab_name == "orbits" then
-		clear_tab_content(self)
-		-- build_orbits_panel(self)
-	end
+	if tab_name == "turrets" then build_turret_upgrades(self)
+	elseif tab_name == "orbits" then build_orbits_panel(self)
+	elseif tab_name == "economy" then clear_tab_content(self) end
 
 	local total_height = #self.spawned_upgrade_nodes * DIMS
 	self.scroll:set_size(vmath.vector3(400, math.max(total_height, 1), 0))
 	self:update_button_colors()
+
+	update_tab_highlights(self)
 end
 
 local function buy_turret(self, turret_id)
 	local turret = prog.data.turrets[turret_id]
-	if not turret then return end
-
-	if prog.data.gold >= turret.price then
+	if turret and prog.data.gold >= turret.price then
 		prog.data.gold = prog.data.gold - turret.price
 		turret.owned = true
 		msg.post("main:/orbit_controller#orbit_controller", "upgrade_purchased", { id = turret_id })
@@ -258,8 +237,6 @@ local function buy_turret(self, turret_id)
 		self:update_balance()
 	end
 end
-
---- 5. ИНИЦИАЛИЗАЦИЯ И СИСТЕМА ---
 
 function init(self)
 	self.update_balance = update_balance
@@ -270,7 +247,6 @@ function init(self)
 	self.update_purchase_panel = update_purchase_panel
 
 	msg.post(".", "acquire_input_focus")
-
 	self.druid = druid.new(self)
 	self.scroll = self.druid:new_scroll("view_port", "content_node")
 
@@ -283,17 +259,32 @@ function init(self)
 	self.is_menu_open = false
 	self.current_tab = "turrets"
 
+	self.tab_nodes = {
+		orbits = gui.get_node("btn_tab_orbits"),
+		turrets = gui.get_node("btn_tab_turrets"),
+		economy = gui.get_node("btn_tab_economy")
+	}
+
+	-- Цвета для подсветки
+	self.color_active = vmath.vector4(1, 1, 1, 1)      -- Белый/Яркий
+	self.color_inactive = vmath.vector4(0.5, 0.5, 0.5, 1) -- Серый
+
 	self.druid:new_button("btn_tab_orbits", function() self:refresh_tab("orbits") end)
 	self.druid:new_button("btn_tab_turrets", function() self:refresh_tab("turrets") end)
 	self.druid:new_button("btn_tab_economy", function() self:refresh_tab("economy") end)
 	self.druid:new_button("btn_toggle_menu", function() self:toggle_menu() end)
-	local hp = prog.data.economy.planet_hp
-	local max_hp = 100 -- Твой максимум
-	update_progress_bar("health_fill", hp, max_hp)
-	
-	local root = gui.get_node("root")
-	gui.set_enabled(root, false)
-	gui.set_visible(root, false)
+
+	-- В init или там, где создаешь кнопку Druid
+	self.druid:new_button("btn_restart", function() 
+		print("Кнопка РЕСТАРТ нажата вручную!") -- Добавь этот текст
+		msg.post("loader:/loader#loader", "restart_game")
+		poki.gameplay_start()
+		prog.reset_progress()
+	end)
+
+	update_progress_bar("health_fill", prog.data.economy.planet_hp, 100)
+	gui.set_enabled(gui.get_node("root"), false)
+	gui.set_enabled(gui.get_node("defeat_root"), false) -- Скрываем экран смерти
 
 	self:update_purchase_panel()
 	self:update_balance()
@@ -310,17 +301,32 @@ end
 function on_message(self, message_id, message, sender)
 	if message_id == hash("refresh_balance") then
 		self:update_balance()
-		if self.is_menu_open then 
-			self:refresh_tab(self.current_tab) 
-		end
-		elseif message_id == hash("update_planet_hp") then
-			-- Допустим, данные лежат в prog.data.economy
-			local hp = prog.data.economy.planet_hp
-			local max_hp = 100 -- Твой максимум
+		if self.is_menu_open then self:refresh_tab(self.current_tab) end
 
-			update_progress_bar("health_fill", hp, max_hp)
-		elseif message_id == hash("update_wave_progress") then
-			local node = gui.get_node("wave_fill")
-			gui.animate(node, "scale.x", message.ratio, gui.EASING_OUTQUAD, 0.5)
+	elseif message_id == hash("update_planet_hp") then
+		local current_hp = prog.data.economy.planet_hp
+
+		-- ОБНОВЛЯЕМ ШКАЛУ
+		update_progress_bar("health_fill", current_hp, 100)
+
+		
+
+	elseif message_id == hash("show_defeat") then
+		if not self.defeat_active then
+			self.defeat_active = true
+			gui.set_enabled(gui.get_node("defeat_root"), true)
+			-- Останавливаем логику через флаг в модуле
+			prog.is_paused = true 
+			poki.gameplay_stop()
 		end
+
+
+	elseif message_id == hash("update_wave_progress") then
+		local node = gui.get_node("wave_fill")
+		gui.animate(node, "scale.x", message.ratio, gui.EASING_OUTQUAD, 0.5)
+
+	elseif message_id == hash("update_wave_number") then
+		local wave_node = gui.get_node("wave_txt")
+		if wave_node then gui.set_text(wave_node, "WAVE " .. message.wave) end
+	end
 end

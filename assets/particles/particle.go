@@ -1,8 +1,8 @@
 components {
-  id: "pink"
-  component: "/assets/particles/pink.particlefx"
+  id: "pink_copy"
+  component: "/assets/particles/pink_copy.particlefx"
 }
 components {
-  id: "particle_manager"
-  component: "/assets/particles/particle_manager.script"
+  id: "particle_manager_copy"
+  component: "/assets/particles/particle_manager_copy.script"
 }

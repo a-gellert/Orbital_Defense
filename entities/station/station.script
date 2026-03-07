@@ -12,7 +12,7 @@ function init(self)
 	go.animate("#sprite", "tint.w", go.PLAYBACK_LOOP_PINGPONG, self.min_alpha, go.EASING_INOUTSINE, self.speed)
 
 	-- Подписка на сообщения от триггера
-	msg.post(".", "acquire_input_focus")
+	--	msg.post(".", "acquire_input_focus")
 end
 
 

@@ -4,6 +4,14 @@ instances {
   prototype: "/entities/orbit_controller/orbit_controller.go"
 }
 instances {
+  id: "planet1"
+  prototype: "/entities/planet/planet.go"
+}
+instances {
+  id: "particle"
+  prototype: "/assets/particles/particle.go"
+}
+instances {
   id: "camera"
   prototype: "/rendercam/camera.go"
   component_properties {
@@ -40,25 +48,13 @@ instances {
     }
   }
 }
-instances {
-  id: "planet1"
-  prototype: "/entities/planet/planet.go"
-}
 scale_along_z: 0
 embedded_instances {
   id: "planet"
   data: ""
 }
 embedded_instances {
-  id: "orbit_inner"
-  data: ""
-}
-embedded_instances {
-  id: "orbit_middle"
-  data: ""
-}
-embedded_instances {
-  id: "orbit_outer"
+  id: "orbit_1"
   data: ""
 }
 embedded_instances {
@@ -92,10 +88,31 @@ embedded_instances {
   ""
 }
 embedded_instances {
-  id: "orbit_outer2"
+  id: "orbit_2"
   data: ""
 }
 embedded_instances {
-  id: "orbit_middle1"
+  id: "orbit_3"
   data: ""
+}
+embedded_instances {
+  id: "orbit_4"
+  data: ""
+}
+embedded_instances {
+  id: "orbit_5"
+  data: ""
+}
+embedded_instances {
+  id: "orbit_6"
+  data: ""
+}
+embedded_instances {
+  id: "camera_root"
+  children: "camera"
+  data: "components {\n"
+  "  id: \"camera_shake\"\n"
+  "  component: \"/main/camera_shake.script\"\n"
+  "}\n"
+  ""
 }

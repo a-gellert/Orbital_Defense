@@ -3,6 +3,10 @@ fonts {
   name: "druid_text_bold"
   font: "/druid/fonts/druid_text_bold.font"
 }
+textures {
+  name: "all"
+  texture: "/assets/all.atlas"
+}
 nodes {
   position {
     x: 680.0
@@ -37,7 +41,7 @@ nodes {
     y: -60.0
   }
   size {
-    x: 190.0
+    x: 198.0
     y: 100.0
   }
   type: TYPE_BOX
@@ -47,11 +51,23 @@ nodes {
   size_mode: SIZE_MODE_AUTO
 }
 nodes {
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  type: TYPE_TEXT
+  text: "ORBITS"
+  font: "druid_text_bold"
+  id: "orbits_txt"
+  parent: "btn_tab_orbits"
+  inherit_alpha: true
+}
+nodes {
   position {
     y: -60.0
   }
   size {
-    x: 190.0
+    x: 198.0
     y: 100.0
   }
   type: TYPE_BOX
@@ -61,12 +77,24 @@ nodes {
   size_mode: SIZE_MODE_AUTO
 }
 nodes {
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  type: TYPE_TEXT
+  text: "TURRETS"
+  font: "druid_text_bold"
+  id: "turrets_txt"
+  parent: "btn_tab_turrets"
+  inherit_alpha: true
+}
+nodes {
   position {
     x: 200.0
     y: -60.0
   }
   size {
-    x: 190.0
+    x: 198.0
     y: 100.0
   }
   type: TYPE_BOX
@@ -74,6 +102,18 @@ nodes {
   parent: "tabs"
   inherit_alpha: true
   size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  type: TYPE_TEXT
+  text: "PLANET"
+  font: "druid_text_bold"
+  id: "planet_txt"
+  parent: "btn_tab_economy"
+  inherit_alpha: true
 }
 nodes {
   position {
@@ -205,12 +245,13 @@ nodes {
 }
 nodes {
   size {
-    x: 200.0
+    x: 180.0
     y: 100.0
   }
   color {
+    x: 0.101960786
     y: 0.2
-    z: 0.33333334
+    z: 0.6
   }
   type: TYPE_BOX
   id: "btn_buy_turret"
@@ -235,6 +276,7 @@ nodes {
 }
 nodes {
   position {
+    x: 18.0
     y: -25.0
   }
   size {
@@ -242,11 +284,29 @@ nodes {
     y: 50.0
   }
   type: TYPE_TEXT
-  text: "300"
+  text: "300000\n"
+  ""
   font: "druid_text_bold"
   id: "turret_price"
+  pivot: PIVOT_E
   parent: "btn_buy_turret"
   inherit_alpha: true
+}
+nodes {
+  position {
+    x: 47.0
+    y: -26.0
+  }
+  scale {
+    x: 0.5
+    y: 0.5
+  }
+  type: TYPE_BOX
+  texture: "all/coin"
+  id: "box1"
+  parent: "btn_buy_turret"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
 }
 nodes {
   position {
@@ -267,27 +327,32 @@ nodes {
     y: 228.0
   }
   size {
-    x: 200.0
+    x: 180.0
     y: 100.0
   }
   color {
-    y: 0.2
-    z: 0.33333334
+    x: 0.2
+    y: 0.101960786
+    z: 0.5019608
   }
   type: TYPE_BOX
   id: "btn_toggle_menu"
   parent: "left_panel"
   inherit_alpha: true
   size_mode: SIZE_MODE_AUTO
-  enabled: false
 }
 nodes {
+  scale {
+    x: 0.8
+    y: 0.8
+  }
   size {
     x: 200.0
     y: 100.0
   }
   type: TYPE_TEXT
-  text: "<text>"
+  text: "UPGRADES\n"
+  ""
   font: "druid_text_bold"
   id: "text"
   parent: "btn_toggle_menu"
@@ -318,9 +383,9 @@ nodes {
     y: 100.0
   }
   color {
-    x: 0.9019608
-    y: 0.9019608
-    z: 0.7019608
+    x: 0.101960786
+    y: 0.3019608
+    z: 0.3019608
   }
   type: TYPE_BOX
   id: "header"
@@ -332,19 +397,15 @@ nodes {
     x: -282.0
   }
   size {
-    x: 200.0
+    x: 64.0
     y: 100.0
-  }
-  color {
-    x: 0.0
-    y: 0.0
-    z: 0.0
   }
   type: TYPE_TEXT
   text: "100\n"
   ""
   font: "druid_text_bold"
   id: "coin_balance_txt"
+  pivot: PIVOT_E
   parent: "header"
   inherit_alpha: true
 }
@@ -398,6 +459,21 @@ nodes {
 }
 nodes {
   position {
+    x: -236.0
+  }
+  scale {
+    x: 0.7
+    y: 0.7
+  }
+  type: TYPE_BOX
+  texture: "all/coin"
+  id: "box2"
+  parent: "header"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
     x: 118.0
     y: 1800.0
   }
@@ -447,6 +523,69 @@ nodes {
   pivot: PIVOT_W
   adjust_mode: ADJUST_MODE_STRETCH
   parent: "wave_bg"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  type: TYPE_TEXT
+  text: "<text>"
+  font: "druid_text_bold"
+  id: "wave_txt"
+  parent: "wave_bg"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    x: 540.0
+    y: 960.0
+  }
+  size {
+    x: 1080.0
+    y: 1920.0
+  }
+  color {
+    x: 0.9019608
+    y: 0.3019608
+    z: 0.3019608
+  }
+  type: TYPE_BOX
+  id: "defeat_root"
+  adjust_mode: ADJUST_MODE_STRETCH
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+  enabled: false
+}
+nodes {
+  position {
+    y: 285.0
+  }
+  scale {
+    x: 3.0
+    y: 3.0
+  }
+  size {
+    x: 100.0
+    y: 100.0
+  }
+  type: TYPE_TEXT
+  text: "GAME OVER"
+  font: "druid_text_bold"
+  id: "game_over_txt"
+  parent: "defeat_root"
+  inherit_alpha: true
+}
+nodes {
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  type: TYPE_BOX
+  id: "btn_restart"
+  parent: "defeat_root"
   inherit_alpha: true
   size_mode: SIZE_MODE_AUTO
 }
