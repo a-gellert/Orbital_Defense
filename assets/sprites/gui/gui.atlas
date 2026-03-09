@@ -1,0 +1,13 @@
+images {
+  image: "/assets/sprites/gui/coin.png"
+}
+images {
+  image: "/assets/sprites/gui/g_blue_btn.png"
+}
+images {
+  image: "/assets/sprites/gui/g_green_btn.png"
+}
+images {
+  image: "/assets/sprites/gui/g_play.png"
+}
+extrude_borders: 2

@@ -8,6 +8,7 @@ local MAX_TEXT_WIDTH = 150
 
 --- 1. ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ---
 local function update_tab_highlights(self)
+	if prog.is_paused then return end
 	for name, node in pairs(self.tab_nodes) do
 		if name == self.current_tab then
 			gui.set_color(node, self.color_active)
@@ -104,7 +105,7 @@ local function add_upgrade_item(self, title, price, callback, index)
 	local template = gui.get_node("btn_buy_turret")
 	local nodes = gui.clone_tree(template)
 	table.insert(self.spawned_upgrade_nodes, nodes)
-	poki.gameplay_start()
+	--poki.gameplay_start()
 	local root = nodes[hash("btn_buy_turret")]
 	gui.set_parent(root, gui.get_node("content_node"))
 	gui.set_enabled(root, true)
@@ -198,6 +199,7 @@ local function update_balance(self)
 end
 
 local function toggle_menu(self)
+	if prog.is_paused then return end
 	self.is_menu_open = not self.is_menu_open
 	local root = gui.get_node("root")
 	gui.set_enabled(root, self.is_menu_open)
@@ -227,6 +229,7 @@ local function refresh_tab(self, tab_name)
 end
 
 local function buy_turret(self, turret_id)
+	if prog.is_paused then return end
 	local turret = prog.data.turrets[turret_id]
 	if turret and prog.data.gold >= turret.price then
 		prog.data.gold = prog.data.gold - turret.price
@@ -250,6 +253,7 @@ function init(self)
 	self.druid = druid.new(self)
 	self.scroll = self.druid:new_scroll("view_port", "content_node")
 
+	self.druid:new_blocker("play_panel")
 	self.spawned_purchase_nodes = {}
 	self.spawned_upgrade_nodes = {}
 	self.purchase_buttons = {}
@@ -258,7 +262,9 @@ function init(self)
 	self.upgrade_items = {}
 	self.is_menu_open = false
 	self.current_tab = "turrets"
-
+	local node = gui.get_node("play_visual")
+	-- Порядок: node, property, to, easing, duration, [delay], [callback], [playback]
+	gui.animate(node, gui.PROP_SCALE, vmath.vector3(1.2, 1.2, 1), go.EASING_INOUTSINE, 2.2, 0, nil, gui.PLAYBACK_LOOP_PINGPONG)
 	self.tab_nodes = {
 		orbits = gui.get_node("btn_tab_orbits"),
 		turrets = gui.get_node("btn_tab_turrets"),
@@ -273,13 +279,25 @@ function init(self)
 	self.druid:new_button("btn_tab_turrets", function() self:refresh_tab("turrets") end)
 	self.druid:new_button("btn_tab_economy", function() self:refresh_tab("economy") end)
 	self.druid:new_button("btn_toggle_menu", function() self:toggle_menu() end)
-
+	
+	self.druid:new_button("play_btn", function()
+		poki.gameplay_start()
+		prog.is_paused = false
+		-- Или просто скрываем меню
+		gui.set_enabled(gui.get_node("play_panel"), false)
+	end)
 	-- В init или там, где создаешь кнопку Druid
 	self.druid:new_button("btn_restart", function() 
-		print("Кнопка РЕСТАРТ нажата вручную!") -- Добавь этот текст
-		msg.post("loader:/loader#loader", "restart_game")
+		gui.set_enabled(gui.get_node("defeat_root"), false)
+
+		-- Сообщаем Poki, что игрок вернулся в геймплей
 		poki.gameplay_start()
+
+		self.defeat_active = false
 		prog.reset_progress()
+
+		-- ИСПРАВЛЕНО: правильный путь к скрипту лоадера
+		msg.post("loader:/loader#script", "restart_game")
 	end)
 
 	update_progress_bar("health_fill", prog.data.economy.planet_hp, 100)

@@ -4,8 +4,8 @@ fonts {
   font: "/druid/fonts/druid_text_bold.font"
 }
 textures {
-  name: "all"
-  texture: "/assets/all.atlas"
+  name: "gui"
+  texture: "/assets/sprites/gui/gui.atlas"
 }
 nodes {
   position {
@@ -302,7 +302,7 @@ nodes {
     y: 0.5
   }
   type: TYPE_BOX
-  texture: "all/coin"
+  texture: "gui/coin"
   id: "box1"
   parent: "btn_buy_turret"
   inherit_alpha: true
@@ -400,6 +400,11 @@ nodes {
     x: 64.0
     y: 100.0
   }
+  color {
+    x: 0.63529414
+    y: 0.9647059
+    z: 0.6666667
+  }
   type: TYPE_TEXT
   text: "100\n"
   ""
@@ -466,7 +471,7 @@ nodes {
     y: 0.7
   }
   type: TYPE_BOX
-  texture: "all/coin"
+  texture: "gui/coin"
   id: "box2"
   parent: "header"
   inherit_alpha: true
@@ -587,6 +592,61 @@ nodes {
   id: "btn_restart"
   parent: "defeat_root"
   inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  type: TYPE_TEXT
+  text: "RESTART"
+  font: "druid_text_bold"
+  id: "text1"
+  parent: "btn_restart"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    x: 540.0
+    y: 960.0
+  }
+  size {
+    x: 1080.0
+    y: 1920.0
+  }
+  color {
+    x: 0.0
+    y: 0.2
+    z: 0.2
+  }
+  type: TYPE_BOX
+  id: "play_panel"
+  adjust_mode: ADJUST_MODE_STRETCH
+  inherit_alpha: true
+  alpha: 0.82
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    y: -300.0
+  }
+  scale {
+    x: 3.0
+    y: 3.0
+  }
+  type: TYPE_BOX
+  texture: "gui/g_play"
+  id: "play_btn"
+  parent: "play_panel"
+  alpha: 0.0
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  type: TYPE_BOX
+  texture: "gui/g_play"
+  id: "play_visual"
+  parent: "play_btn"
   size_mode: SIZE_MODE_AUTO
 }
 material: "/builtins/materials/gui.material"

@@ -41,6 +41,6 @@ images {
   image: "/assets/sprites/t_racket.png"
 }
 images {
-  image: "/assets/sprites/coin.png"
+  image: "/assets/sprites/gui/coin.png"
 }
 extrude_borders: 2

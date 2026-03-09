@@ -42,3 +42,9 @@ dependencies#3 = https://github.com/defold/extension-poki-sdk/archive/refs/tags/
 [sprite]
 max_count = 2048
 
+[particle_fx]
+max_count = 256
+max_emitter_count = 256
+max_particle_count = 2048
+max_particle_buffer_count = 2048
+

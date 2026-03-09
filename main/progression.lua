@@ -3,7 +3,7 @@ local M = {}
 M.data = {
 	gold = 100, -- Дадим немного денег на старт для теста
 	diamonds = 0,
-	is_paused =false,
+	is_paused =true,
 	-- Состояние турелей
 	turrets = {
 		blaster = { unlocked = true, level_dmg = 1, level_rate = 1, price = 100 },
@@ -56,6 +56,7 @@ function M.reset_progress()
 
 	print("🧹 Прогресс сброшен")
 end
+M.is_paused = true
 -- Формула сокращения чисел
 function M.format_num(n)
 	if not n then return "0" end

@@ -67,6 +67,7 @@ end
 function update(self, dt)
 	if self.is_dead then return end
 	if prog.is_paused then return end
+	
 	local my_pos = go.get_position()
 	local to_target = self.target_pos - my_pos
 	local dist = vmath.length(to_target)

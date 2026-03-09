@@ -18,10 +18,7 @@ function on_message(self, message_id, message, sender)
 		-- СБРАСЫВАЕМ HP И ЗОЛОТО ЗДЕСЬ!
 		if prog.reset_progress then 
 			prog.reset_progress() 
-		else
-			-- Если функции нет, хотя бы вручную:
-			prog.data.economy.planet_hp = 100
-			prog.is_paused = false
+
 		end
 		msg.post("#game_proxy", "unload")
 
