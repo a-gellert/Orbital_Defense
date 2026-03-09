@@ -310,21 +310,24 @@ nodes {
 }
 nodes {
   position {
-    x: 128.0
-    y: 1561.0
+    x: 20.0
+    y: 1370.0
   }
   size {
     x: 200.0
-    y: 600.0
+    y: 1000.0
   }
   type: TYPE_BOX
   id: "left_panel"
+  pivot: PIVOT_W
   inherit_alpha: true
+  alpha: 0.17
   size_mode: SIZE_MODE_AUTO
 }
 nodes {
   position {
-    y: 228.0
+    x: 100.0
+    y: 400.0
   }
   size {
     x: 180.0
@@ -338,7 +341,6 @@ nodes {
   type: TYPE_BOX
   id: "btn_toggle_menu"
   parent: "left_panel"
-  inherit_alpha: true
   size_mode: SIZE_MODE_AUTO
 }
 nodes {
@@ -360,7 +362,8 @@ nodes {
 }
 nodes {
   position {
-    y: 128.0
+    x: 100.0
+    y: 256.0
   }
   size {
     x: 1.0
@@ -369,7 +372,6 @@ nodes {
   type: TYPE_BOX
   id: "left_panel_node"
   parent: "left_panel"
-  inherit_alpha: true
   size_mode: SIZE_MODE_AUTO
   visible: false
 }

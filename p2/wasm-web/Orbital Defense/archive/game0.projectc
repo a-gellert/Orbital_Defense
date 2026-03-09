@@ -190,10 +190,10 @@ scale_mode = stretch
 transparent_graphics_context = 0
 
 [particle_fx]
-max_particle_count = 1024
-max_particle_buffer_count = 1024
-max_count = 64
-max_emitter_count = 64
+max_particle_count = 2048
+max_particle_buffer_count = 2048
+max_count = 256
+max_emitter_count = 256
 
 [network]
 http_timeout = 0
