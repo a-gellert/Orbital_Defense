@@ -1,0 +1,23 @@
+-- damage_label.script
+go.property("value", 0)
+go.property("color", vmath.vector4(1, 1, 1, 1))
+
+function init(self)
+	-- Устанавливаем текст (число урона)
+	label.set_text("#label", tostring(math.floor(self.value)))
+	go.set_rotation(vmath.quat(0,0,0,0))
+	-- Устанавливаем цвет (например, красный для игрока, желтый для крита)
+	go.set("#label", "color", self.color)
+
+	-- Анимация: Взлет вверх и исчезновение
+	local p = go.get_position()
+	local target_p = p + vmath.vector3(math.random(-30, 30), 100, 0) -- Немного в разброс
+
+	-- Плавный подъем
+	go.animate(".", "position", go.PLAYBACK_ONCE_FORWARD, target_p, go.EASING_OUTQUAD, 0.6)
+
+	-- Плавное исчезновение (альфа-канал)
+	go.animate("#label", "color.w", go.PLAYBACK_ONCE_FORWARD, 0, go.EASING_INSINE, 0.6, 0, function()
+		go.delete() -- Удаляем объект после завершения
+	end)
+end

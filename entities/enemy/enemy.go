@@ -54,3 +54,9 @@ embedded_components {
   data: "prototype: \"/assets/particles/destroy.go\"\n"
   ""
 }
+embedded_components {
+  id: "damage_factory"
+  type: "factory"
+  data: "prototype: \"/entities/damage_label/damage_label.go\"\n"
+  ""
+}

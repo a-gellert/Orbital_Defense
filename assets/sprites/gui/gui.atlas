@@ -10,4 +10,7 @@ images {
 images {
   image: "/assets/sprites/gui/g_play.png"
 }
+images {
+  image: "/assets/sprites/gui/back.png"
+}
 extrude_borders: 2

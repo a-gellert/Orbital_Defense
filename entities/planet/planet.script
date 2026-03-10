@@ -89,7 +89,7 @@ function on_message(self, message_id, message, sender)
 			go.set("#sprite", "tint", vmath.vector4(2, 0.5, 0.5, 1))
 			go.animate("#sprite", "tint", go.PLAYBACK_ONCE_FORWARD, vmath.vector4(1,1,1,1), go.EASING_LINEAR, 0.2)
 
-			msg.post("main:/camera_root#camera_shake", "shake", { intensity = 7, duration = 0.3 })
+			msg.post("main:/camera_root#camera_shake", "shake", { intensity = 10, duration = 0.4 })
 			-- Убиваем врага
 			msg.post(message.other_id, "die_from_crash")
 			msg.post("main:/gui#game", "update_planet_hp")

@@ -18,6 +18,7 @@ nodes {
   }
   type: TYPE_BOX
   id: "root"
+  xanchor: XANCHOR_LEFT
   inherit_alpha: true
   alpha: 0.0
   size_mode: SIZE_MODE_AUTO
@@ -310,7 +311,7 @@ nodes {
 }
 nodes {
   position {
-    x: 20.0
+    x: 30.0
     y: 1370.0
   }
   size {
@@ -319,6 +320,7 @@ nodes {
   }
   type: TYPE_BOX
   id: "left_panel"
+  xanchor: XANCHOR_LEFT
   pivot: PIVOT_W
   inherit_alpha: true
   alpha: 0.17
@@ -386,8 +388,8 @@ nodes {
   }
   color {
     x: 0.101960786
-    y: 0.3019608
-    z: 0.3019608
+    y: 0.2
+    z: 0.6
   }
   type: TYPE_BOX
   id: "header"
@@ -403,9 +405,8 @@ nodes {
     y: 100.0
   }
   color {
-    x: 0.63529414
-    y: 0.9647059
-    z: 0.6666667
+    y: 0.8
+    z: 0.8
   }
   type: TYPE_TEXT
   text: "100\n"
@@ -418,7 +419,7 @@ nodes {
 }
 nodes {
   size {
-    x: 200.0
+    x: 300.0
     y: 50.0
   }
   color {
@@ -434,10 +435,10 @@ nodes {
 }
 nodes {
   position {
-    x: -97.5
+    x: -145.5
   }
   size {
-    x: 195.0
+    x: 290.0
     y: 45.0
   }
   color {
@@ -501,7 +502,7 @@ nodes {
   }
   size {
     x: 720.0
-    y: 70.0
+    y: 80.0
   }
   type: TYPE_BOX
   id: "wave_bg"
@@ -517,12 +518,12 @@ nodes {
   }
   size {
     x: 710.0
-    y: 65.0
+    y: 75.0
   }
   color {
-    x: 0.101960786
-    y: 0.0
-    z: 0.40784314
+    x: 0.8
+    y: 0.4
+    z: 0.2
   }
   type: TYPE_BOX
   id: "wave_fill"
@@ -539,7 +540,7 @@ nodes {
     y: 100.0
   }
   type: TYPE_TEXT
-  text: "<text>"
+  text: "WAVE 1"
   font: "druid_text_bold"
   id: "wave_txt"
   parent: "wave_bg"
@@ -628,6 +629,7 @@ nodes {
   inherit_alpha: true
   alpha: 0.82
   size_mode: SIZE_MODE_AUTO
+  enabled: false
 }
 nodes {
   position {

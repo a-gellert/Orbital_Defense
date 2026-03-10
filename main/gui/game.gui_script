@@ -201,7 +201,12 @@ end
 
 local function update_balance(self)
 	local coin_node = gui.get_node("coin_balance_txt")
-	if coin_node then gui.set_text(coin_node, prog.format_num(prog.data.gold or 0) .. " 💰") end
+	if coin_node then 
+		gui.set_text(coin_node, prog.format_num(prog.data.gold or 0) .. " 💰") 
+		gui.set_scale(coin_node, vmath.vector3(1, 1, 1))
+		gui.animate(coin_node, "scale", vmath.vector3(1.2, 1.2, 1), gui.EASING_OUTBACK, 0.2, 0, nil, gui.PLAYBACK_ONCE_PINGPONG)
+	end
+
 	self:update_button_colors()
 end
 
@@ -216,7 +221,7 @@ local function toggle_menu(self)
 	-- msg.post("@system:", "set_time_step", {factor = self.is_menu_open and 0 or 1, mode = 0})
 
 	if self.is_menu_open then
-		self:update_purchase_panel() 
+		--self:update_purchase_panel() 
 		self:refresh_tab(self.current_tab or "turrets")
 		self:update_balance()
 	end
@@ -242,7 +247,7 @@ local function buy_turret(self, turret_id)
 		prog.data.gold = prog.data.gold - turret.price
 		turret.owned = true
 		msg.post("main:/orbit_controller#orbit_controller", "upgrade_purchased", { id = turret_id })
-		self:update_purchase_panel() 
+		--self:update_purchase_panel() 
 		self:refresh_tab(self.current_tab) 
 		self:update_balance()
 	end
@@ -308,6 +313,8 @@ function init(self)
 	end)
 	if not prog.is_paused then
 		gui.set_enabled(gui.get_node("play_panel"), false)
+	else 
+		gui.set_enabled(gui.get_node("play_panel"), true)
 	end
 	update_progress_bar("health_fill", prog.data.economy.planet_hp, 100)
 	gui.set_enabled(gui.get_node("root"), false)

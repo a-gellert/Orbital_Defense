@@ -1,7 +1,7 @@
 local M = {}
 
 M.data = {
-	gold = 100, -- Дадим немного денег на старт для теста
+	gold = 1000, -- Дадим немного денег на старт для теста
 	diamonds = 0,
 	is_paused =true,
 	-- Состояние турелей
@@ -43,11 +43,7 @@ function M.reset_progress()
 	M.data.economy.planet_hp = 100
 	M.is_paused = false
 	-- Сброс турелей (оставляем только бластер)
-	for id, turret in pairs(M.data.turrets) do
-		turret.owned = (id == "blaster")
-		turret.level_dmg = 1
-		turret.level_rate = 1
-	end
+	
 
 	-- Сброс орбит (оставляем только первую)
 	for id, orbit in pairs(M.data.orbits_data) do
