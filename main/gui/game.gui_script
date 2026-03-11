@@ -129,7 +129,7 @@ local function update_purchase_panel(self)
 	-- Очищаем панель перед перерисовкой, чтобы кнопки не дублировались
 	clear_purchase_panel(self)
 
-	local turret_order = {"blaster", "sniper", "rocket", "laser", "plasma", "laser2"}
+	local turret_order = {"blaster", "pulse", "rocket", "laser", "plasma", "tesla"}
 	local displayed_count = 0
 
 	for _, id in ipairs(turret_order) do
@@ -243,7 +243,7 @@ end
 local function buy_turret(self, turret_id)
 	if prog.is_paused then return end
 	local turret = prog.data.turrets[turret_id]
-	if turret and prog.data.gold >= turret.price then
+	if turret and prog.has_free_slot and prog.data.gold >= turret.price then
 		prog.data.gold = prog.data.gold - turret.price
 		turret.owned = true
 		msg.post("main:/orbit_controller#orbit_controller", "upgrade_purchased", { id = turret_id })
@@ -252,6 +252,7 @@ local function buy_turret(self, turret_id)
 		self:update_balance()
 	end
 end
+-- Добавь это в GUI скрипт ДО функции init
 
 function init(self)
 	self.update_balance = update_balance
@@ -295,7 +296,6 @@ function init(self)
 	self.druid:new_button("play_btn", function()
 		poki.gameplay_start()
 		prog.is_paused = false
-		-- Или просто скрываем меню
 		gui.set_enabled(gui.get_node("play_panel"), false)
 	end)
 	-- В init или там, где создаешь кнопку Druid
@@ -311,6 +311,7 @@ function init(self)
 		-- ИСПРАВЛЕНО: правильный путь к скрипту лоадера
 		msg.post("loader:/loader#loader", "restart_game")
 	end)
+
 	if not prog.is_paused then
 		gui.set_enabled(gui.get_node("play_panel"), false)
 	else 
@@ -322,6 +323,9 @@ function init(self)
 
 	self:update_purchase_panel()
 	self:update_balance()
+
+
+
 end
 
 function update(self, dt)

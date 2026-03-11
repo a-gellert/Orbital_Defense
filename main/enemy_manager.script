@@ -2,7 +2,7 @@
 local balance = require "main.balance" 
 local prog = require "main.progression"
 
-local SPAWN_RADIUS = 600 
+local SPAWN_RADIUS = 500 
 local WAVE_DELAY = 3.0
 
 function init(self)

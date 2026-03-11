@@ -9,12 +9,12 @@ textures {
 }
 nodes {
   position {
-    x: 680.0
-    y: 1700.0
+    x: 540.0
+    y: 960.0
   }
   size {
-    x: 1024.0
-    y: 100.0
+    x: 1080.0
+    y: 1920.0
   }
   type: TYPE_BOX
   id: "root"
@@ -25,7 +25,8 @@ nodes {
 }
 nodes {
   position {
-    y: 50.0
+    x: 100.0
+    y: 720.0
   }
   size {
     x: 768.0
@@ -118,7 +119,8 @@ nodes {
 }
 nodes {
   position {
-    y: -571.0
+    x: 100.0
+    y: 95.0
   }
   size {
     x: 768.0
@@ -539,10 +541,20 @@ nodes {
     x: 200.0
     y: 100.0
   }
+  color {
+    x: 0.0
+    y: 0.2
+    z: 0.2
+  }
   type: TYPE_TEXT
   text: "WAVE 1"
   font: "druid_text_bold"
   id: "wave_txt"
+  outline {
+    x: 0.8
+    y: 1.0
+    z: 1.0
+  }
   parent: "wave_bg"
   inherit_alpha: true
 }
@@ -633,7 +645,7 @@ nodes {
 }
 nodes {
   position {
-    y: -300.0
+    y: -500.0
   }
   scale {
     x: 3.0
@@ -652,6 +664,37 @@ nodes {
   id: "play_visual"
   parent: "play_btn"
   size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    x: 540.0
+    y: 960.0
+    z: -1.0
+  }
+  size {
+    x: 1080.0
+    y: 1920.0
+  }
+  type: TYPE_BOX
+  id: "box3"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+  visible: false
+}
+nodes {
+  color {
+    x: 0.6
+    y: 0.0
+    z: 0.0
+  }
+  type: TYPE_BOX
+  texture: "gui/circle"
+  id: "range_circle_template"
+  parent: "box3"
+  inherit_alpha: true
+  alpha: 0.3
+  size_mode: SIZE_MODE_AUTO
+  visible: false
 }
 material: "/builtins/materials/gui.material"
 adjust_reference: ADJUST_REFERENCE_PARENT

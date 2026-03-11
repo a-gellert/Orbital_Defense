@@ -1,16 +1,11 @@
 components {
-  id: "bullet"
-  component: "/entities/bullet/bullet.script"
-  properties {
-    id: "speed"
-    value: "800.0"
-    type: PROPERTY_TYPE_NUMBER
-  }
+  id: "rocket"
+  component: "/entities/rocket/rocket.script"
 }
 embedded_components {
   id: "sprite"
   type: "sprite"
-  data: "default_animation: \"p_purple\"\n"
+  data: "default_animation: \"p_racket\"\n"
   "material: \"/builtins/materials/sprite.material\"\n"
   "textures {\n"
   "  sampler: \"texture_sampler\"\n"

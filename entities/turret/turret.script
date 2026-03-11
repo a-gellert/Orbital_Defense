@@ -1,68 +1,74 @@
--- entities/turret/turret.script
 local config = require "main.game_config"
 
 go.property("turret_type", hash("blaster"))
 go.property("level", 1)
 
-function init(self)
-	print("🔫 Turret INIT! Type:", self.turret_type)
+-- Таблица паттернов стрельбы
+local PATTERNS = {
+	-- Бластер и Пульсатор используют один и тот же метод (разница только в статах из конфига)
+	[hash("blaster")] = function(self, pos, rot)
+		factory.create("#bullet_factory", pos, rot, {
+			damage = self.damage, speed = self.stats.bullet_speed
+		})
+	end,
 
-	local stats = config.turret_stats[self.turret_type]
-	if not stats then
-		stats = config.turret_stats.blaster
-		self.turret_type = hash("blaster")
+	[hash("pulse")] = function(self, pos, rot)
+		factory.create("#bullet_factory", pos, rot, {
+			damage = self.damage, speed = self.stats.bullet_speed
+		})
+	end,
+
+	-- Ракетница спавнит ракету и передает ей цель для наведения
+	[hash("rocket")] = function(self, pos, rot)
+		-- Важно: ракете нужна цель (target_id)
+		factory.create("#rocket_factory", pos, rot, {
+			damage = self.damage, 
+			speed = self.stats.bullet_speed,
+			target_id = self.current_target
+		})
 	end
+}
 
+function init(self)
+	local type_str = "blaster"
+	sprite.play_flipbook("#sprite", "t_blaster")
+	if self.turret_type == hash("pulse") then 
+		type_str = "pulse"
+		sprite.play_flipbook("#sprite", "t_laser")
+	elseif self.turret_type == hash("rocket") then 
+		type_str = "rocket"
+		sprite.play_flipbook("#sprite", "t_racket")
+	 end
+
+	local stats = config.turret_stats[type_str] or config.turret_stats.blaster
 	self.stats = stats
 	self.cooldown = 0
 	self.current_target = nil
-	self.damage = stats.damage * (config.level_multiplier and config.level_multiplier(self.level) or 1)
-
-	if go.exists("#sprite") then
---		go.set_color("#sprite", vmath.vector4(1, 1, 1, 1))
-	end
+	self.damage = stats.damage * config.level_multiplier(self.level)
 end
 
 function fire(self, pos, rot)
 	self.cooldown = self.stats.rate
-	factory.create("#bullet_factory", pos, rot, {
-		damage = self.damage,
-		speed = self.stats.bullet_speed,
-		is_enemy = false
-	})
+	local shoot_func = PATTERNS[self.turret_type] or PATTERNS[hash("blaster")]
+	shoot_func(self, pos, rot)
 end
 
 function update(self, dt)
-	if self.cooldown > 0 then
-		self.cooldown = self.cooldown - dt
-	end
+	if self.cooldown > 0 then self.cooldown = self.cooldown - dt end
 
 	if self.current_target and go.exists(self.current_target) then
 		local my_pos = go.get_world_position()
 		local target_pos = go.get_world_position(self.current_target)
-
-		-- 1. Вычисляем направление
 		local dir = target_pos - my_pos
-
-		-- 2. Считаем угол. 
-		-- Если пушка в редакторе смотрит ВВЕРХ, добавь: - math.pi / 2
-		-- Если пушка в редакторе смотрит ВНИЗ, добавь: + math.pi / 2
-		-- Если пушка смотрит ВЛЕВО, добавь: + math.pi
 		local target_angle = math.atan2(dir.y, dir.x) 
 
-		-- ПОПРАВКА: если пушка изначально смотрит вверх, вычитаем 90 градусов (pi/2)
+		-- Поворот спрайта
 		local offset = - math.pi / 2 
 		local target_quat = vmath.quat_rotation_z(target_angle + offset)
-
-		-- 3. Компенсируем вращение родителя (станции)
 		local parent_quat = go.get_world_rotation(go.get_parent())
-		local local_quat = vmath.conj(parent_quat) * target_quat
-
-		-- 4. Применяем
-		go.set_rotation(local_quat)
+		go.set_rotation(vmath.conj(parent_quat) * target_quat)
 
 		if self.cooldown <= 0 then
-			-- ПУЛЯ должна лететь по чистому target_angle (без офсета спрайта!)
 			fire(self, my_pos, vmath.quat_rotation_z(target_angle))
 		end
 	else
@@ -73,9 +79,7 @@ end
 function on_message(self, message_id, message, sender)
 	if message_id == hash("set_target") then
 		self.current_target = message.target_id
-	end
-
-	if message_id == hash("upgrade_turret") then
+	elseif message_id == hash("upgrade_turret") then
 		self.level = self.level + 1
 		self.damage = self.stats.damage * config.level_multiplier(self.level)
 	end

@@ -68,7 +68,11 @@ end
 
 function build_turret(self, turret_type)
 	if self.turret_id and go.exists(self.turret_id) then return end
-
+	if self.turret_type == hash("pulse") then
+		go.set("#sprite", "tint", vmath.vector4(0.2, 0.5, 1, 1)) -- Синеватый оттенок
+	elseif self.turret_type == hash("rocket") then
+		go.set("#sprite", "tint", vmath.vector4(1, 0.5, 0.2, 1)) -- Оранжевый оттенок
+	end
 	-- Создаем турель в мировых координатах станции
 	local world_pos = go.get_world_position()
 	self.turret_id = factory.create("#turret_factory", world_pos, nil, {

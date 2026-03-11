@@ -53,3 +53,9 @@ embedded_components {
   data: "prototype: \"/entities/bullet/bullet.go\"\n"
   ""
 }
+embedded_components {
+  id: "rocket_factory"
+  type: "factory"
+  data: "prototype: \"/entities/rocket/rocket.go\"\n"
+  ""
+}

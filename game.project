@@ -48,3 +48,6 @@ max_emitter_count = 256
 max_particle_count = 2048
 max_particle_buffer_count = 2048
 
+[shader]
+exclude_gles_sm100 = 0
+

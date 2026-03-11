@@ -2,26 +2,14 @@
 local M = {}
 
 M.turret_stats = {
-	blaster = {
-		damage = 10,
-		rate = 0.4,          -- Секунды между выстрелами
-		range = 60,         -- Радиус (должен совпадать с триггером на карте)
-		bullet_speed = 200,
-		turn_speed = 10.0,
-		color = {0.2, 0.6, 1, 1}, -- Синий
-		max_level = 5
-	},
-	sniper = {
-		damage = 40,
-		rate = 1.5,
-		range = 60,
-		bullet_speed = 300,
-		turn_speed = 5.0,
-		color = {1, 0.2, 0.2, 1}, -- Красный
-		max_level = 5
-	}
+	blaster = { damage = 20, rate = 0.5,range = 70, bullet_speed = 600 },
+	pulse = { damage = 8, rate = 0.15,range = 70, bullet_speed = 800 },
+	sniper = { damage = 150, rate = 2.5,range = 70, bullet_speed = 1200 },
+	rocket = { damage = 80, rate = 1.5,range = 150, bullet_speed = 200 }, -- Тут скорость ниже, т.к. ракета наводится
+	laser = { damage = 5, rate = 0.1,range = 70, bullet_speed = 0 },     -- Для лазера скорость не важна
+	plasma = { damage = 100, rate = 2.0,range = 70, bullet_speed = 250 },
+	tesla = { damage = 45, rate = 1.2,range = 70, bullet_speed = 1000 }
 }
-
 -- Прогрессия урона от уровня (множитель)
 M.level_multiplier = function(level)
 	return 1 + (level - 1) * 0.5 -- +50% урона за уровень

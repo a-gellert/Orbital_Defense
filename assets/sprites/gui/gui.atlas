@@ -13,4 +13,10 @@ images {
 images {
   image: "/assets/sprites/gui/back.png"
 }
+images {
+  image: "/assets/sprites/gui/circle.png"
+}
+images {
+  image: "/assets/sprites/gui/fog.png"
+}
 extrude_borders: 2
