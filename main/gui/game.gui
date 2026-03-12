@@ -22,6 +22,7 @@ nodes {
   inherit_alpha: true
   alpha: 0.0
   size_mode: SIZE_MODE_AUTO
+  enabled: false
 }
 nodes {
   position {
@@ -378,6 +379,81 @@ nodes {
   parent: "left_panel"
   size_mode: SIZE_MODE_AUTO
   visible: false
+}
+nodes {
+  position {
+    x: 540.0
+    y: 960.0
+  }
+  size {
+    x: 1080.0
+    y: 1920.0
+  }
+  type: TYPE_BOX
+  id: "card_panel"
+  yanchor: YANCHOR_TOP
+  adjust_mode: ADJUST_MODE_STRETCH
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+  visible: false
+}
+nodes {
+  position {
+    y: -860.0
+  }
+  size {
+    x: 1000.0
+    y: 256.0
+  }
+  type: TYPE_BOX
+  id: "active_panel"
+  pivot: PIVOT_S
+  parent: "card_panel"
+  inherit_alpha: true
+  alpha: 0.5
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    x: -460.0
+    y: 122.0
+  }
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  type: TYPE_BOX
+  id: "active_panel_node"
+  parent: "active_panel"
+  size_mode: SIZE_MODE_AUTO
+  visible: false
+}
+nodes {
+  position {
+    x: -406.0
+    y: 128.0
+  }
+  size {
+    x: 180.0
+    y: 250.0
+  }
+  type: TYPE_BOX
+  id: "box4"
+  parent: "active_panel"
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    y: 128.0
+  }
+  size {
+    x: 180.0
+    y: 250.0
+  }
+  type: TYPE_BOX
+  id: "box5"
+  parent: "active_panel"
+  size_mode: SIZE_MODE_AUTO
 }
 nodes {
   position {

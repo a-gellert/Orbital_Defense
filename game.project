@@ -10,9 +10,6 @@ width = 1080
 height = 1920
 high_dpi = 1
 
-[android]
-input_method = HiddenInputField
-
 [physics]
 gravity_y = -1000.0
 scale = 0.01
@@ -43,11 +40,17 @@ dependencies#3 = https://github.com/defold/extension-poki-sdk/archive/refs/tags/
 max_count = 2048
 
 [particle_fx]
-max_count = 256
-max_emitter_count = 256
-max_particle_count = 2048
-max_particle_buffer_count = 2048
+max_count = 512
+max_emitter_count = 512
+max_particle_count = 4096
+max_particle_buffer_count = 4096
 
 [shader]
 exclude_gles_sm100 = 0
+
+[factory]
+max_count = 256
+
+[label]
+max_count = 256
 
