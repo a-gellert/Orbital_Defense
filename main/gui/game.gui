@@ -415,32 +415,197 @@ nodes {
 }
 nodes {
   position {
-    x: -460.0
-    y: 122.0
+    x: -400.0
+    y: 128.0
+  }
+  size {
+    x: 180.0
+    y: 250.0
+  }
+  color {
+    x: 0.3019608
+    y: 0.101960786
+    z: 0.3019608
+  }
+  type: TYPE_BOX
+  id: "cardholder_1"
+  parent: "active_panel"
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    y: 20.0
+  }
+  size {
+    x: 120.0
+    y: 180.0
+  }
+  type: TYPE_BOX
+  id: "card_img1"
+  parent: "cardholder_1"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    y: -100.0
+  }
+  scale {
+    x: 0.75
+    y: 0.75
+  }
+  size {
+    x: 200.0
+    y: 50.0
+  }
+  color {
+    y: 0.8
+    z: 0.7019608
+  }
+  type: TYPE_TEXT
+  text: "1.05x"
+  font: "druid_text_bold"
+  id: "card_txt1"
+  parent: "cardholder_1"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    y: 178.0
   }
   size {
     x: 200.0
     y: 100.0
   }
+  color {
+    x: 0.0
+    y: 0.2
+    z: 0.2
+  }
   type: TYPE_BOX
-  id: "active_panel_node"
-  parent: "active_panel"
+  id: "card_info_popup1"
+  parent: "cardholder_1"
+  inherit_alpha: true
+  alpha: 0.5
   size_mode: SIZE_MODE_AUTO
-  visible: false
+}
+nodes {
+  scale {
+    x: 0.4
+    y: 0.4
+  }
+  size {
+    x: 500.0
+    y: 250.0
+  }
+  color {
+    y: 0.9019608
+    z: 0.8
+  }
+  type: TYPE_TEXT
+  text: "\320\241\320\272\320\276\321\200\320\276\321\201\321\202\321\214 \321\201\321\202\321\200\320\265\320\273\321\214\320\261\321\213 \320\262\321\201\320\265\321\205 \321\202\321\203\321\200\320\265\320\273\320\265\320\271 \320\241\320\272\320\276\321\200\320\276\321\201\321\202\321\214 \321\201\321\202\321\200\320\265\320\273\321\214\320\261\321\213 \320\262\321\201\320\265\321\205 \321\202\321\203\321\200\320\265\320\273\320\265\320\271 dfsdfhsdfh df\n"
+  ""
+  font: "druid_text_bold"
+  id: "card_info_popup_txt1"
+  line_break: true
+  parent: "card_info_popup1"
 }
 nodes {
   position {
-    x: -406.0
+    x: -200.0
     y: 128.0
   }
   size {
     x: 180.0
     y: 250.0
   }
+  color {
+    x: 0.3019608
+    y: 0.101960786
+    z: 0.3019608
+  }
   type: TYPE_BOX
-  id: "box4"
+  id: "cardholder_2"
   parent: "active_panel"
   size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    y: 20.0
+  }
+  size {
+    x: 120.0
+    y: 180.0
+  }
+  type: TYPE_BOX
+  id: "card_img2"
+  parent: "cardholder_2"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    y: -100.0
+  }
+  scale {
+    x: 0.75
+    y: 0.75
+  }
+  size {
+    x: 200.0
+    y: 50.0
+  }
+  color {
+    y: 0.8
+    z: 0.7019608
+  }
+  type: TYPE_TEXT
+  text: "1.05x"
+  font: "druid_text_bold"
+  id: "card_txt2"
+  parent: "cardholder_2"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    y: 178.0
+  }
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  color {
+    x: 0.0
+    y: 0.2
+    z: 0.2
+  }
+  type: TYPE_BOX
+  id: "card_info_popup2"
+  parent: "cardholder_2"
+  inherit_alpha: true
+  alpha: 0.5
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  scale {
+    x: 0.4
+    y: 0.4
+  }
+  size {
+    x: 500.0
+    y: 250.0
+  }
+  color {
+    y: 0.9019608
+    z: 0.8
+  }
+  type: TYPE_TEXT
+  text: "\320\241\320\272\320\276\321\200\320\276\321\201\321\202\321\214 \321\201\321\202\321\200\320\265\320\273\321\214\320\261\321\213 \320\262\321\201\320\265\321\205 \321\202\321\203\321\200\320\265\320\273\320\265\320\271 \320\241\320\272\320\276\321\200\320\276\321\201\321\202\321\214 \321\201\321\202\321\200\320\265\320\273\321\214\320\261\321\213 \320\262\321\201\320\265\321\205 \321\202\321\203\321\200\320\265\320\273\320\265\320\271 dfsdfhsdfh df\n"
+  ""
+  font: "druid_text_bold"
+  id: "card_info_popup_txt2"
+  line_break: true
+  parent: "card_info_popup2"
 }
 nodes {
   position {
@@ -450,10 +615,1081 @@ nodes {
     x: 180.0
     y: 250.0
   }
+  color {
+    x: 0.3019608
+    y: 0.101960786
+    z: 0.3019608
+  }
   type: TYPE_BOX
-  id: "box5"
+  id: "cardholder_3"
   parent: "active_panel"
   size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    y: 20.0
+  }
+  size {
+    x: 120.0
+    y: 180.0
+  }
+  type: TYPE_BOX
+  id: "card_img3"
+  parent: "cardholder_3"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    y: -100.0
+  }
+  scale {
+    x: 0.75
+    y: 0.75
+  }
+  size {
+    x: 200.0
+    y: 50.0
+  }
+  color {
+    y: 0.8
+    z: 0.7019608
+  }
+  type: TYPE_TEXT
+  text: "1.05x"
+  font: "druid_text_bold"
+  id: "card_txt3"
+  parent: "cardholder_3"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    y: 178.0
+  }
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  color {
+    x: 0.0
+    y: 0.2
+    z: 0.2
+  }
+  type: TYPE_BOX
+  id: "card_info_popup3"
+  parent: "cardholder_3"
+  inherit_alpha: true
+  alpha: 0.5
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  scale {
+    x: 0.4
+    y: 0.4
+  }
+  size {
+    x: 500.0
+    y: 250.0
+  }
+  color {
+    y: 0.9019608
+    z: 0.8
+  }
+  type: TYPE_TEXT
+  text: "\320\241\320\272\320\276\321\200\320\276\321\201\321\202\321\214 \321\201\321\202\321\200\320\265\320\273\321\214\320\261\321\213 \320\262\321\201\320\265\321\205 \321\202\321\203\321\200\320\265\320\273\320\265\320\271 \320\241\320\272\320\276\321\200\320\276\321\201\321\202\321\214 \321\201\321\202\321\200\320\265\320\273\321\214\320\261\321\213 \320\262\321\201\320\265\321\205 \321\202\321\203\321\200\320\265\320\273\320\265\320\271 dfsdfhsdfh df\n"
+  ""
+  font: "druid_text_bold"
+  id: "card_info_popup_txt3"
+  line_break: true
+  parent: "card_info_popup3"
+}
+nodes {
+  position {
+    x: 200.0
+    y: 128.0
+  }
+  size {
+    x: 180.0
+    y: 250.0
+  }
+  color {
+    x: 0.3019608
+    y: 0.101960786
+    z: 0.3019608
+  }
+  type: TYPE_BOX
+  id: "cardholder_4"
+  parent: "active_panel"
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    y: 20.0
+  }
+  size {
+    x: 120.0
+    y: 180.0
+  }
+  type: TYPE_BOX
+  id: "card_img4"
+  parent: "cardholder_4"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    y: -100.0
+  }
+  scale {
+    x: 0.75
+    y: 0.75
+  }
+  size {
+    x: 200.0
+    y: 50.0
+  }
+  color {
+    y: 0.8
+    z: 0.7019608
+  }
+  type: TYPE_TEXT
+  text: "1.05x"
+  font: "druid_text_bold"
+  id: "card_txt4"
+  parent: "cardholder_4"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    y: 178.0
+  }
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  color {
+    x: 0.0
+    y: 0.2
+    z: 0.2
+  }
+  type: TYPE_BOX
+  id: "card_info_popup4"
+  parent: "cardholder_4"
+  inherit_alpha: true
+  alpha: 0.5
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  scale {
+    x: 0.4
+    y: 0.4
+  }
+  size {
+    x: 500.0
+    y: 250.0
+  }
+  color {
+    y: 0.9019608
+    z: 0.8
+  }
+  type: TYPE_TEXT
+  text: "\320\241\320\272\320\276\321\200\320\276\321\201\321\202\321\214 \321\201\321\202\321\200\320\265\320\273\321\214\320\261\321\213 \320\262\321\201\320\265\321\205 \321\202\321\203\321\200\320\265\320\273\320\265\320\271 \320\241\320\272\320\276\321\200\320\276\321\201\321\202\321\214 \321\201\321\202\321\200\320\265\320\273\321\214\320\261\321\213 \320\262\321\201\320\265\321\205 \321\202\321\203\321\200\320\265\320\273\320\265\320\271 dfsdfhsdfh df\n"
+  ""
+  font: "druid_text_bold"
+  id: "card_info_popup_txt4"
+  line_break: true
+  parent: "card_info_popup4"
+}
+nodes {
+  position {
+    x: 400.0
+    y: 128.0
+  }
+  size {
+    x: 180.0
+    y: 250.0
+  }
+  color {
+    x: 0.3019608
+    y: 0.101960786
+    z: 0.3019608
+  }
+  type: TYPE_BOX
+  id: "cardholder_5"
+  parent: "active_panel"
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    y: 20.0
+  }
+  size {
+    x: 120.0
+    y: 180.0
+  }
+  type: TYPE_BOX
+  id: "card_img5"
+  parent: "cardholder_5"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    y: -100.0
+  }
+  scale {
+    x: 0.75
+    y: 0.75
+  }
+  size {
+    x: 200.0
+    y: 50.0
+  }
+  color {
+    y: 0.8
+    z: 0.7019608
+  }
+  type: TYPE_TEXT
+  text: "1.05x"
+  font: "druid_text_bold"
+  id: "card_txt5"
+  parent: "cardholder_5"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    y: 178.0
+  }
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  color {
+    x: 0.0
+    y: 0.2
+    z: 0.2
+  }
+  type: TYPE_BOX
+  id: "card_info_popup5"
+  parent: "cardholder_5"
+  inherit_alpha: true
+  alpha: 0.5
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  scale {
+    x: 0.4
+    y: 0.4
+  }
+  size {
+    x: 500.0
+    y: 250.0
+  }
+  color {
+    y: 0.9019608
+    z: 0.8
+  }
+  type: TYPE_TEXT
+  text: "\320\241\320\272\320\276\321\200\320\276\321\201\321\202\321\214 \321\201\321\202\321\200\320\265\320\273\321\214\320\261\321\213 \320\262\321\201\320\265\321\205 \321\202\321\203\321\200\320\265\320\273\320\265\320\271 \320\241\320\272\320\276\321\200\320\276\321\201\321\202\321\214 \321\201\321\202\321\200\320\265\320\273\321\214\320\261\321\213 \320\262\321\201\320\265\321\205 \321\202\321\203\321\200\320\265\320\273\320\265\320\271 dfsdfhsdfh df\n"
+  ""
+  font: "druid_text_bold"
+  id: "card_info_popup_txt5"
+  line_break: true
+  parent: "card_info_popup5"
+}
+nodes {
+  size {
+    x: 1000.0
+    y: 700.0
+  }
+  color {
+    x: 0.7019608
+    y: 0.3019608
+    z: 0.101960786
+  }
+  type: TYPE_BOX
+  id: "choose_panel"
+  parent: "card_panel"
+  inherit_alpha: true
+  alpha: 0.27
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    x: -325.0
+    y: 50.0
+  }
+  size {
+    x: 256.0
+    y: 512.0
+  }
+  color {
+    x: 0.4
+    y: 0.4
+    z: 0.4
+  }
+  type: TYPE_BOX
+  id: "choose_card_1"
+  parent: "choose_panel"
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    y: 80.0
+  }
+  size {
+    x: 200.0
+    y: 300.0
+  }
+  color {
+    z: 0.8
+  }
+  type: TYPE_BOX
+  id: "icon_card"
+  parent: "choose_card_1"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    y: -125.0
+  }
+  size {
+    x: 200.0
+    y: 50.0
+  }
+  color {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  }
+  type: TYPE_BOX
+  id: "back_for_text"
+  parent: "icon_card"
+  inherit_alpha: true
+  alpha: 0.3
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    x: -50.0
+    y: -125.0
+  }
+  scale {
+    x: 0.5
+    y: 0.5
+  }
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  color {
+    y: 0.4
+    z: 0.4
+  }
+  type: TYPE_TEXT
+  text: "1.0"
+  font: "druid_text_bold"
+  id: "prev_txt1"
+  parent: "icon_card"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    x: 50.0
+    y: -125.0
+  }
+  scale {
+    x: 0.5
+    y: 0.5
+  }
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  color {
+    x: 0.22870196
+    y: 0.75409836
+    z: 0.22870196
+  }
+  type: TYPE_TEXT
+  text: "1.05"
+  font: "druid_text_bold"
+  id: "next_txt1"
+  parent: "icon_card"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    y: -125.0
+  }
+  scale {
+    x: 0.5
+    y: 0.5
+  }
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  color {
+    y: 0.4
+    z: 0.4
+  }
+  type: TYPE_TEXT
+  text: "=>"
+  font: "druid_text_bold"
+  id: "txt"
+  parent: "icon_card"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    x: -70.0
+    y: -100.0
+  }
+  size {
+    x: 32.0
+    y: 32.0
+  }
+  color {
+    x: 0.6
+    y: 0.0
+    z: 0.0
+  }
+  type: TYPE_BOX
+  id: "star_11"
+  parent: "choose_card_1"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    x: -35.0
+    y: -100.0
+  }
+  size {
+    x: 32.0
+    y: 32.0
+  }
+  color {
+    x: 0.6
+    y: 0.0
+    z: 0.0
+  }
+  type: TYPE_BOX
+  id: "star_12"
+  parent: "choose_card_1"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    y: -100.0
+  }
+  size {
+    x: 32.0
+    y: 32.0
+  }
+  color {
+    x: 0.6
+    y: 0.0
+    z: 0.0
+  }
+  type: TYPE_BOX
+  id: "star_13"
+  parent: "choose_card_1"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    x: 35.0
+    y: -100.0
+  }
+  size {
+    x: 32.0
+    y: 32.0
+  }
+  color {
+    x: 0.6
+    y: 0.0
+    z: 0.0
+  }
+  type: TYPE_BOX
+  id: "star_14"
+  parent: "choose_card_1"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    x: 70.0
+    y: -100.0
+  }
+  size {
+    x: 32.0
+    y: 32.0
+  }
+  color {
+    x: 0.6
+    y: 0.0
+    z: 0.0
+  }
+  type: TYPE_BOX
+  id: "star_15"
+  parent: "choose_card_1"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    y: -168.0
+  }
+  scale {
+    x: 0.5
+    y: 0.5
+  }
+  size {
+    x: 400.0
+    y: 200.0
+  }
+  color {
+    y: 0.8
+    z: 0.7019608
+  }
+  type: TYPE_TEXT
+  text: "\320\241\320\272\320\276\321\200\320\276\321\201\321\202\321\214 \321\201\321\202\321\200\320\265\320\273\321\214\320\261\321\213 \320\262\321\201\320\265\321\205 \321\202\321\203\321\200\320\265\320\273\320\265\320\271 \320\241\320\272\320\276\321\200\320\276\321\201\321\202\321\214 \321\201\321\202\321\200\320\265\320\273\321\214\320\261\321\213 \320\262\321\201\320\265\321\205 \321\202\321\203\321\200\320\265\320\273\320\265\320\271"
+  font: "druid_text_bold"
+  id: "card_info1"
+  outline {
+    x: 0.2
+    y: 0.2
+    z: 0.2
+  }
+  line_break: true
+  parent: "choose_card_1"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    y: -286.0
+  }
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  color {
+    x: 0.101960786
+    y: 0.101960786
+    z: 0.101960786
+  }
+  type: TYPE_BOX
+  id: "refresh_choose_panel"
+  parent: "choose_panel"
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    y: 50.0
+  }
+  size {
+    x: 256.0
+    y: 512.0
+  }
+  color {
+    x: 0.4
+    y: 0.4
+    z: 0.4
+  }
+  type: TYPE_BOX
+  id: "choose_card_2"
+  parent: "choose_panel"
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    y: 80.0
+  }
+  size {
+    x: 200.0
+    y: 300.0
+  }
+  color {
+    z: 0.8
+  }
+  type: TYPE_BOX
+  id: "icon_card2"
+  parent: "choose_card_2"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    y: -125.0
+  }
+  size {
+    x: 200.0
+    y: 50.0
+  }
+  color {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  }
+  type: TYPE_BOX
+  id: "back_for_text2"
+  parent: "icon_card2"
+  inherit_alpha: true
+  alpha: 0.3
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    x: -50.0
+    y: -125.0
+  }
+  scale {
+    x: 0.5
+    y: 0.5
+  }
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  color {
+    y: 0.4
+    z: 0.4
+  }
+  type: TYPE_TEXT
+  text: "1.0"
+  font: "druid_text_bold"
+  id: "prev_txt2"
+  parent: "icon_card2"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    x: 50.0
+    y: -125.0
+  }
+  scale {
+    x: 0.5
+    y: 0.5
+  }
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  color {
+    x: 0.22870196
+    y: 0.75409836
+    z: 0.22870196
+  }
+  type: TYPE_TEXT
+  text: "1.05"
+  font: "druid_text_bold"
+  id: "next_txt2"
+  parent: "icon_card2"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    y: -125.0
+  }
+  scale {
+    x: 0.5
+    y: 0.5
+  }
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  type: TYPE_TEXT
+  text: "=>"
+  font: "druid_text_bold"
+  id: "txt2"
+  parent: "icon_card2"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    x: -70.0
+    y: -100.0
+  }
+  size {
+    x: 32.0
+    y: 32.0
+  }
+  color {
+    x: 0.6
+    y: 0.0
+    z: 0.0
+  }
+  type: TYPE_BOX
+  id: "star_21"
+  parent: "choose_card_2"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    x: -35.0
+    y: -100.0
+  }
+  size {
+    x: 32.0
+    y: 32.0
+  }
+  color {
+    x: 0.6
+    y: 0.0
+    z: 0.0
+  }
+  type: TYPE_BOX
+  id: "star_22"
+  parent: "choose_card_2"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    y: -100.0
+  }
+  size {
+    x: 32.0
+    y: 32.0
+  }
+  color {
+    x: 0.6
+    y: 0.0
+    z: 0.0
+  }
+  type: TYPE_BOX
+  id: "star_23"
+  parent: "choose_card_2"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    x: 35.0
+    y: -100.0
+  }
+  size {
+    x: 32.0
+    y: 32.0
+  }
+  color {
+    x: 0.6
+    y: 0.0
+    z: 0.0
+  }
+  type: TYPE_BOX
+  id: "star_24"
+  parent: "choose_card_2"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    x: 70.0
+    y: -100.0
+  }
+  size {
+    x: 32.0
+    y: 32.0
+  }
+  color {
+    x: 0.6
+    y: 0.0
+    z: 0.0
+  }
+  type: TYPE_BOX
+  id: "star_25"
+  parent: "choose_card_2"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    y: -168.0
+  }
+  scale {
+    x: 0.5
+    y: 0.5
+  }
+  size {
+    x: 400.0
+    y: 200.0
+  }
+  color {
+    y: 0.8
+    z: 0.7019608
+  }
+  type: TYPE_TEXT
+  text: "\320\241\320\272\320\276\321\200\320\276\321\201\321\202\321\214 \321\201\321\202\321\200\320\265\320\273\321\214\320\261\321\213 \320\262\321\201\320\265\321\205 \321\202\321\203\321\200\320\265\320\273\320\265\320\271 \320\241\320\272\320\276\321\200\320\276\321\201\321\202\321\214 \321\201\321\202\321\200\320\265\320\273\321\214\320\261\321\213 \320\262\321\201\320\265\321\205 \321\202\321\203\321\200\320\265\320\273\320\265\320\271"
+  font: "druid_text_bold"
+  id: "card_info2"
+  outline {
+    x: 0.2
+    y: 0.2
+    z: 0.2
+  }
+  line_break: true
+  parent: "choose_card_2"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    x: 325.0
+    y: 50.0
+  }
+  size {
+    x: 256.0
+    y: 512.0
+  }
+  color {
+    x: 0.4
+    y: 0.4
+    z: 0.4
+  }
+  type: TYPE_BOX
+  id: "choose_card_3"
+  parent: "choose_panel"
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    y: 80.0
+  }
+  size {
+    x: 200.0
+    y: 300.0
+  }
+  color {
+    z: 0.8
+  }
+  type: TYPE_BOX
+  id: "icon_card1"
+  parent: "choose_card_3"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    y: -125.0
+  }
+  size {
+    x: 200.0
+    y: 50.0
+  }
+  color {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  }
+  type: TYPE_BOX
+  id: "back_for_text1"
+  parent: "icon_card1"
+  inherit_alpha: true
+  alpha: 0.3
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    x: -50.0
+    y: -125.0
+  }
+  scale {
+    x: 0.5
+    y: 0.5
+  }
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  color {
+    y: 0.4
+    z: 0.4
+  }
+  type: TYPE_TEXT
+  text: "1.0"
+  font: "druid_text_bold"
+  id: "prev_txt3"
+  parent: "icon_card1"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    x: 50.0
+    y: -125.0
+  }
+  scale {
+    x: 0.5
+    y: 0.5
+  }
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  color {
+    x: 0.22870196
+    y: 0.75409836
+    z: 0.22870196
+  }
+  type: TYPE_TEXT
+  text: "1.05"
+  font: "druid_text_bold"
+  id: "next_txt3"
+  parent: "icon_card1"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    y: -125.0
+  }
+  scale {
+    x: 0.5
+    y: 0.5
+  }
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  type: TYPE_TEXT
+  text: "=>"
+  font: "druid_text_bold"
+  id: "txt1"
+  parent: "icon_card1"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    x: -70.0
+    y: -100.0
+  }
+  size {
+    x: 32.0
+    y: 32.0
+  }
+  color {
+    x: 0.6
+    y: 0.0
+    z: 0.0
+  }
+  type: TYPE_BOX
+  id: "star_31"
+  parent: "choose_card_3"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    x: -35.0
+    y: -100.0
+  }
+  size {
+    x: 32.0
+    y: 32.0
+  }
+  color {
+    x: 0.6
+    y: 0.0
+    z: 0.0
+  }
+  type: TYPE_BOX
+  id: "star_32"
+  parent: "choose_card_3"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    y: -100.0
+  }
+  size {
+    x: 32.0
+    y: 32.0
+  }
+  color {
+    x: 0.6
+    y: 0.0
+    z: 0.0
+  }
+  type: TYPE_BOX
+  id: "star_33"
+  parent: "choose_card_3"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    x: 35.0
+    y: -100.0
+  }
+  size {
+    x: 32.0
+    y: 32.0
+  }
+  color {
+    x: 0.6
+    y: 0.0
+    z: 0.0
+  }
+  type: TYPE_BOX
+  id: "star_34"
+  parent: "choose_card_3"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    x: 70.0
+    y: -100.0
+  }
+  size {
+    x: 32.0
+    y: 32.0
+  }
+  color {
+    x: 0.6
+    y: 0.0
+    z: 0.0
+  }
+  type: TYPE_BOX
+  id: "star_35"
+  parent: "choose_card_3"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    y: -168.0
+  }
+  scale {
+    x: 0.5
+    y: 0.5
+  }
+  size {
+    x: 400.0
+    y: 200.0
+  }
+  color {
+    y: 0.8
+    z: 0.7019608
+  }
+  type: TYPE_TEXT
+  text: "\320\241\320\272\320\276\321\200\320\276\321\201\321\202\321\214 \321\201\321\202\321\200\320\265\320\273\321\214\320\261\321\213 \320\262\321\201\320\265\321\205 \321\202\321\203\321\200\320\265\320\273\320\265\320\271 \320\241\320\272\320\276\321\200\320\276\321\201\321\202\321\214 \321\201\321\202\321\200\320\265\320\273\321\214\320\261\321\213 \320\262\321\201\320\265\321\205 \321\202\321\203\321\200\320\265\320\273\320\265\320\271"
+  font: "druid_text_bold"
+  id: "card_info3"
+  outline {
+    x: 0.2
+    y: 0.2
+    z: 0.2
+  }
+  line_break: true
+  parent: "choose_card_3"
+  inherit_alpha: true
 }
 nodes {
   position {

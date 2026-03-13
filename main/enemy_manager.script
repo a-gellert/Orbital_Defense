@@ -50,6 +50,8 @@ function update(self, dt)
 			if self.spawned_count >= self.enemies_to_spawn then
 				self.state = "WAITING"
 				print("🌊 Wave " .. self.current_wave .. " spawning complete. Waiting for cleanup...")
+
+				msg.post("main:/gui#game", "show_card_selection")
 			end
 		end
 	elseif self.state == "WAITING" then

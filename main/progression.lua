@@ -1,3 +1,4 @@
+local config = require "main.game_config"
 
 local M = {}
 M.data = {
@@ -30,7 +31,8 @@ M.data = {
 		or5 = { id = hash("/orbit_5"), radius = 195, speed = 0.4, slots = 24, price = 50000, unlocked = false },
 		or6 = { id = hash("/orbit_6"), radius = 225, speed = 0.2, slots = 32, price = 150000,unlocked = false }
 	},
-
+	active_upgrades = {},
+	rarity_colors = {},
 	-- Планета и Экономика
 
 	economy = {
@@ -52,32 +54,54 @@ M.data = {
 	}
 
 }
+M.data.active_upgrades = {}
+M.rarity_colors = {
+	[1] = vmath.vector4(0.8, 0.8, 0.8, 1), -- Обычный (Серый)
+	[2] = vmath.vector4(0.2, 0.8, 0.2, 1), -- Элитный (Зеленый)
+	[3] = vmath.vector4(0.2, 0.5, 1, 1),   -- Редкий (Синий)
+	[4] = vmath.vector4(0.8, 0.2, 0.8, 1), -- Эпический (Фиолетовый)
+}
+-- В progression.lua или отдельном модуле logic.lua
+function M.get_random_upgrades(count)
+	local pool = {}
+	local upgrades = config.upgrades
+
+	-- Создаем "веса" для редкости (чем выше тип, тем меньше шансов)
+	-- Type 1: вес 60, Type 2: 25, Type 3: 10, Type 4: 5
+	local weights = { [1] = 60, [2] = 25, [3] = 10, [4] = 5 }
+
+	local result = {}
+	local keys = {}
+	for k, _ in pairs(upgrades) do table.insert(keys, k) end
+
+	while #result < count do
+		local key = keys[math.random(#keys)]
+		local upgrade = upgrades[key]
+
+		-- Простая проверка шанса
+		if math.random(1, 100) <= weights[upgrade.type] then
+			-- Проверяем, не выбрали ли мы уже эту карту и не макс. ли она уровня
+			local current_lvl = M.data.active_upgrades[key] or 0
+			if current_lvl < #upgrade.levels then
+				table.insert(result, { id = key, data = upgrade })
+			end
+		end
+	end
+	return result
+end
 
 function M.reset_progress()
-
 	M.data.gold = 100 -- Начальная сумма
-
 	M.data.economy.planet_hp = 100
-
 	M.is_paused = false
-
 	M.has_free_slot = true
-
-
-
 
 	-- Сброс орбит (оставляем только первую)
 
 	for id, orbit in pairs(M.data.orbits_data) do
-
 		orbit.unlocked = (id == "or1")
-
 	end
-
-
-
 	print("🧹 Прогресс сброшен")
-
 end
 
 M.has_free_slot = true
