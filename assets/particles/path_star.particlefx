@@ -2,43 +2,41 @@ emitters {
   mode: PLAY_MODE_LOOP
   duration: 1.0
   space: EMISSION_SPACE_WORLD
-  position {
-    z: -1.0
-  }
   tile_source: "/builtins/graphics/particle_blob.tilesource"
   animation: "anim"
   material: "/builtins/materials/particlefx.material"
   blend_mode: BLEND_MODE_ADD
-  max_particle_count: 12
+  max_particle_count: 80
   type: EMITTER_TYPE_CIRCLE
   properties {
     key: EMITTER_KEY_SPAWN_RATE
     points {
       y: 50.0
     }
+    spread: 50.0
   }
   properties {
     key: EMITTER_KEY_SIZE_X
     points {
-      y: 5.0
+      y: 2000.0
     }
   }
   properties {
     key: EMITTER_KEY_SIZE_Y
     points {
-      y: 12.0
+      y: 2000.0
     }
   }
   properties {
     key: EMITTER_KEY_PARTICLE_LIFE_TIME
     points {
-      y: 1.0
+      y: 2.0
     }
   }
   properties {
     key: EMITTER_KEY_PARTICLE_SPEED
     points {
-      y: 50.0
+      y: 300.0
     }
     spread: 10.0
   }
@@ -76,7 +74,7 @@ emitters {
   particle_properties {
     key: PARTICLE_KEY_SCALE
     points {
-      y: 2.0
+      y: 0.5
     }
   }
   particle_properties {
@@ -88,7 +86,7 @@ emitters {
   particle_properties {
     key: PARTICLE_KEY_GREEN
     points {
-      y: 0.2
+      y: 0.8
     }
   }
   particle_properties {

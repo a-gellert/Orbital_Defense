@@ -17,6 +17,11 @@ instances {
   component_properties {
     id: "script"
     properties {
+      id: "orthoScale"
+      value: "1.0"
+      type: PROPERTY_TYPE_NUMBER
+    }
+    properties {
       id: "fixedAspectRatio"
       value: "false"
       type: PROPERTY_TYPE_BOOLEAN
@@ -28,8 +33,13 @@ instances {
     }
     properties {
       id: "useViewArea"
-      value: "false"
+      value: "true"
       type: PROPERTY_TYPE_BOOLEAN
+    }
+    properties {
+      id: "viewArea"
+      value: "390.0, 780.0, 0.0"
+      type: PROPERTY_TYPE_VECTOR3
     }
     properties {
       id: "expandView"
@@ -37,13 +47,18 @@ instances {
       type: PROPERTY_TYPE_BOOLEAN
     }
     properties {
+      id: "fixedArea"
+      value: "false"
+      type: PROPERTY_TYPE_BOOLEAN
+    }
+    properties {
       id: "fixedWidth"
-      value: "true"
+      value: "false"
       type: PROPERTY_TYPE_BOOLEAN
     }
     properties {
       id: "fixedHeight"
-      value: "false"
+      value: "true"
       type: PROPERTY_TYPE_BOOLEAN
     }
   }

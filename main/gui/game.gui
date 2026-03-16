@@ -9,34 +9,34 @@ textures {
 }
 nodes {
   position {
-    x: 540.0
-    y: 960.0
+    x: 195.0
+    y: 390.0
   }
   size {
-    x: 1080.0
-    y: 1920.0
+    x: 390.0
+    y: 780.0
   }
   type: TYPE_BOX
   id: "root"
   xanchor: XANCHOR_LEFT
   inherit_alpha: true
-  alpha: 0.0
   size_mode: SIZE_MODE_AUTO
   enabled: false
 }
 nodes {
   position {
-    x: 100.0
-    y: 720.0
+    x: 50.0
+    y: 360.0
   }
   size {
-    x: 768.0
+    x: 195.0
     y: 10.0
   }
   type: TYPE_BOX
   id: "tabs"
   parent: "root"
   size_mode: SIZE_MODE_AUTO
+  enabled: false
 }
 nodes {
   position {
@@ -124,14 +124,15 @@ nodes {
     y: 95.0
   }
   size {
-    x: 768.0
-    y: 1024.0
+    x: 390.0
+    y: 780.0
   }
   type: TYPE_BOX
   id: "view_port"
   parent: "root"
   clipping_mode: CLIPPING_MODE_STENCIL
   size_mode: SIZE_MODE_AUTO
+  enabled: false
 }
 nodes {
   position {
@@ -249,8 +250,8 @@ nodes {
 }
 nodes {
   size {
-    x: 180.0
-    y: 100.0
+    x: 80.0
+    y: 32.0
   }
   color {
     x: 0.101960786
@@ -264,11 +265,14 @@ nodes {
 }
 nodes {
   position {
-    x: -2.0
-    y: 25.0
+    y: 8.0
+  }
+  scale {
+    x: 0.4
+    y: 0.4
   }
   size {
-    x: 100.0
+    x: 50.0
     y: 50.0
   }
   type: TYPE_TEXT
@@ -281,11 +285,15 @@ nodes {
 nodes {
   position {
     x: 18.0
-    y: -25.0
+    y: -8.0
+  }
+  scale {
+    x: 0.4
+    y: 0.4
   }
   size {
-    x: 128.0
-    y: 50.0
+    x: 50.0
+    y: 25.0
   }
   type: TYPE_TEXT
   text: "300000\n"
@@ -298,12 +306,12 @@ nodes {
 }
 nodes {
   position {
-    x: 47.0
-    y: -26.0
+    x: 28.0
+    y: -8.0
   }
   scale {
-    x: 0.5
-    y: 0.5
+    x: 0.15
+    y: 0.15
   }
   type: TYPE_BOX
   texture: "gui/coin"
@@ -313,18 +321,35 @@ nodes {
   size_mode: SIZE_MODE_AUTO
 }
 nodes {
+  size {
+    x: 80.0
+    y: 1.0
+  }
+  color {
+    x: 0.0
+    y: 0.101960786
+    z: 0.5019608
+  }
+  type: TYPE_BOX
+  id: "box7"
+  parent: "btn_buy_turret"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
   position {
-    x: 30.0
-    y: 1370.0
+    x: 8.0
+    y: 780.0
   }
   size {
-    x: 200.0
-    y: 1000.0
+    x: 100.0
+    y: 256.0
   }
   type: TYPE_BOX
   id: "left_panel"
   xanchor: XANCHOR_LEFT
-  pivot: PIVOT_W
+  yanchor: YANCHOR_TOP
+  pivot: PIVOT_NW
   inherit_alpha: true
   alpha: 0.17
   size_mode: SIZE_MODE_AUTO
@@ -347,6 +372,7 @@ nodes {
   id: "btn_toggle_menu"
   parent: "left_panel"
   size_mode: SIZE_MODE_AUTO
+  enabled: false
 }
 nodes {
   scale {
@@ -367,8 +393,8 @@ nodes {
 }
 nodes {
   position {
-    x: 100.0
-    y: 256.0
+    x: 50.0
+    y: -10.0
   }
   size {
     x: 1.0
@@ -382,12 +408,12 @@ nodes {
 }
 nodes {
   position {
-    x: 540.0
-    y: 960.0
+    x: 195.0
+    y: 390.0
   }
   size {
-    x: 1080.0
-    y: 1920.0
+    x: 390.0
+    y: 780.0
   }
   type: TYPE_BOX
   id: "card_panel"
@@ -399,14 +425,15 @@ nodes {
 }
 nodes {
   position {
-    y: -860.0
+    y: -353.0
   }
   size {
-    x: 1000.0
-    y: 256.0
+    x: 350.0
+    y: 128.0
   }
   type: TYPE_BOX
   id: "active_panel"
+  yanchor: YANCHOR_BOTTOM
   pivot: PIVOT_S
   parent: "card_panel"
   inherit_alpha: true
@@ -415,12 +442,101 @@ nodes {
 }
 nodes {
   position {
-    x: -400.0
-    y: 128.0
+    y: 50.0
   }
   size {
-    x: 180.0
-    y: 250.0
+    x: 350.0
+    y: 50.0
+  }
+  type: TYPE_BOX
+  id: "box8"
+  parent: "active_panel"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+  visible: false
+}
+nodes {
+  position {
+    x: -140.0
+    y: 14.0
+  }
+  size {
+    x: 64.0
+    y: 125.0
+  }
+  type: TYPE_BOX
+  id: "box9"
+  parent: "box8"
+  alpha: 0.4
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    x: -70.0
+    y: 14.0
+  }
+  size {
+    x: 64.0
+    y: 125.0
+  }
+  type: TYPE_BOX
+  id: "box10"
+  parent: "box8"
+  alpha: 0.4
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    y: 14.0
+  }
+  size {
+    x: 64.0
+    y: 125.0
+  }
+  type: TYPE_BOX
+  id: "box11"
+  parent: "box8"
+  alpha: 0.4
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    x: 70.0
+    y: 14.0
+  }
+  size {
+    x: 64.0
+    y: 125.0
+  }
+  type: TYPE_BOX
+  id: "box12"
+  parent: "box8"
+  alpha: 0.4
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    x: 140.0
+    y: 14.0
+  }
+  size {
+    x: 64.0
+    y: 125.0
+  }
+  type: TYPE_BOX
+  id: "box13"
+  parent: "box8"
+  alpha: 0.4
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    x: -140.0
+    y: 64.0
+  }
+  size {
+    x: 65.0
+    y: 125.0
   }
   color {
     x: 0.3019608
@@ -431,16 +547,18 @@ nodes {
   id: "cardholder_1"
   parent: "active_panel"
   size_mode: SIZE_MODE_AUTO
+  enabled: false
 }
 nodes {
   position {
-    y: 20.0
+    y: 15.0
   }
-  size {
-    x: 120.0
-    y: 180.0
+  scale {
+    x: 0.3
+    y: 0.3
   }
   type: TYPE_BOX
+  texture: "gui/u_t_atk_spd"
   id: "card_img1"
   parent: "cardholder_1"
   inherit_alpha: true
@@ -448,15 +566,15 @@ nodes {
 }
 nodes {
   position {
-    y: -100.0
+    y: -50.0
   }
   scale {
-    x: 0.75
-    y: 0.75
+    x: 0.3
+    y: 0.3
   }
   size {
-    x: 200.0
-    y: 50.0
+    x: 100.0
+    y: 25.0
   }
   color {
     y: 0.8
@@ -471,11 +589,11 @@ nodes {
 }
 nodes {
   position {
-    y: 178.0
+    y: 84.0
   }
   size {
-    x: 200.0
-    y: 100.0
+    x: 64.0
+    y: 40.0
   }
   color {
     x: 0.0
@@ -488,19 +606,20 @@ nodes {
   inherit_alpha: true
   alpha: 0.5
   size_mode: SIZE_MODE_AUTO
+  enabled: false
 }
 nodes {
   scale {
-    x: 0.4
-    y: 0.4
+    x: 0.18
+    y: 0.18
   }
   size {
-    x: 500.0
-    y: 250.0
+    x: 360.0
+    y: 200.0
   }
   color {
-    y: 0.9019608
-    z: 0.8
+    x: 0.9019608
+    y: 0.8
   }
   type: TYPE_TEXT
   text: "\320\241\320\272\320\276\321\200\320\276\321\201\321\202\321\214 \321\201\321\202\321\200\320\265\320\273\321\214\320\261\321\213 \320\262\321\201\320\265\321\205 \321\202\321\203\321\200\320\265\320\273\320\265\320\271 \320\241\320\272\320\276\321\200\320\276\321\201\321\202\321\214 \321\201\321\202\321\200\320\265\320\273\321\214\320\261\321\213 \320\262\321\201\320\265\321\205 \321\202\321\203\321\200\320\265\320\273\320\265\320\271 dfsdfhsdfh df\n"
@@ -512,12 +631,12 @@ nodes {
 }
 nodes {
   position {
-    x: -200.0
-    y: 128.0
+    x: -70.0
+    y: 64.0
   }
   size {
-    x: 180.0
-    y: 250.0
+    x: 65.0
+    y: 125.0
   }
   color {
     x: 0.3019608
@@ -528,16 +647,18 @@ nodes {
   id: "cardholder_2"
   parent: "active_panel"
   size_mode: SIZE_MODE_AUTO
+  enabled: false
 }
 nodes {
   position {
-    y: 20.0
+    y: 15.0
   }
-  size {
-    x: 120.0
-    y: 180.0
+  scale {
+    x: 0.3
+    y: 0.3
   }
   type: TYPE_BOX
+  texture: "gui/u_t_atk_spd"
   id: "card_img2"
   parent: "cardholder_2"
   inherit_alpha: true
@@ -545,15 +666,15 @@ nodes {
 }
 nodes {
   position {
-    y: -100.0
+    y: -50.0
   }
   scale {
-    x: 0.75
-    y: 0.75
+    x: 0.3
+    y: 0.3
   }
   size {
-    x: 200.0
-    y: 50.0
+    x: 100.0
+    y: 25.0
   }
   color {
     y: 0.8
@@ -568,11 +689,11 @@ nodes {
 }
 nodes {
   position {
-    y: 178.0
+    y: 84.0
   }
   size {
-    x: 200.0
-    y: 100.0
+    x: 64.0
+    y: 40.0
   }
   color {
     x: 0.0
@@ -585,19 +706,20 @@ nodes {
   inherit_alpha: true
   alpha: 0.5
   size_mode: SIZE_MODE_AUTO
+  enabled: false
 }
 nodes {
   scale {
-    x: 0.4
-    y: 0.4
+    x: 0.18
+    y: 0.18
   }
   size {
-    x: 500.0
-    y: 250.0
+    x: 360.0
+    y: 200.0
   }
   color {
-    y: 0.9019608
-    z: 0.8
+    x: 0.9019608
+    y: 0.8
   }
   type: TYPE_TEXT
   text: "\320\241\320\272\320\276\321\200\320\276\321\201\321\202\321\214 \321\201\321\202\321\200\320\265\320\273\321\214\320\261\321\213 \320\262\321\201\320\265\321\205 \321\202\321\203\321\200\320\265\320\273\320\265\320\271 \320\241\320\272\320\276\321\200\320\276\321\201\321\202\321\214 \321\201\321\202\321\200\320\265\320\273\321\214\320\261\321\213 \320\262\321\201\320\265\321\205 \321\202\321\203\321\200\320\265\320\273\320\265\320\271 dfsdfhsdfh df\n"
@@ -609,11 +731,11 @@ nodes {
 }
 nodes {
   position {
-    y: 128.0
+    y: 64.0
   }
   size {
-    x: 180.0
-    y: 250.0
+    x: 65.0
+    y: 125.0
   }
   color {
     x: 0.3019608
@@ -624,16 +746,18 @@ nodes {
   id: "cardholder_3"
   parent: "active_panel"
   size_mode: SIZE_MODE_AUTO
+  enabled: false
 }
 nodes {
   position {
-    y: 20.0
+    y: 15.0
   }
-  size {
-    x: 120.0
-    y: 180.0
+  scale {
+    x: 0.3
+    y: 0.3
   }
   type: TYPE_BOX
+  texture: "gui/u_t_atk_spd"
   id: "card_img3"
   parent: "cardholder_3"
   inherit_alpha: true
@@ -641,15 +765,15 @@ nodes {
 }
 nodes {
   position {
-    y: -100.0
+    y: -50.0
   }
   scale {
-    x: 0.75
-    y: 0.75
+    x: 0.3
+    y: 0.3
   }
   size {
-    x: 200.0
-    y: 50.0
+    x: 100.0
+    y: 25.0
   }
   color {
     y: 0.8
@@ -664,11 +788,11 @@ nodes {
 }
 nodes {
   position {
-    y: 178.0
+    y: 84.0
   }
   size {
-    x: 200.0
-    y: 100.0
+    x: 64.0
+    y: 40.0
   }
   color {
     x: 0.0
@@ -681,19 +805,20 @@ nodes {
   inherit_alpha: true
   alpha: 0.5
   size_mode: SIZE_MODE_AUTO
+  enabled: false
 }
 nodes {
   scale {
-    x: 0.4
-    y: 0.4
+    x: 0.18
+    y: 0.18
   }
   size {
-    x: 500.0
-    y: 250.0
+    x: 360.0
+    y: 200.0
   }
   color {
-    y: 0.9019608
-    z: 0.8
+    x: 0.9019608
+    y: 0.8
   }
   type: TYPE_TEXT
   text: "\320\241\320\272\320\276\321\200\320\276\321\201\321\202\321\214 \321\201\321\202\321\200\320\265\320\273\321\214\320\261\321\213 \320\262\321\201\320\265\321\205 \321\202\321\203\321\200\320\265\320\273\320\265\320\271 \320\241\320\272\320\276\321\200\320\276\321\201\321\202\321\214 \321\201\321\202\321\200\320\265\320\273\321\214\320\261\321\213 \320\262\321\201\320\265\321\205 \321\202\321\203\321\200\320\265\320\273\320\265\320\271 dfsdfhsdfh df\n"
@@ -705,12 +830,12 @@ nodes {
 }
 nodes {
   position {
-    x: 200.0
-    y: 128.0
+    x: 70.0
+    y: 64.0
   }
   size {
-    x: 180.0
-    y: 250.0
+    x: 65.0
+    y: 125.0
   }
   color {
     x: 0.3019608
@@ -721,16 +846,18 @@ nodes {
   id: "cardholder_4"
   parent: "active_panel"
   size_mode: SIZE_MODE_AUTO
+  enabled: false
 }
 nodes {
   position {
-    y: 20.0
+    y: 15.0
   }
-  size {
-    x: 120.0
-    y: 180.0
+  scale {
+    x: 0.3
+    y: 0.3
   }
   type: TYPE_BOX
+  texture: "gui/u_t_atk_spd"
   id: "card_img4"
   parent: "cardholder_4"
   inherit_alpha: true
@@ -738,15 +865,15 @@ nodes {
 }
 nodes {
   position {
-    y: -100.0
+    y: -50.0
   }
   scale {
-    x: 0.75
-    y: 0.75
+    x: 0.3
+    y: 0.3
   }
   size {
-    x: 200.0
-    y: 50.0
+    x: 100.0
+    y: 25.0
   }
   color {
     y: 0.8
@@ -761,11 +888,11 @@ nodes {
 }
 nodes {
   position {
-    y: 178.0
+    y: 84.0
   }
   size {
-    x: 200.0
-    y: 100.0
+    x: 64.0
+    y: 40.0
   }
   color {
     x: 0.0
@@ -778,19 +905,20 @@ nodes {
   inherit_alpha: true
   alpha: 0.5
   size_mode: SIZE_MODE_AUTO
+  enabled: false
 }
 nodes {
   scale {
-    x: 0.4
-    y: 0.4
+    x: 0.18
+    y: 0.18
   }
   size {
-    x: 500.0
-    y: 250.0
+    x: 360.0
+    y: 200.0
   }
   color {
-    y: 0.9019608
-    z: 0.8
+    x: 0.9019608
+    y: 0.8
   }
   type: TYPE_TEXT
   text: "\320\241\320\272\320\276\321\200\320\276\321\201\321\202\321\214 \321\201\321\202\321\200\320\265\320\273\321\214\320\261\321\213 \320\262\321\201\320\265\321\205 \321\202\321\203\321\200\320\265\320\273\320\265\320\271 \320\241\320\272\320\276\321\200\320\276\321\201\321\202\321\214 \321\201\321\202\321\200\320\265\320\273\321\214\320\261\321\213 \320\262\321\201\320\265\321\205 \321\202\321\203\321\200\320\265\320\273\320\265\320\271 dfsdfhsdfh df\n"
@@ -802,12 +930,12 @@ nodes {
 }
 nodes {
   position {
-    x: 400.0
-    y: 128.0
+    x: 140.0
+    y: 64.0
   }
   size {
-    x: 180.0
-    y: 250.0
+    x: 65.0
+    y: 125.0
   }
   color {
     x: 0.3019608
@@ -818,16 +946,18 @@ nodes {
   id: "cardholder_5"
   parent: "active_panel"
   size_mode: SIZE_MODE_AUTO
+  enabled: false
 }
 nodes {
   position {
-    y: 20.0
+    y: 15.0
   }
-  size {
-    x: 120.0
-    y: 180.0
+  scale {
+    x: 0.3
+    y: 0.3
   }
   type: TYPE_BOX
+  texture: "gui/u_t_atk_spd"
   id: "card_img5"
   parent: "cardholder_5"
   inherit_alpha: true
@@ -835,15 +965,15 @@ nodes {
 }
 nodes {
   position {
-    y: -100.0
+    y: -50.0
   }
   scale {
-    x: 0.75
-    y: 0.75
+    x: 0.3
+    y: 0.3
   }
   size {
-    x: 200.0
-    y: 50.0
+    x: 100.0
+    y: 25.0
   }
   color {
     y: 0.8
@@ -858,11 +988,11 @@ nodes {
 }
 nodes {
   position {
-    y: 178.0
+    y: 84.0
   }
   size {
-    x: 200.0
-    y: 100.0
+    x: 64.0
+    y: 40.0
   }
   color {
     x: 0.0
@@ -875,19 +1005,20 @@ nodes {
   inherit_alpha: true
   alpha: 0.5
   size_mode: SIZE_MODE_AUTO
+  enabled: false
 }
 nodes {
   scale {
-    x: 0.4
-    y: 0.4
+    x: 0.18
+    y: 0.18
   }
   size {
-    x: 500.0
-    y: 250.0
+    x: 360.0
+    y: 200.0
   }
   color {
-    y: 0.9019608
-    z: 0.8
+    x: 0.9019608
+    y: 0.8
   }
   type: TYPE_TEXT
   text: "\320\241\320\272\320\276\321\200\320\276\321\201\321\202\321\214 \321\201\321\202\321\200\320\265\320\273\321\214\320\261\321\213 \320\262\321\201\320\265\321\205 \321\202\321\203\321\200\320\265\320\273\320\265\320\271 \320\241\320\272\320\276\321\200\320\276\321\201\321\202\321\214 \321\201\321\202\321\200\320\265\320\273\321\214\320\261\321\213 \320\262\321\201\320\265\321\205 \321\202\321\203\321\200\320\265\320\273\320\265\320\271 dfsdfhsdfh df\n"
@@ -898,8 +1029,15 @@ nodes {
   parent: "card_info_popup5"
 }
 nodes {
+  position {
+    y: 64.0
+  }
+  scale {
+    x: 0.6
+    y: 0.6
+  }
   size {
-    x: 1000.0
+    x: 971.0
     y: 700.0
   }
   color {
@@ -909,6 +1047,7 @@ nodes {
   }
   type: TYPE_BOX
   id: "choose_panel"
+  yanchor: YANCHOR_BOTTOM
   parent: "card_panel"
   inherit_alpha: true
   alpha: 0.27
@@ -937,15 +1076,12 @@ nodes {
   position {
     y: 80.0
   }
-  size {
-    x: 200.0
-    y: 300.0
-  }
   color {
     z: 0.8
   }
   type: TYPE_BOX
-  id: "icon_card"
+  texture: "gui/u_a_lucky"
+  id: "icon_card1"
   parent: "choose_card_1"
   inherit_alpha: true
   size_mode: SIZE_MODE_AUTO
@@ -965,7 +1101,7 @@ nodes {
   }
   type: TYPE_BOX
   id: "back_for_text"
-  parent: "icon_card"
+  parent: "icon_card1"
   inherit_alpha: true
   alpha: 0.3
   size_mode: SIZE_MODE_AUTO
@@ -976,8 +1112,8 @@ nodes {
     y: -125.0
   }
   scale {
-    x: 0.5
-    y: 0.5
+    x: 0.7
+    y: 0.7
   }
   size {
     x: 200.0
@@ -991,7 +1127,7 @@ nodes {
   text: "1.0"
   font: "druid_text_bold"
   id: "prev_txt1"
-  parent: "icon_card"
+  parent: "icon_card1"
   inherit_alpha: true
 }
 nodes {
@@ -1000,8 +1136,8 @@ nodes {
     y: -125.0
   }
   scale {
-    x: 0.5
-    y: 0.5
+    x: 0.7
+    y: 0.7
   }
   size {
     x: 200.0
@@ -1016,7 +1152,7 @@ nodes {
   text: "1.05"
   font: "druid_text_bold"
   id: "next_txt1"
-  parent: "icon_card"
+  parent: "icon_card1"
   inherit_alpha: true
 }
 nodes {
@@ -1024,8 +1160,8 @@ nodes {
     y: -125.0
   }
   scale {
-    x: 0.5
-    y: 0.5
+    x: 0.7
+    y: 0.7
   }
   size {
     x: 200.0
@@ -1039,8 +1175,28 @@ nodes {
   text: "=>"
   font: "druid_text_bold"
   id: "txt"
-  parent: "icon_card"
+  parent: "icon_card1"
   inherit_alpha: true
+}
+nodes {
+  position {
+    y: -190.0
+  }
+  size {
+    x: 256.0
+    y: 132.0
+  }
+  color {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  }
+  type: TYPE_BOX
+  id: "box4"
+  parent: "choose_card_1"
+  inherit_alpha: true
+  alpha: 0.5
+  size_mode: SIZE_MODE_AUTO
 }
 nodes {
   position {
@@ -1143,11 +1299,11 @@ nodes {
 }
 nodes {
   position {
-    y: -168.0
+    y: -180.0
   }
   scale {
-    x: 0.5
-    y: 0.5
+    x: 0.6
+    y: 0.6
   }
   size {
     x: 400.0
@@ -1210,14 +1366,11 @@ nodes {
   position {
     y: 80.0
   }
-  size {
-    x: 200.0
-    y: 300.0
-  }
   color {
     z: 0.8
   }
   type: TYPE_BOX
+  texture: "gui/u_r_splash"
   id: "icon_card2"
   parent: "choose_card_2"
   inherit_alpha: true
@@ -1249,8 +1402,8 @@ nodes {
     y: -125.0
   }
   scale {
-    x: 0.5
-    y: 0.5
+    x: 0.7
+    y: 0.7
   }
   size {
     x: 200.0
@@ -1273,8 +1426,8 @@ nodes {
     y: -125.0
   }
   scale {
-    x: 0.5
-    y: 0.5
+    x: 0.7
+    y: 0.7
   }
   size {
     x: 200.0
@@ -1297,8 +1450,8 @@ nodes {
     y: -125.0
   }
   scale {
-    x: 0.5
-    y: 0.5
+    x: 0.7
+    y: 0.7
   }
   size {
     x: 200.0
@@ -1412,11 +1565,31 @@ nodes {
 }
 nodes {
   position {
-    y: -168.0
+    y: -190.0
+  }
+  size {
+    x: 256.0
+    y: 132.0
+  }
+  color {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  }
+  type: TYPE_BOX
+  id: "box5"
+  parent: "choose_card_2"
+  inherit_alpha: true
+  alpha: 0.5
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    y: -180.0
   }
   scale {
-    x: 0.5
-    y: 0.5
+    x: 0.6
+    y: 0.6
   }
   size {
     x: 400.0
@@ -1462,15 +1635,12 @@ nodes {
   position {
     y: 80.0
   }
-  size {
-    x: 200.0
-    y: 300.0
-  }
   color {
     z: 0.8
   }
   type: TYPE_BOX
-  id: "icon_card1"
+  texture: "gui/u_t_multi"
+  id: "icon_card3"
   parent: "choose_card_3"
   inherit_alpha: true
   size_mode: SIZE_MODE_AUTO
@@ -1490,7 +1660,7 @@ nodes {
   }
   type: TYPE_BOX
   id: "back_for_text1"
-  parent: "icon_card1"
+  parent: "icon_card3"
   inherit_alpha: true
   alpha: 0.3
   size_mode: SIZE_MODE_AUTO
@@ -1501,8 +1671,8 @@ nodes {
     y: -125.0
   }
   scale {
-    x: 0.5
-    y: 0.5
+    x: 0.7
+    y: 0.7
   }
   size {
     x: 200.0
@@ -1516,7 +1686,7 @@ nodes {
   text: "1.0"
   font: "druid_text_bold"
   id: "prev_txt3"
-  parent: "icon_card1"
+  parent: "icon_card3"
   inherit_alpha: true
 }
 nodes {
@@ -1525,8 +1695,8 @@ nodes {
     y: -125.0
   }
   scale {
-    x: 0.5
-    y: 0.5
+    x: 0.7
+    y: 0.7
   }
   size {
     x: 200.0
@@ -1541,7 +1711,7 @@ nodes {
   text: "1.05"
   font: "druid_text_bold"
   id: "next_txt3"
-  parent: "icon_card1"
+  parent: "icon_card3"
   inherit_alpha: true
 }
 nodes {
@@ -1549,8 +1719,8 @@ nodes {
     y: -125.0
   }
   scale {
-    x: 0.5
-    y: 0.5
+    x: 0.7
+    y: 0.7
   }
   size {
     x: 200.0
@@ -1560,7 +1730,7 @@ nodes {
   text: "=>"
   font: "druid_text_bold"
   id: "txt1"
-  parent: "icon_card1"
+  parent: "icon_card3"
   inherit_alpha: true
 }
 nodes {
@@ -1664,11 +1834,31 @@ nodes {
 }
 nodes {
   position {
-    y: -168.0
+    y: -190.0
+  }
+  size {
+    x: 256.0
+    y: 132.0
+  }
+  color {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  }
+  type: TYPE_BOX
+  id: "box6"
+  parent: "choose_card_3"
+  inherit_alpha: true
+  alpha: 0.5
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    y: -180.0
   }
   scale {
-    x: 0.5
-    y: 0.5
+    x: 0.6
+    y: 0.6
   }
   size {
     x: 400.0
@@ -1693,11 +1883,15 @@ nodes {
 }
 nodes {
   position {
-    x: 680.0
-    y: 1820.0
+    x: 247.0
+    y: 780.0
+  }
+  scale {
+    x: 0.4
+    y: 0.4
   }
   size {
-    x: 768.0
+    x: 700.0
     y: 100.0
   }
   color {
@@ -1707,12 +1901,16 @@ nodes {
   }
   type: TYPE_BOX
   id: "header"
+  yanchor: YANCHOR_TOP
+  pivot: PIVOT_N
   inherit_alpha: true
+  alpha: 0.3
   size_mode: SIZE_MODE_AUTO
 }
 nodes {
   position {
-    x: -282.0
+    x: -279.5
+    y: -50.0
   }
   size {
     x: 64.0
@@ -1727,11 +1925,13 @@ nodes {
   ""
   font: "druid_text_bold"
   id: "coin_balance_txt"
-  pivot: PIVOT_E
   parent: "header"
-  inherit_alpha: true
 }
 nodes {
+  position {
+    x: 85.0
+    y: -50.0
+  }
   size {
     x: 300.0
     y: 50.0
@@ -1744,7 +1944,6 @@ nodes {
   type: TYPE_BOX
   id: "health_bg"
   parent: "header"
-  inherit_alpha: true
   size_mode: SIZE_MODE_AUTO
 }
 nodes {
@@ -1781,7 +1980,8 @@ nodes {
 }
 nodes {
   position {
-    x: -236.0
+    x: -186.0
+    y: -50.0
   }
   scale {
     x: 0.7
@@ -1791,7 +1991,6 @@ nodes {
   texture: "gui/coin"
   id: "box2"
   parent: "header"
-  inherit_alpha: true
   size_mode: SIZE_MODE_AUTO
 }
 nodes {
@@ -1811,12 +2010,16 @@ nodes {
 }
 nodes {
   position {
-    x: 540.0
-    y: 50.0
+    x: 195.0
+    y: 18.0
   }
   size {
-    x: 720.0
-    y: 80.0
+    x: 300.0
+    y: 32.0
+  }
+  color {
+    y: 0.8
+    z: 0.7019608
   }
   type: TYPE_BOX
   id: "wave_bg"
@@ -1828,11 +2031,11 @@ nodes {
 }
 nodes {
   position {
-    x: -355.0
+    x: -147.5
   }
   size {
-    x: 710.0
-    y: 75.0
+    x: 295.0
+    y: 30.0
   }
   color {
     x: 0.8
@@ -1849,6 +2052,10 @@ nodes {
   size_mode: SIZE_MODE_AUTO
 }
 nodes {
+  scale {
+    x: 0.5
+    y: 0.5
+  }
   size {
     x: 200.0
     y: 100.0
@@ -1872,12 +2079,12 @@ nodes {
 }
 nodes {
   position {
-    x: 540.0
-    y: 960.0
+    x: 195.0
+    y: 390.0
   }
   size {
-    x: 1080.0
-    y: 1920.0
+    x: 390.0
+    y: 780.0
   }
   color {
     x: 0.9019608
@@ -1893,11 +2100,7 @@ nodes {
 }
 nodes {
   position {
-    y: 285.0
-  }
-  scale {
-    x: 3.0
-    y: 3.0
+    y: 244.0
   }
   size {
     x: 100.0
@@ -1911,9 +2114,15 @@ nodes {
   inherit_alpha: true
 }
 nodes {
+  position {
+    y: -87.0
+  }
   size {
     x: 200.0
     y: 100.0
+  }
+  color {
+    z: 0.8
   }
   type: TYPE_BOX
   id: "btn_restart"
@@ -1926,6 +2135,11 @@ nodes {
     x: 200.0
     y: 100.0
   }
+  color {
+    x: 0.9019608
+    y: 0.9019608
+    z: 0.3019608
+  }
   type: TYPE_TEXT
   text: "RESTART"
   font: "druid_text_bold"
@@ -1935,12 +2149,12 @@ nodes {
 }
 nodes {
   position {
-    x: 540.0
-    y: 960.0
+    x: 195.0
+    y: 390.0
   }
   size {
-    x: 1080.0
-    y: 1920.0
+    x: 390.0
+    y: 780.0
   }
   color {
     x: 0.0
@@ -1957,7 +2171,7 @@ nodes {
 }
 nodes {
   position {
-    y: -500.0
+    y: -100.0
   }
   scale {
     x: 3.0
@@ -1971,6 +2185,10 @@ nodes {
   size_mode: SIZE_MODE_AUTO
 }
 nodes {
+  scale {
+    x: 0.3
+    y: 0.3
+  }
   type: TYPE_BOX
   texture: "gui/g_play"
   id: "play_visual"

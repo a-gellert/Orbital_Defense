@@ -1,5 +1,28 @@
 -- camera_shake.script
 
+local time_for_refresh = 2
+local current_time = 2
+function init(self)
+	msg.post(".", "acquire_input_focus")
+	self.current_zoom = 1.0
+	self.target_zoom = 1.0
+end
+function update(self, dt)
+
+
+	if(current_time <= time_for_refresh) then return end
+
+	local window_w, window_h = window.get_size()
+	local scale_val = 1 -- По умолчанию портрет
+
+	if window_w > window_h then
+		scale_val = 1.4 -- Ландшафт
+	end
+	gui.set_scale(gui.get_node("active_panel"), vmath.vector3(scale_val, scale_val, 1))
+	current_time = 0
+end
+
+
 local function shake(self, intensity, duration)
 	-- Сохраняем исходную позицию, чтобы камера не "уехала" навсегда
 	local initial_pos = vmath.vector3(0, 0, 0) 

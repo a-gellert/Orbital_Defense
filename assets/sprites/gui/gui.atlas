@@ -19,4 +19,43 @@ images {
 images {
   image: "/assets/sprites/gui/fog.png"
 }
+images {
+  image: "/assets/sprites/gui/u_a_lucky.png"
+}
+images {
+  image: "/assets/sprites/gui/u_a_prj_spd.png"
+}
+images {
+  image: "/assets/sprites/gui/u_b_pierce.png"
+}
+images {
+  image: "/assets/sprites/gui/u_p_charge.png"
+}
+images {
+  image: "/assets/sprites/gui/u_p_dur.png"
+}
+images {
+  image: "/assets/sprites/gui/u_p_gold.png"
+}
+images {
+  image: "/assets/sprites/gui/u_r_splash.png"
+}
+images {
+  image: "/assets/sprites/gui/u_t_atk_spd.png"
+}
+images {
+  image: "/assets/sprites/gui/u_t_multi.png"
+}
+images {
+  image: "/assets/sprites/gui/u_te_chain.png"
+}
+images {
+  image: "/assets/sprites/gui/u_a_orbit.png"
+}
+images {
+  image: "/assets/sprites/gui/u_p_hp.png"
+}
+images {
+  image: "/assets/sprites/gui/u_p_hp_regen.png"
+}
 extrude_borders: 2

@@ -108,3 +108,9 @@ embedded_components {
     y: 0.15
   }
 }
+embedded_components {
+  id: "bullet_out_factory"
+  type: "factory"
+  data: "prototype: \"/assets/particles/bullet_out.go\"\n"
+  ""
+}

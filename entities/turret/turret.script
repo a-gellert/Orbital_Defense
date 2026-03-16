@@ -10,12 +10,17 @@ local PATTERNS = {
 		factory.create("#bullet_factory", pos, rot, {
 			damage = self.damage, speed = self.stats.bullet_speed
 		})
+		self.out = factory.create("#bullet_out_factory", pos, rot	)
+		go.set_parent(self.out, go.get_id(), true)
 	end,
 
 	[hash("pulse")] = function(self, pos, rot)
 		factory.create("#bullet_factory", pos, rot, {
 			damage = self.damage, speed = self.stats.bullet_speed
 		})
+
+		self.out = factory.create("#bullet_out_factory", pos, rot	)
+		go.set_parent(self.out, go.get_id(), true)
 	end,
 
 	-- Ракетница спавнит ракету и передает ей цель для наведения

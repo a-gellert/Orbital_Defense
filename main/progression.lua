@@ -95,7 +95,7 @@ function M.reset_progress()
 	M.data.economy.planet_hp = 100
 	M.is_paused = false
 	M.has_free_slot = true
-
+	M.data.active_upgrades = {}
 	-- Сброс орбит (оставляем только первую)
 
 	for id, orbit in pairs(M.data.orbits_data) do

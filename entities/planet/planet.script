@@ -47,6 +47,7 @@ local function fire(self, target_id)
 	-- Создаем пулю (используем урон планеты из progression)
 	local dmg = prog.data.economy.planet_dmg
 	factory.create("#bullet_factory", my_pos, rot, { damage = dmg })
+	factory.create("#bullet_out_factory", my_pos, rot)
 end
 
 function update(self, dt)
