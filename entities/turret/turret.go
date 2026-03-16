@@ -56,7 +56,7 @@ embedded_components {
 embedded_components {
   id: "rocket_factory"
   type: "factory"
-  data: "prototype: \"/entities/rocket/rocket.go\"\n"
+  data: "prototype: \"/entities/slot/rocket/rocket.go\"\n"
   ""
 }
 embedded_components {

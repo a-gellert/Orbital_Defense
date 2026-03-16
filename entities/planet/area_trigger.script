@@ -1,0 +1,32 @@
+-- area_trigger.script
+local prog = require "main.progression"
+
+-- Выносим функцию обновления масштаба, чтобы вызывать её по необходимости
+local function update_scale(self)
+	local target_scale = prog.data.economy.planet_damage_radius / 100
+	go.set_scale(vmath.vector3(target_scale, target_scale, 1))
+	self.current_applied_scale = target_scale -- запоминаем, что уже применили
+end
+
+function init(self)
+	self.current_applied_scale = 0
+	update_scale(self)
+end
+
+function update(self, dt)
+	-- Проверяем раз в кадр только число (это быстро), 
+	-- и только если оно изменилось — меняем масштаб самого объекта (это медленно)
+	local actual_scale = prog.data.economy.planet_damage_radius / 100
+	if math.abs(self.current_applied_scale - actual_scale) > 0.001 then
+		update_scale(self)
+	end
+end
+
+function on_message(self, message_id, message, sender)
+	if message_id == hash("trigger_response") then
+		if message.other_group == hash("enemy") then
+			-- ".." автоматически отправит сообщение объекту-родителю
+			msg.post("/planet#planet", "target_update", { id = message.other_id, enter = message.enter })
+		end
+	end 
+end

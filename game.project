@@ -13,7 +13,6 @@ high_dpi = 1
 [physics]
 gravity_y = -1000.0
 scale = 0.01
-debug = 0
 max_collision_object_count = 1024
 max_collisions = 512
 max_contacts = 512
@@ -53,4 +52,10 @@ max_count = 256
 
 [label]
 max_count = 256
+
+[native_extension]
+app_manifest = /game.appmanifest
+
+[graphics]
+texture_profiles = /game.texture_profiles
 

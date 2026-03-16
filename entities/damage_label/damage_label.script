@@ -1,8 +1,16 @@
 -- damage_label.script
+local util = require "main.utility"
+
 go.property("value", 0)
 go.property("color", vmath.vector4(1, 1, 1, 1))
 
 function init(self)
+	
+	local hue = math.random() 
+	-- Насыщенность 0.8 и Яркость 1.0 делают цвет сочным и светящимся
+	local r, g, b = util.hsv_to_rgb(hue, 0.8, 1.0)
+
+	self.color = vmath.vector4(r, g, b, 1)
 	-- Устанавливаем текст (число урона)
 	label.set_text("#label", tostring(math.floor(self.value)))
 	go.set_rotation(vmath.quat(0,0,0,0))

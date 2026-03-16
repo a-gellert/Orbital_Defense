@@ -1052,6 +1052,7 @@ nodes {
   inherit_alpha: true
   alpha: 0.27
   size_mode: SIZE_MODE_AUTO
+  enabled: false
 }
 nodes {
   position {

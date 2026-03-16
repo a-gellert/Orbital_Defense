@@ -1,0 +1,33 @@
+-- entities/rocket/rocket.script
+go.property("damage", 0)
+go.property("speed", 300)
+go.property("target_id", hash(""))
+
+function update(self, dt)
+	if go.exists(self.target_id) then
+		local my_pos = go.get_world_position()
+		local target_pos = go.get_world_position(self.target_id)
+
+		-- Направление к цели
+		local target_dir = vmath.normalize(target_pos - my_pos)
+		local current_dir = vmath.rotate(go.get_rotation(), vmath.vector3(1, 0, 0))
+
+		-- Плавный поворот (интерполяция направления)
+		local new_dir = vmath.lerp(0.1, current_dir, target_dir)
+		local angle = math.atan2(new_dir.y, new_dir.x)
+		go.set_rotation(vmath.quat_rotation_z(angle))
+	end
+
+	-- Движение вперед
+	local distance = self.speed * dt
+	local direction = vmath.rotate(go.get_rotation(), vmath.vector3(1, 0, 0))
+	go.set_position(go.get_position() + direction * distance)
+end
+
+function on_message(self, message_id, message, sender)
+	if message_id == hash("collision_response") then
+		-- Логика взрыва: наносим урон и удаляемся
+		msg.post(message.other_id, "take_damage", { amount = self.damage })
+		go.delete()
+	end
+end

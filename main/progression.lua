@@ -6,6 +6,7 @@ M.data = {
 	diamonds = 0,
 	is_paused =true,
 	has_free_slot = true,
+	click_state = 0,
 	-- Состояние турелей
 
 	turrets = {
@@ -36,21 +37,13 @@ M.data = {
 	-- Планета и Экономика
 
 	economy = {
-
 		level_gpk = 1,     
-
 		level_hp = 1,      -- Уровень здоровья планеты
-
 		gold_per_kill = 10,
-
 		passive_income = 0,
-
 		planet_hp = 100,
-
 		planet_dmg = 10,
-
-		planet_damage_radius = 300
-
+		planet_damage_radius = 200
 	}
 
 }
@@ -111,19 +104,11 @@ M.is_paused = true
 -- Формула сокращения чисел
 
 function M.format_num(n)
-
 	if not n then return "0" end
-
 	if n >= 10^9 then return string.format("%.2fB", n/10^9) end
-
 	if n >= 10^6 then return string.format("%.2fM", n/10^6) end
-
 	if n >= 10^3 then return string.format("%.1fK", n/10^3) end
-
 	return tostring(math.floor(n))
-
 end
-
-
 
 return M

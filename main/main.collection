@@ -4,7 +4,7 @@ instances {
   prototype: "/entities/orbit_controller/orbit_controller.go"
 }
 instances {
-  id: "planet1"
+  id: "planet"
   prototype: "/entities/planet/planet.go"
 }
 instances {
@@ -66,15 +66,20 @@ instances {
 instances {
   id: "range_circle"
   prototype: "/entities/range_circle/range_circle.go"
+  children: "fill_circle"
   position {
     z: -0.5
   }
 }
-scale_along_z: 0
-embedded_instances {
-  id: "planet"
-  data: ""
+instances {
+  id: "area_trigger"
+  prototype: "/entities/planet/area_trigger.go"
+  scale3 {
+    x: 3.0
+    y: 3.0
+  }
 }
+scale_along_z: 0
 embedded_instances {
   id: "orbit_1"
   data: ""
@@ -157,6 +162,21 @@ embedded_instances {
   "    x: 500.0\n"
   "    y: 500.0\n"
   "  }\n"
+  "}\n"
+  ""
+}
+embedded_instances {
+  id: "fill_circle"
+  data: "embedded_components {\n"
+  "  id: \"sprite\"\n"
+  "  type: \"sprite\"\n"
+  "  data: \"default_animation: \\\"circle\\\"\\n"
+  "material: \\\"/builtins/materials/sprite.material\\\"\\n"
+  "textures {\\n"
+  "  sampler: \\\"texture_sampler\\\"\\n"
+  "  texture: \\\"/assets/sprites/gui/gui.atlas\\\"\\n"
+  "}\\n"
+  "\"\n"
   "}\n"
   ""
 }
