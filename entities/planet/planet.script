@@ -72,6 +72,25 @@ end
 
 function on_message(self, message_id, message, sender)
 	-- 1. ПОЛУЧЕНИЕ ЦЕЛЕЙ ОТ РАДАРА
+	if message_id == hash("take_damage") then
+		-- Учет щита: щит поглощает часть урона
+		prog.data.economy.planet_hp = prog.data.economy.planet_hp - message.amount 
+
+		-- Визуальный отклик (вспышка красным)
+		go.set("#sprite", "tint", vmath.vector4(2, 0.5, 0.5, 1))
+		go.animate("#sprite", "tint", go.PLAYBACK_ONCE_FORWARD, vmath.vector4(1, 1, 1, 1), go.EASING_LINEAR, 0.2)
+
+		-- Тряска камеры
+		msg.post("main:/camera_root#camera_shake", "shake", { intensity = 10, duration = 0.4 })
+
+	
+		msg.post("main:/gui#game", "update_planet_hp")
+
+		-- Проверка поражения
+		if prog.data.economy.planet_hp <= 0 then
+			msg.post("main:/gui#game", "show_defeat")
+		end
+	end
 	if message_id == hash("target_update") then
 		if message.enter then
 			self.enemies_in_range[message.id] = true
@@ -102,5 +121,27 @@ function on_message(self, message_id, message, sender)
 				msg.post("main:/gui#game", "show_defeat")
 			end
 		end
+elseif message_id == hash("collision_response") or message_id == hash("contact_point_response") then
+	if message.own_group == hash("planet") and message.other_group == hash("enemy_bullet") then
+
+		-- Вычитаем здоровье
+		prog.data.economy.planet_hp = prog.data.economy.planet_hp - 10
+
+		-- Визуальный отклик (вспышка красным)
+		go.set("#sprite", "tint", vmath.vector4(2, 0.5, 0.5, 1))
+		go.animate("#sprite", "tint", go.PLAYBACK_ONCE_FORWARD, vmath.vector4(1, 1, 1, 1), go.EASING_LINEAR, 0.2)
+
+		-- Тряска камеры
+		msg.post("main:/camera_root#camera_shake", "shake", { intensity = 10, duration = 0.4 })
+
+		-- Враг уничтожается при столкновении
+		go.delete(message.other_id)
+		msg.post("main:/gui#game", "update_planet_hp")
+
+		-- Проверка поражения
+		if prog.data.economy.planet_hp <= 0 then
+			msg.post("main:/gui#game", "show_defeat")
+		end
 	end
+end
 end

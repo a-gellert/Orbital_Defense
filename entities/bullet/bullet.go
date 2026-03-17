@@ -3,7 +3,7 @@ components {
   component: "/entities/bullet/bullet.script"
   properties {
     id: "speed"
-    value: "800.0"
+    value: "600.0"
     type: PROPERTY_TYPE_NUMBER
   }
 }
@@ -25,7 +25,7 @@ embedded_components {
 embedded_components {
   id: "collisionobject"
   type: "collisionobject"
-  data: "type: COLLISION_OBJECT_TYPE_KINEMATIC\n"
+  data: "type: COLLISION_OBJECT_TYPE_TRIGGER\n"
   "mass: 0.0\n"
   "friction: 0.1\n"
   "restitution: 0.5\n"
@@ -41,7 +41,7 @@ embedded_components {
   "    index: 0\n"
   "    count: 1\n"
   "  }\n"
-  "  data: 4.0\n"
+  "  data: 5.0\n"
   "}\n"
   ""
 }

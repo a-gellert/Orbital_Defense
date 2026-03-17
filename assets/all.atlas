@@ -1,13 +1,4 @@
 images {
-  image: "/assets/sprites/e_kamikaze.png"
-}
-images {
-  image: "/assets/sprites/e_shooter.png"
-}
-images {
-  image: "/assets/sprites/e_tank.png"
-}
-images {
   image: "/assets/sprites/p_blue.png"
 }
 images {
@@ -42,5 +33,29 @@ images {
 }
 images {
   image: "/assets/sprites/gui/coin.png"
+}
+images {
+  image: "/assets/sprites/kamikaze.png"
+}
+images {
+  image: "/assets/sprites/mini_splitter.png"
+}
+images {
+  image: "/assets/sprites/shooter.png"
+}
+images {
+  image: "/assets/sprites/splitter.png"
+}
+images {
+  image: "/assets/sprites/swarmer.png"
+}
+images {
+  image: "/assets/sprites/swing.png"
+}
+images {
+  image: "/assets/sprites/tank.png"
+}
+images {
+  image: "/assets/sprites/warp.png"
 }
 extrude_borders: 2

@@ -11,9 +11,21 @@ M.turret_stats = {
 	plasma = { damage = 100, rate = 2.0,range = 70, bullet_speed = 250 },
 	tesla = { damage = 45, rate = 1.2,range = 70, bullet_speed = 1000 }
 }
+--враги
+M.enemy_stats = {
+	kamikaze = {type = 1, unlock_wave = 1, hp = 15, damage = 10, speed = 60, is_fireable = false, shield = 0, move = "straight" },
+	swarmer = {type = 1, unlock_wave = 1, hp = 5, damage = 5, speed = 90, is_fireable = false, shield = 0 , move = "straight"},
+	swing = {type = 2, unlock_wave = 3,hp = 10, damage = 10, speed = 90, is_fireable = false, shield = 0 , move = "sinuos"},
+	shooter = {type = 2, unlock_wave = 5, speed = 80, is_fireable = true, shield = 0 , move = "straight"},
+	tank = {type = 2, unlock_wave = 8,hp = 30, damage = 10, speed = 40, is_fireable = false, shield = 3 , move = "straight"},
+	splitter = {type = 3, unlock_wave = 12,hp = 30, damage = 10, speed = 70, is_fireable = true, shield = 0 , move = "straight"},
+	mini_splitter = {type = 3, unlock_wave = 30, hp = 10, damage = 5, speed = 90, is_fireable = false, shield = 0 , move = "straight"},
+	warp = {type = 3, unlock_wave = 20, hp = 20, damage = 15, speed = 50, is_fireable = true, shield = 2 , move = "warp"}
+}
+
 
 M.upgrades = {}
--- Добавляем в твою таблицу M.upgrades
+-- Добавляем в твою таблицу M.upgradess
 -- Типы: 1 - Обычный, 2 - Элитный, 3 - Редкий, 4 - Эпический
 
 -- АТАКА И СКОРОСТЬ
@@ -36,6 +48,10 @@ M.upgrades.planet_hp = { type = 2, levels = {1.01, 1.05, 1.1, 1.2, 1.3}, owner =
 -- CLICKER MECHANICS (Overdrive)
 M.upgrades.click_overdrive_charge = { type = 2, levels = {1.15, 1.3, 1.6}, owner = "planet", sprite = "u_p_charge", info = "Overdrive gauge fills faster" }
 M.upgrades.overdrive_duration = { type = 3, levels = {1.2, 1.5, 2.0}, owner = "planet", sprite = "u_p_dur", info = "Overdrive mode duration" }
+
+
+
+
 -- Прогрессия урона от уровня (множитель)
 M.level_multiplier = function(level)
 	return 1 + (level - 1) * 0.5 -- +50% урона за уровень

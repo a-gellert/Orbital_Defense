@@ -1,144 +1,155 @@
 -- enemy.script
 local prog = require "main.progression"
+local config = require "main.game_config" -- Убедись, что твои таблицы статов лежат тут
 
 go.property("type", hash("kamikaze"))
-go.property("health", 20)
-go.property("max_health", 20)
+
+-- Хеши для быстрого сравнения
 local types = {
 	KAMIKAZE = hash("kamikaze"),
+	SWARMER = hash("swarmer"),
+	SWING = hash("swing"),
 	SHOOTER = hash("shooter"),
-	SINUOUS = hash("sinuous")
+	TANK = hash("tank"),
+	SPLITTER = hash("splitter"),
+	MINI_SPLITTER = hash("mini_splitter"),
+	WARP = hash("warp")
 }
--- Внутри логики смерти врага
-function die(self)
-	-- Отправляем в спавнер (чтобы он считал живых)
-	msg.post("/enemy_manager", "enemy_died")
-	msg.post("@render:", "player_take_damage", { amount = 10 })
 
-	msg.post("main:/camera_root#camera_shake", "shake", { intensity = 4, duration = 0.2 })
-	timer.delay(0.1, false, function()
-		factory.create("#fx_factory", go.get_position())
-		go.delete() 
-	end)
-end
 function play_hit_animation(self)
-	-- 1. Сбросим масштаб в 1, если предыдущая анимация еще шла
 	go.set_scale(vmath.vector3(1, 1, 1))
-
-	-- 2. Цепочка анимаций:
-	-- Сначала сжимаем (0.05 сек)
 	go.animate(".", "scale", go.PLAYBACK_ONCE_FORWARD, vmath.vector3(0.8, 0.8, 1), go.EASING_OUTCUBIC, 0.07, 0, function()
-		-- Затем раздуваем чуть больше нормы (0.07 сек)
 		go.animate(".", "scale", go.PLAYBACK_ONCE_FORWARD, vmath.vector3(1.2, 1.2, 1), go.EASING_OUTBACK, 0.1, 0, function()
-			-- Возвращаем в исходный размер (0.05 сек)
 			go.animate(".", "scale", go.PLAYBACK_ONCE_FORWARD, vmath.vector3(1, 1, 1), go.EASING_INSINE, 0.05)
 		end)
 	end)
 
-	-- Дополнительно: можно "мигнуть" красным цветом, если у тебя стоит спрайт
-	go.set("#sprite", "tint", vmath.vector4(2, 0.5, 0.5, 1)) -- Усиливаем красный канал
+	go.set("#sprite", "tint", vmath.vector4(2, 0.5, 0.5, 1)) 
 	go.animate("#sprite", "tint", go.PLAYBACK_ONCE_FORWARD, vmath.vector4(1, 1, 1, 1), go.EASING_INSINE, 0.2)
 end
-function init(self)
-	self.target_pos = vmath.vector3(0, 0, 0)
-	self.speed = 10
-	self.shoot_timer = 0
-	self.sin_timer = 0
-	self.base_pos = nil
-	self.is_dead = false
-	self.reward = 3
-	
-	-- Настройка типа
-	if self.type == types.KAMIKAZE then
-		self.speed = 90
-		self.health = 10
-	elseif self.type == types.SHOOTER then
-		self.speed = 60
-		self.stop_distance = 150
-		self.health = 40
-		self.shoot_timer = 2.0 -- Задержка перед первым выстрелом
-	elseif self.type == types.SINUOUS then
-		self.speed = 70
-		self.amplitude = 60
-		self.frequency = 3
-		self.health = 30
+
+function die(self, was_killed_by_player)
+	if self.is_dead then return end
+	self.is_dead = true
+
+	-- Если это Сплиттер, спавним мелких
+	if self.type == types.SPLITTER and was_killed_by_player then
+		for i = 1, 3 do
+			local offset = vmath.vector3(math.random(-20, 20), math.random(-20, 20), 0)
+			factory.create("#enemy_factory", go.get_position() + offset, nil, { type = types.MINI_SPLITTER })
+		end
 	end
 
-	self.max_health = self.health
+	msg.post("/enemy_manager", "enemy_died")
+
+	if not was_killed_by_player then
+		-- Урон игроку, если долетел
+		msg.post("@render:", "player_take_damage", { amount = self.stats.damage })
+	end
+
+	msg.post("main:/camera_root#camera_shake", "shake", { intensity = 4, duration = 0.2 })
+
+	factory.create("#fx_factory", go.get_position())
+	go.delete() 
 end
 
+function init(self)
+	self.target_pos = vmath.vector3(0, 0, 0)
+	self.is_dead = false
+	self.sin_timer = 0
+	self.warp_timer = 0
+	self.base_pos = go.get_position()
+
+	-- 1. Получаем таблицу статов
+	local raw_stats = config.enemy_stats
+	self.stats = nil
+
+	-- 2. Ищем данные врага по хешу типа
+	for name, data in pairs(raw_stats) do
+		if hash(name) == self.type then
+			self.stats = data
+			self.type_name = name -- Сохраняем имя для спрайта
+			break
+		end
+	end
+
+	-- 3. ПРОВЕРКА: Если тип не найден, ставим дефолтные статы, чтобы не было ошибки
+	if not self.stats then
+		print("ERROR: Enemy type not found in config: " .. tostring(self.type))
+		self.stats = { hp = 10, damage = 5, speed = 50, move = "straight", shield = 0 }
+		self.type_name = "kamikaze" -- любой дефолтный спрайт
+	end
+
+	-- 4. Теперь безопасно задаем здоровье
+	self.health = self.stats.hp or 10
+	self.max_health = self.health
+
+	-- Ставим спрайт
+	sprite.play_flipbook("#sprite", hash(self.type_name))
+
+	self.shoot_timer = self.stats.is_fireable and 2.0 or 0
+end
 function update(self, dt)
-	if self.is_dead then return end
-	if prog.is_paused then return end
-	
+	if self.is_dead or prog.is_paused then return end
+
 	local my_pos = go.get_position()
 	local to_target = self.target_pos - my_pos
 	local dist = vmath.length(to_target)
 	local dir = dist > 0.1 and vmath.normalize(to_target) or vmath.vector3(1,0,0)
-	if self.type == types.SHOOTER then
-		-- Движение
-		if dist > self.stop_distance then
-			go.set_position(my_pos + dir * self.speed * dt)
-		end
-		go.set_rotation(vmath.quat_rotation_z(math.atan2(dir.y, dir.x)))
 
-		-- Стрельба
-		self.shoot_timer = self.shoot_timer - dt
-		if self.shoot_timer <= 0 then
-			-- Стреляем только если враг в радиусе атаки
-			if dist <= self.stop_distance + 50 then 
-				factory.create("#bullet_factory", my_pos, go.get_rotation(), {
-					is_enemy = true,
-					damage = 10,
-					speed = 300
-				})
-				self.shoot_timer = 2.0 -- Перезарядка
-			else
-				self.shoot_timer = 0.5
-			end
+	-- ЛОГИКА ДВИЖЕНИЯ
+	if self.stats.move == "straight" then
+		local stop_dist = self.stats.is_fireable and 75 or 20
+		if dist > stop_dist then
+			go.set_position(my_pos + dir * self.stats.speed * dt)
 		end
-
-	elseif self.type == types.SINUOUS then
+	elseif self.stats.move == "sinuos" then
 		self.sin_timer = self.sin_timer + dt
 		local side_dir = vmath.vector3(-dir.y, dir.x, 0)
-		local offset = side_dir * math.sin(self.sin_timer * self.frequency) * self.amplitude
-		self.base_pos = (self.base_pos or my_pos) + dir * self.speed * dt
-		go.set_position(self.base_pos + offset)
-		go.set_rotation(vmath.quat_rotation_z(math.atan2(dir.y, dir.x)))
-	elseif self.type == types.KAMIKAZE then
-		go.set_position(my_pos + dir * self.speed * dt)
-		go.set_rotation(vmath.quat_rotation_z(math.atan2(dir.y, dir.x)))
+		local wave = math.sin(self.sin_timer * 3) * 60
+		self.base_pos = self.base_pos + dir * self.stats.speed * dt
+		go.set_position(self.base_pos + side_dir * wave)
+	elseif self.stats.move == "warp" then
+		self.warp_timer = self.warp_timer + dt
+		if self.warp_timer > 2.5 then
+			go.set_position(my_pos + dir * 60) -- Прыжок
+			self.warp_timer = 0
+			factory.create("#fx_factory", my_pos) -- Эффект вспышки на месте прыжка
+		end
+		go.set_position(go.get_position() + dir * self.stats.speed * dt)
 	end
 
-	-- Проверка столкновения с центром
-	if dist < 20 then
-		die(self)
+	-- ПОВОРОТ К ЦЕНТРУ
+	go.set_rotation(vmath.quat_rotation_z(math.atan2(dir.y, dir.x)))
+
+	-- СТРЕЛЬБА
+	if self.stats.is_fireable then
+		self.shoot_timer = self.shoot_timer - dt
+		if self.shoot_timer <= 0 and dist < 100 then
+			factory.create("#bullet_factory", my_pos, go.get_rotation(), { is_enemy = true, damage = self.stats.damage })
+			self.shoot_timer = 2.5
+		end
+	end
+
+	-- ПРОВЕРКА СТОЛКНОВЕНИЯ
+	if dist < 25 then
+		die(self, false)
 	end
 end
 
 function on_message(self, message_id, message, sender)
 	if message_id == hash("take_damage") then
-		self.health = self.health - message.amount
-		local p = go.get_position()
-		-- Добавляем немного Z, чтобы цифры были ПОВЕРХ врагов
-		p.z = 0.7
-		factory.create("#damage_factory", p, nil, { value = message.amount })
-		-- Визуал удара
-		go.cancel_animations("#sprite", "tint")
-		go.set("#sprite", "tint", vmath.vector4(1, 0.5, 0.5, 1))
-		go.animate("#sprite", "tint", go.PLAYBACK_ONCE_FORWARD, vmath.vector4(1, 1, 1, 1), go.EASING_OUTQUAD, 0.3)
+		-- Учет щита: щит поглощает часть урона
+		local effective_damage = message.amount / (1 + (self.stats.shield or 0))
+		self.health = self.health - effective_damage
+
+		factory.create("#damage_factory", go.get_position() + vmath.vector3(0,0,0.7), nil, { value = math.floor(effective_damage) })
+
 		play_hit_animation(self)
+
 		if self.health <= 0 and not self.is_dead then
-			self.is_dead = true
 			msg.post("main:/logic#game_manager", "enemy_killed", { amount = prog.data.economy.gold_per_kill })
-			die(self)
+			die(self, true)
 		end
 	end
-	if message_id == hash("die_from_crash") then
-		-- Враг умирает, но НЕ дает золото, так как он нанес урон планете
-
-		msg.post("/enemy_manager", "enemy_died") 
-		go.delete()
-	end
 end
-

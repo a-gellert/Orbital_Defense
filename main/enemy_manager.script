@@ -1,9 +1,18 @@
 -- wave_manager.script
 local balance = require "main.balance" 
+local config = require "main.game_config"
 local prog = require "main.progression"
 
 local SPAWN_RADIUS = 500 
 local WAVE_DELAY = 3.0
+
+-- Веса редкости для спавна (чем выше, тем чаще)
+local RARITY_WEIGHTS = {
+	[1] = 100, -- Обычные (Kamikaze, Swarmer)
+	[2] = 30,  -- Элитные (Shooter, Tank)
+	[3] = 10,  -- Редкие (Splitter, Warp)
+	[4] = 2    -- Эпические (Боссы или супер-редкие)
+}
 
 function init(self)
 	self.current_wave = 1
@@ -12,26 +21,45 @@ function init(self)
 	self.active_enemies = 0 
 	self.timer = 0.5
 	self.state = "SPAWNING" 
+	self.cards_shown = false
 
-	-- Проверка GUI перед отправкой
 	if msg.url("main:/gui#game") then
 		msg.post("main:/gui#game", "update_wave_number", { wave = self.current_wave })
 		msg.post("main:/gui#game", "update_wave_progress", { ratio = 0 })
 	end
 end
 
+-- Функция выбора случайного типа врага на основе весов и текущей волны
+local function get_random_enemy_type(wave)
+	local pool = {}
+	for name, stats in pairs(config.enemy_stats) do
+		-- Условие разблокировки: например, Tank появляется только после 5 волны
+		local unlock_wave = stats.unlock_wave or 1 
+		if wave >= unlock_wave then
+			local weight = RARITY_WEIGHTS[stats.type] or 10
+			for i = 1, weight do
+				table.insert(pool, hash(name))
+			end
+		end
+	end
+	return pool[math.random(#pool)]
+end
+
 local function spawn_enemy(self)
 	local angle = math.random() * math.pi * 2
 	local pos = vmath.vector3(math.cos(angle) * SPAWN_RADIUS, math.sin(angle) * SPAWN_RADIUS, 0.2)
 
-	local hp, reward = balance.get_enemy_stats(self.current_wave)
-	local is_boss = (self.current_wave % 10 == 0)
+	-- 1. Выбираем КТО заспавнится
+	local enemy_type = get_random_enemy_type(self.current_wave)
 
-	local enemy_id = factory.create("#enemy_factory", pos, nil, { 
-		hp = hp, 
-		reward = reward, 
-		is_boss = is_boss,
-		scale = is_boss and 2.5 or 1.0  -- Передаем масштаб в свойствах
+	-- 2. Берем базовые множители волны
+	local wave_hp_mult, wave_reward_mult = balance.get_enemy_stats(self.current_wave)
+
+	-- 3. Создаем врага, передавая ему тип. 
+	-- Скрипт врага сам подтянет статы из конфига по этому типу.
+	factory.create("#enemy_factory", pos, nil, { 
+		type = enemy_type
+		-- Дополнительные множители можно передать, если хочешь чтобы враги росли в статах
 	})
 
 	self.spawned_count = self.spawned_count + 1
@@ -45,32 +73,36 @@ function update(self, dt)
 		self.timer = self.timer - dt
 		if self.timer <= 0 then
 			spawn_enemy(self)
-			self.timer = math.max(0.2, 0.8 - (self.current_wave * 0.02))
+
+			-- Ускоряем темп спавна с каждой волной
+			local spawn_speed = math.max(0.15, 0.8 - (self.current_wave * 0.03))
+			self.timer = spawn_speed
 
 			if self.spawned_count >= self.enemies_to_spawn then
 				self.state = "WAITING"
-				-- Убрали отсюда вызов карточек
 			end
 		end
 
 	elseif self.state == "WAITING" then
 		if self.active_enemies <= 0 then
-			-- ПРОВЕРКА: Если волна закончилась и она кратна 5
-			-- И мы еще не показали карточки для этой волны
+			-- Вызов карточек каждые 3 волны
 			if self.current_wave % 3 == 0 and not self.cards_shown then
 				msg.post("main:/gui#game", "show_card_selection")
-				self.cards_shown = true -- Флаг, чтобы не вызывать в каждом кадре апдейта
-				return -- Выходим, пока игрок выбирает
+				self.cards_shown = true
+				return 
 			end
 
 			self.timer = self.timer - dt
 			if self.timer <= 0 then
 				self.current_wave = self.current_wave + 1
-				self.cards_shown = false -- Сбрасываем флаг для следующей пятерки
+				self.cards_shown = false 
 				self.spawned_count = 0
+
+				-- Прогрессия количества врагов
 				self.enemies_to_spawn = 5 + (self.current_wave * 2)
+
 				self.state = "SPAWNING"
-				self.timer = 0.5 
+				self.timer = 1.0 -- Пауза перед началом новой волны
 
 				if msg.url("main:/gui#game") then
 					msg.post("main:/gui#game", "update_wave_number", { wave = self.current_wave })
@@ -82,13 +114,11 @@ function update(self, dt)
 end
 
 function on_message(self, message_id, message, sender)
-	if message_id == hash("enemy_died") or message_id == hash("enemy_defeated") then
+	if message_id == hash("enemy_died") then
 		self.active_enemies = math.max(0, self.active_enemies - 1)
 
-		local killed_count = self.spawned_count - self.active_enemies
-		local progress = self.enemies_to_spawn > 0 and (killed_count / self.enemies_to_spawn) or 0
-		progress = math.min(math.max(progress, 0), 1)
-
+		-- Обновляем прогресс-бар в GUI
+		local progress = self.spawned_count > 0 and ((self.spawned_count - self.active_enemies) / self.enemies_to_spawn) or 0
 		if msg.url("main:/gui#game") then
 			msg.post("main:/gui#game", "update_wave_progress", { ratio = progress })
 		end

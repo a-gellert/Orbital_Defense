@@ -22,15 +22,22 @@ function on_message(self, message_id, message, sender)
 	if message_id == hash("trigger_response") and message.enter then
 		local target_group = message.other_group
 
-		-- Пуля игрока бьет врагов
+		-- 1. Пуля ИГРОКА попадает во ВРАГА
 		if not self.is_enemy and target_group == hash("enemy") then
-			msg.post(message.other_id, "take_damage", { amount = self.damage })
+			-- Добавляем проверку, чтобы не отправить урон уже мертвому объекту
+			msg.post(message.other_id, "take_damage", { amount = self.damage or 10 })
 			go.delete()
+			return -- Важно: выходим из функции, так как объект удален
+		end
 
-			-- Пуля врага бьет станцию/игрока
-		elseif self.is_enemy and (target_group == hash("station") or target_group == hash("player")) then
-			msg.post("@render:", "player_take_damage", { amount = self.damage })
+		-- 2. Пуля ВРАГА попадает в ПЛАНЕТУ
+		if self.is_enemy and target_group == hash("planet") then
+			msg.post(message.other_id, "take_damage", { 
+				amount = self.damage or 5,
+				attacker_id = go.get_id() -- Передаем ID, если планета должна знать, кто бил
+			})
 			go.delete()
+			return
 		end
 	end
 end

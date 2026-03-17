@@ -23,14 +23,14 @@ embedded_components {
   "    index: 0\n"
   "    count: 1\n"
   "  }\n"
-  "  data: 7.0\n"
+  "  data: 6.0\n"
   "}\n"
   ""
 }
 embedded_components {
   id: "sprite"
   type: "sprite"
-  data: "default_animation: \"kamikaze\"\n"
+  data: "default_animation: \"mini_splitter\"\n"
   "material: \"/builtins/materials/sprite.material\"\n"
   "textures {\n"
   "  sampler: \"texture_sampler\"\n"
@@ -38,8 +38,8 @@ embedded_components {
   "}\n"
   ""
   scale {
-    x: 0.15
-    y: 0.15
+    x: 0.1
+    y: 0.1
   }
 }
 embedded_components {
@@ -58,11 +58,5 @@ embedded_components {
   id: "damage_factory"
   type: "factory"
   data: "prototype: \"/entities/damage_label/damage_label.go\"\n"
-  ""
-}
-embedded_components {
-  id: "enemy_factory"
-  type: "factory"
-  data: "prototype: \"/entities/enemy/mini_enemy.go\"\n"
   ""
 }
