@@ -26,7 +26,7 @@ M.data = {
 
 	orbits_data = {
 		or1 = { id = hash("/orbit_1"), radius = 75,  speed = 1.5, slots = 4,  price = 0,     unlocked = true },
-		or2 = { id = hash("/orbit_2"), radius = 105, speed = 1,   slots = 6,  price = 1000,  unlocked = false },
+		or2 = { id = hash("/orbit_2"), radius = 105, speed = 1,   slots = 6,  price = 1000,  unlocked = true },
 		or3 = { id = hash("/orbit_3"), radius = 135, speed = 0.8, slots = 10, price = 5000,  unlocked = false },
 		or4 = { id = hash("/orbit_4"), radius = 165, speed = 0.6, slots = 16, price = 15000, unlocked = false },
 		or5 = { id = hash("/orbit_5"), radius = 195, speed = 0.4, slots = 24, price = 50000, unlocked = false },
@@ -43,7 +43,7 @@ M.data = {
 		passive_income = 0,
 		planet_hp = 100,
 		planet_dmg = 10,
-		planet_damage_radius = 200
+		planet_damage_radius = 250
 	}
 
 }

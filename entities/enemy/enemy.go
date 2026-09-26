@@ -66,3 +66,9 @@ embedded_components {
   data: "prototype: \"/entities/enemy/mini_enemy.go\"\n"
   ""
 }
+embedded_components {
+  id: "ghost_factory"
+  type: "factory"
+  data: "prototype: \"/entities/enemy/ghost.go\"\n"
+  ""
+}

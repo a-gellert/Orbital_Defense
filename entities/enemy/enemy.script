@@ -59,7 +59,7 @@ function init(self)
 	self.sin_timer = 0
 	self.warp_timer = 0
 	self.base_pos = go.get_position()
-
+	self.ghost_timer = 0
 	-- 1. Получаем таблицу статов
 	local raw_stats = config.enemy_stats
 	self.stats = nil
@@ -130,7 +130,25 @@ function update(self, dt)
 			self.shoot_timer = 2.5
 		end
 	end
+	self.ghost_timer = self.ghost_timer + dt
+	if self.ghost_timer > 0.1 then
+		self.ghost_timer = 0
 
+		-- Спавним госта в текущей позиции врага
+		local ghost_id = factory.create("#ghost_factory", go.get_position(), go.get_rotation())
+
+		-- Настраиваем его внешний вид (тот же спрайт и тинт)
+		local sprite_url = msg.url(nil, ghost_id, "sprite")
+		sprite.play_flipbook(sprite_url, hash(self.type_name))
+
+		-- Анимация исчезновения и удаления
+		go.set(sprite_url, "tint", vmath.vector4(1, 1, 1, 0.4)) -- Полупрозрачный
+		go.animate(sprite_url, "tint.w", go.PLAYBACK_ONCE_FORWARD, 0, go.EASING_LINEAR, 0.4, 0, function()
+			go.delete(ghost_id)
+		end)
+		-- Можно еще плавно уменьшать размер
+	--	go.animate(ghost_id, "scale", go.PLAYBACK_ONCE_FORWARD, vmath.vector3(0.5, 0.5, 1), go.EASING_LINEAR, 0.3)
+	end
 	-- ПРОВЕРКА СТОЛКНОВЕНИЯ
 	if dist < 25 then
 		die(self, false)

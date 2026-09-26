@@ -430,9 +430,10 @@ function update(self, dt)
 	local scale_val = 1 -- По умолчанию портрет
 
 	if window_w > window_h then
-		scale_val = 1.4 -- Ландшафт
+		scale_val = 1.5 -- Ландшафт
 	end
 	gui.set_scale(gui.get_node("active_panel"), vmath.vector3(scale_val, scale_val, 1))
+	gui.set_scale(gui.get_node("left_panel"), vmath.vector3(scale_val, scale_val, 1))
 	current_time = 0
 end
 
