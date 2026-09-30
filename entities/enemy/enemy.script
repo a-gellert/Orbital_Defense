@@ -3,6 +3,9 @@ local prog = require "main.progression"
 local config = require "main.game_config" -- Убедись, что твои таблицы статов лежат тут
 
 go.property("type", hash("kamikaze"))
+go.property("hp_multiplier", 1.0)
+go.property("reward_multiplier", 1.0)
+go.property("is_boss", false)
 
 -- Хеши для быстрого сравнения
 local types = {
@@ -16,21 +19,20 @@ local types = {
 	WARP = hash("warp")
 }
 
-function play_hit_animation(self)
-	go.set_scale(vmath.vector3(1, 1, 1))
-	go.animate(".", "scale", go.PLAYBACK_ONCE_FORWARD, vmath.vector3(0.8, 0.8, 1), go.EASING_OUTCUBIC, 0.07, 0, function()
-		go.animate(".", "scale", go.PLAYBACK_ONCE_FORWARD, vmath.vector3(1.2, 1.2, 1), go.EASING_OUTBACK, 0.1, 0, function()
-			go.animate(".", "scale", go.PLAYBACK_ONCE_FORWARD, vmath.vector3(1, 1, 1), go.EASING_INSINE, 0.05)
-		end)
-	end)
+local function play_hit_animation(self)
+	-- Сочный Squash & Stretch
+	go.set_scale(vmath.vector3(1.35, 0.7, 1))
+	go.animate(".", "scale", go.PLAYBACK_ONCE_FORWARD, vmath.vector3(1.0, 1.0, 1), go.EASING_OUTELASTIC, 0.22)
 
-	go.set("#sprite", "tint", vmath.vector4(2, 0.5, 0.5, 1)) 
-	go.animate("#sprite", "tint", go.PLAYBACK_ONCE_FORWARD, vmath.vector4(1, 1, 1, 1), go.EASING_INSINE, 0.2)
+	-- Ослепительная неоновая вспышка
+	go.set("#sprite", "tint", vmath.vector4(2.5, 2.5, 2.5, 1)) 
+	go.animate("#sprite", "tint", go.PLAYBACK_ONCE_FORWARD, vmath.vector4(1, 1, 1, 1), go.EASING_OUTQUAD, 0.12)
 end
 
-function die(self, was_killed_by_player)
+local function die(self, was_killed_by_player)
 	if self.is_dead then return end
 	self.is_dead = true
+	prog.active_enemies[go.get_id()] = nil
 
 	-- Если это Сплиттер, спавним мелких
 	if self.type == types.SPLITTER and was_killed_by_player then
@@ -43,17 +45,24 @@ function die(self, was_killed_by_player)
 	msg.post("/enemy_manager", "enemy_died")
 
 	if not was_killed_by_player then
-		-- Урон игроку, если долетел
-		msg.post("@render:", "player_take_damage", { amount = self.stats.damage })
+		-- Наносим прямой урон планете, если враг долетел
+		msg.post("main:/planet#planet", "take_damage", { amount = self.stats.damage or 10 })
 	end
 
-	msg.post("main:/camera_root#camera_shake", "shake", { intensity = 4, duration = 0.2 })
+	local intensity = self.is_boss and 16 or ((self.stats and self.stats.hp and self.stats.hp > 25) and 7 or 4)
+	local duration = self.is_boss and 0.6 or 0.25
+	msg.post("main:/camera_root#camera_shake", "shake", { intensity = intensity, duration = duration })
 
 	factory.create("#fx_factory", go.get_position())
 	go.delete() 
 end
 
+function final(self)
+	prog.active_enemies[go.get_id()] = nil
+end
+
 function init(self)
+	prog.active_enemies[go.get_id()] = true
 	self.target_pos = vmath.vector3(0, 0, 0)
 	self.is_dead = false
 	self.sin_timer = 0
@@ -68,24 +77,31 @@ function init(self)
 	for name, data in pairs(raw_stats) do
 		if hash(name) == self.type then
 			self.stats = data
-			self.type_name = name -- Сохраняем имя для спрайта
+			self.type_name = name
 			break
 		end
 	end
 
-	-- 3. ПРОВЕРКА: Если тип не найден, ставим дефолтные статы, чтобы не было ошибки
+	-- 3. ПРОВЕРКА: Если тип не найден, ставим дефолтные статы
 	if not self.stats then
 		print("ERROR: Enemy type not found in config: " .. tostring(self.type))
 		self.stats = { hp = 10, damage = 5, speed = 50, move = "straight", shield = 0 }
-		self.type_name = "kamikaze" -- любой дефолтный спрайт
+		self.type_name = "kamikaze"
 	end
 
-	-- 4. Теперь безопасно задаем здоровье
-	self.health = self.stats.hp or 10
+	-- 4. Задаем здоровье с учетом множителя волны
+	local base_hp = self.stats.hp or 10
+	self.health = math.max(1, math.floor(base_hp * (self.hp_multiplier or 1.0)))
 	self.max_health = self.health
 
 	-- Ставим спрайт
 	sprite.play_flipbook("#sprite", hash(self.type_name))
+
+	-- Босс: увеличенный масштаб и зловещий красный неон
+	if self.is_boss then
+		go.set_scale(vmath.vector3(1.7, 1.7, 1))
+		go.set("#sprite", "tint", vmath.vector4(2.2, 0.4, 0.4, 1))
+	end
 
 	self.shoot_timer = self.stats.is_fireable and 2.0 or 0
 end
@@ -146,8 +162,6 @@ function update(self, dt)
 		go.animate(sprite_url, "tint.w", go.PLAYBACK_ONCE_FORWARD, 0, go.EASING_LINEAR, 0.4, 0, function()
 			go.delete(ghost_id)
 		end)
-		-- Можно еще плавно уменьшать размер
-	--	go.animate(ghost_id, "scale", go.PLAYBACK_ONCE_FORWARD, vmath.vector3(0.5, 0.5, 1), go.EASING_LINEAR, 0.3)
 	end
 	-- ПРОВЕРКА СТОЛКНОВЕНИЯ
 	if dist < 25 then
@@ -161,12 +175,24 @@ function on_message(self, message_id, message, sender)
 		local effective_damage = message.amount / (1 + (self.stats.shield or 0))
 		self.health = self.health - effective_damage
 
-		factory.create("#damage_factory", go.get_position() + vmath.vector3(0,0,0.7), nil, { value = math.floor(effective_damage) })
+		-- Физическая отдача (Knockback от центра планеты)
+		local my_pos = go.get_position()
+		local dist_sq = my_pos.x * my_pos.x + my_pos.y * my_pos.y
+		if dist_sq > 25 then
+			local dist = math.sqrt(dist_sq)
+			local push_dir = vmath.vector3(my_pos.x / dist, my_pos.y / dist, 0)
+			local knockback = (self.stats.shield and self.stats.shield > 0) and 7 or 18
+			go.set_position(my_pos + push_dir * knockback)
+		end
+
+		factory.create("#damage_factory", go.get_position() + vmath.vector3(0, 0, 0.7), nil, { value = math.floor(effective_damage) })
 
 		play_hit_animation(self)
 
 		if self.health <= 0 and not self.is_dead then
-			msg.post("main:/logic#game_manager", "enemy_killed", { amount = prog.data.economy.gold_per_kill })
+			local reward = math.max(1, math.floor(prog.get_gold_per_kill() * (self.reward_multiplier or 1.0)))
+			msg.post("main:/logic#game_manager", "enemy_killed", { amount = reward })
+			prog.add_overdrive(4)
 			die(self, true)
 		end
 	end

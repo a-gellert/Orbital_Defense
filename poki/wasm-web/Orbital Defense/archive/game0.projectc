@@ -10,8 +10,8 @@ compress_archive = 1
 title_as_file_name = OrbitalDefense
 
 [display]
-width = 960
-height = 640
+width = 390
+height = 780
 high_dpi = 1
 samples = 0
 fullscreen = 0
@@ -30,7 +30,7 @@ clear_color_blue = 0
 clear_color_alpha = 1
 
 [physics]
-max_collision_object_count = 128
+max_collision_object_count = 1024
 type = 2D
 use_fixed_timestep = 0
 debug = 0
@@ -38,16 +38,16 @@ debug_alpha = 0.9
 debug_scale = 30
 world_count = 4
 gravity_x = 0
-gravity_y = -1000.0
+gravity_y = 0.0
 gravity_z = 0
 scale = 0.01
 allow_dynamic_transforms = 1
-max_collisions = 64
-max_contacts = 128
+max_collisions = 512
+max_contacts = 512
 contact_impulse_limit = 0
 ray_cast_limit_2d = 64
 ray_cast_limit_3d = 128
-trigger_overlap_capacity = 16
+trigger_overlap_capacity = 64
 velocity_threshold = 1
 max_fixed_timesteps = 2
 
@@ -57,7 +57,7 @@ position_iterations = 10
 sub_step_count = 4
 
 [bootstrap]
-main_collection = /main/main.collectionc
+main_collection = /main/loader.collectionc
 render = /rendercam/rendercam.renderc
 debug_init_script = 
 
@@ -72,10 +72,14 @@ texture_profiles = /builtins/graphics/default.texture_profiles
 verify_graphics_calls = 1
 opengl_version_hint = 33
 opengl_core_profile_hint = 1
+vulkan_version_major = 1
+vulkan_version_minor = 0
 memory_size = 512
 
 [shader]
 output_spirv = 0
+glsl_es_default_precision_float = mediump
+glsl_es_default_precision_int = highp
 
 [sound]
 gain = 1
@@ -104,7 +108,7 @@ game_binding = /input/game.input_bindingc
 use_accelerometer = 1
 
 [sprite]
-max_count = 128
+max_count = 2048
 subpixels = 1
 
 [model]
@@ -112,9 +116,14 @@ max_count = 128
 split_meshes = 0
 max_bone_matrix_texture_width = 1024
 max_bone_matrix_texture_height = 1024
+max_morph_target_texture_width = 1024
+max_morph_target_texture_height = 1024
 
 [mesh]
 max_count = 128
+
+[light]
+max_count = 64
 
 [gui]
 max_count = 64
@@ -134,7 +143,7 @@ max_count = 8
 max_count = 128
 
 [factory]
-max_count = 128
+max_count = 256
 
 [ios]
 launch_screen = /builtins/manifests/ios/LaunchScreen.storyboardc
@@ -149,14 +158,14 @@ localizations = en
 
 [android]
 version_code = 1
-minimum_sdk_version = 19
+minimum_sdk_version = 21
 target_sdk_version = 36
 package = com.example.todo
 gcm_sender_id = 
 fcm_application_id = 
 manifest = /builtins/manifests/android/AndroidManifest.xml
 iap_provider = GooglePlay
-input_method = HiddenInputField
+input_method = KeyEvent
 immersive_mode = 0
 display_cutout = 1
 debuggable = 0
@@ -176,9 +185,9 @@ localizations = en
 
 [html5]
 custom_heap_size = 0
-heap_size = 256
+heap_size = 128
 htmlfile = /builtins/manifests/web/engine_template.html
-cssfile = /builtins/manifests/web/light_theme.css
+cssfile = /builtins/manifests/web/dark_theme.css
 archive_location_prefix = archive
 archive_location_suffix = 
 engine_arguments = --verify-graphics-calls=false
@@ -186,14 +195,14 @@ wasm_streaming = 0
 show_fullscreen_button = 0
 show_made_with_defold = 0
 show_console_banner = 0
-scale_mode = stretch
+scale_mode = downscale_fit
 transparent_graphics_context = 0
 
 [particle_fx]
-max_particle_count = 1024
-max_particle_buffer_count = 1024
-max_count = 64
-max_emitter_count = 64
+max_particle_count = 4096
+max_particle_buffer_count = 4096
+max_count = 512
+max_emitter_count = 512
 
 [network]
 http_timeout = 0
@@ -209,19 +218,20 @@ defold_min_version =
 shared_state = 1
 
 [label]
-max_count = 64
+max_count = 256
 subpixels = 1
 
 [profiler]
 track_cpu = 0
+track_detailed_memory = 0
 enabled = 1
 sleep_between_server_updates = 0
 performance_timeline_enabled = 0
+max_sample_count = 4096
 
 [liveupdate]
 enabled = 1
 settings = /liveupdate.settings
-mount_on_start = 1
 
 [tilemap]
 max_count = 16

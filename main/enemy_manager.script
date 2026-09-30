@@ -53,13 +53,19 @@ local function spawn_enemy(self)
 	local enemy_type = get_random_enemy_type(self.current_wave)
 
 	-- 2. Берем базовые множители волны
-	local wave_hp_mult, wave_reward_mult = balance.get_enemy_stats(self.current_wave)
+	local wave_hp, wave_reward = balance.get_enemy_stats(self.current_wave)
+	local hp_mult = wave_hp / balance.base_hp
+	local reward_mult = wave_reward / balance.base_reward
 
-	-- 3. Создаем врага, передавая ему тип. 
-	-- Скрипт врага сам подтянет статы из конфига по этому типу.
+	local is_boss_wave = (self.current_wave % 10 == 0)
+	local is_this_boss = is_boss_wave and (self.spawned_count == 0)
+
+	-- 3. Создаем врага, передавая ему тип и множители волны
 	factory.create("#enemy_factory", pos, nil, { 
-		type = enemy_type
-		-- Дополнительные множители можно передать, если хочешь чтобы враги росли в статах
+		type = is_this_boss and hash("tank") or enemy_type,
+		hp_multiplier = is_this_boss and (hp_mult * 1.5) or hp_mult,
+		reward_multiplier = reward_mult,
+		is_boss = is_this_boss
 	})
 
 	self.spawned_count = self.spawned_count + 1
@@ -85,8 +91,9 @@ function update(self, dt)
 
 	elseif self.state == "WAITING" then
 		if self.active_enemies <= 0 then
-			-- Вызов карточек каждые 3 волны
-			if self.current_wave % 3 == 0 and not self.cards_shown then
+			-- Вызов карточек: волна 1 (ранний хук) и каждые 3 волны
+			local is_perk_wave = (self.current_wave == 1 or self.current_wave % 3 == 0)
+			if is_perk_wave and not self.cards_shown then
 				msg.post("main:/gui#game", "show_card_selection")
 				self.cards_shown = true
 				return 
@@ -99,13 +106,19 @@ function update(self, dt)
 				self.spawned_count = 0
 
 				-- Прогрессия количества врагов
-				self.enemies_to_spawn = 5 + (self.current_wave * 2)
+				self.enemies_to_spawn = 4 + (self.current_wave * 2)
 
 				self.state = "SPAWNING"
-				self.timer = 1.0 -- Пауза перед началом новой волны
+				self.timer = 1.8 -- Комфортная пауза перед началом новой волны
+
+				local is_boss = (self.current_wave % 10 == 0)
+				if is_boss then
+					msg.post("main:/camera_root#camera_shake", "shake", { intensity = 10, duration = 0.5 })
+				end
 
 				if msg.url("main:/gui#game") then
-					msg.post("main:/gui#game", "update_wave_number", { wave = self.current_wave })
+					local text = is_boss and ("⚠️ BOSS " .. self.current_wave) or ("WAVE " .. self.current_wave)
+					msg.post("main:/gui#game", "update_wave_number", { wave = self.current_wave, text = text })
 					msg.post("main:/gui#game", "update_wave_progress", { ratio = 0 })
 				end
 			end

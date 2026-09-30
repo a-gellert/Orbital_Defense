@@ -1,31 +1,38 @@
 -- damage_label.script
-local util = require "main.utility"
-
 go.property("value", 0)
 go.property("color", vmath.vector4(1, 1, 1, 1))
 
 function init(self)
-	
-	local hue = math.random() 
-	-- Насыщенность 0.8 и Яркость 1.0 делают цвет сочным и светящимся
-	local r, g, b = util.hsv_to_rgb(hue, 0.8, 1.0)
+	local is_crit = (self.value >= 22)
+	local text_str = tostring(math.floor(self.value))
+	if is_crit then
+		text_str = "!" .. text_str
+		self.color = vmath.vector4(1.0, 0.82, 0.15, 1.0) -- Огненно-золотой неон
+	else
+		self.color = vmath.vector4(0.85, 0.95, 1.0, 1.0) -- Неоново-ледяной белый
+	end
 
-	self.color = vmath.vector4(r, g, b, 1)
-	-- Устанавливаем текст (число урона)
-	label.set_text("#label", tostring(math.floor(self.value)))
-	go.set_rotation(vmath.quat(0,0,0,0))
-	-- Устанавливаем цвет (например, красный для игрока, желтый для крита)
+	label.set_text("#label", text_str)
+	go.set_rotation(vmath.quat(0, 0, 0, 1))
 	go.set("#label", "color", self.color)
 
-	-- Анимация: Взлет вверх и исчезновение
-	local p = go.get_position()
-	local target_p = p + vmath.vector3(math.random(-30, 30), 100, 0) -- Немного в разброс
+	-- Сочный поп-эффект масштаба (Pop-Up)
+	local target_scale = is_crit and 1.4 or 1.0
+	go.set_scale(vmath.vector3(0.2, 0.2, 1))
+	go.animate(".", "scale", go.PLAYBACK_ONCE_FORWARD, vmath.vector3(target_scale, target_scale, 1), go.EASING_OUTBACK, 0.14)
 
-	-- Плавный подъем
+	-- Баллистический разлет цифры по дуге
+	local p = go.get_position()
+	local offset_x = math.random(-40, 40)
+	local offset_y = is_crit and math.random(75, 110) or math.random(55, 80)
+	local target_p = p + vmath.vector3(offset_x, offset_y, 0)
+
 	go.animate(".", "position", go.PLAYBACK_ONCE_FORWARD, target_p, go.EASING_OUTQUAD, 0.6)
 
-	-- Плавное исчезновение (альфа-канал)
-	go.animate("#label", "color.w", go.PLAYBACK_ONCE_FORWARD, 0, go.EASING_INSINE, 0.6, 0, function()
-		go.delete() -- Удаляем объект после завершения
+	-- Плавное растворение
+	timer.delay(0.35, false, function()
+		go.animate("#label", "color.w", go.PLAYBACK_ONCE_FORWARD, 0, go.EASING_INSINE, 0.25, 0, function()
+			go.delete()
+		end)
 	end)
 end

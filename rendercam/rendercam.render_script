@@ -1,0 +1,121 @@
+local rendercam = require "rendercam.rendercam"
+local vp = rendercam.viewport
+
+-- Compatibility shim for Defold 1.13+ where BUFFER_COLOR_BIT was replaced by BUFFER_COLOR0_BIT
+if not render.BUFFER_COLOR_BIT then
+	render.BUFFER_COLOR_BIT = render.BUFFER_COLOR0_BIT
+end
+
+local COLOR_BIT = render.BUFFER_COLOR0_BIT or render.BUFFER_COLOR_BIT
+local DEPTH_BIT = render.BUFFER_DEPTH_BIT
+local STENCIL_BIT = render.BUFFER_STENCIL_BIT
+
+-- Compatibility shims for Defold 1.13+ where BLEND_* and STATE_* constants moved to graphics.* / changed names
+local BLEND_SRC_ALPHA = (graphics and (graphics.BLEND_FACTOR_SRC_ALPHA or graphics.BLEND_SRC_ALPHA))
+	or render.BLEND_FACTOR_SRC_ALPHA
+	or render.BLEND_SRC_ALPHA
+
+local BLEND_ONE_MINUS_SRC_ALPHA = (graphics and (graphics.BLEND_FACTOR_ONE_MINUS_SRC_ALPHA or graphics.BLEND_ONE_MINUS_SRC_ALPHA))
+	or render.BLEND_FACTOR_ONE_MINUS_SRC_ALPHA
+	or render.BLEND_ONE_MINUS_SRC_ALPHA
+
+local STATE_DEPTH_TEST = (graphics and graphics.STATE_DEPTH_TEST) or render.STATE_DEPTH_TEST
+local STATE_STENCIL_TEST = (graphics and graphics.STATE_STENCIL_TEST) or render.STATE_STENCIL_TEST
+local STATE_BLEND = (graphics and graphics.STATE_BLEND) or render.STATE_BLEND
+local STATE_CULL_FACE = (graphics and graphics.STATE_CULL_FACE) or render.STATE_CULL_FACE
+
+local IDENTITY_MATRIX = vmath.matrix4()
+local CLEAR_COLOR = hash("clear_color")
+local WINDOW_RESIZED = hash("window_resized")
+local UPDATE_WINDOW = hash("update window")
+
+
+local function update_window(self)
+	rendercam.update_window(render.get_window_width(), render.get_window_height())
+	self.gui_proj = vmath.matrix4_orthographic(0, rendercam.window.x, 0, rendercam.window.y, -1, 1)
+end
+
+function init(self)
+	self.tile_pred = render.predicate({"tile"})
+	self.gui_pred = render.predicate({"gui"})
+	self.text_pred = render.predicate({"text"})
+	self.model_pred = render.predicate({"model"})
+	self.particle_pred = render.predicate({"particle"})
+
+	self.clear_color = vmath.vector4(0)
+	local get_num = sys.get_config_number or function(k, def)
+		local val = sys.get_config and sys.get_config(k, def)
+		return tonumber(val) or def
+	end
+	self.clear_color.x = get_num("render.clear_color_red", 0)
+	self.clear_color.y = get_num("render.clear_color_green", 0)
+	self.clear_color.z = get_num("render.clear_color_blue", 0)
+	self.clear_color.w = get_num("render.clear_color_alpha", 0)
+
+	rendercam.configWin.x = render.get_width();  rendercam.configWin.y = render.get_height()
+	rendercam.update_window_size(render.get_window_width(), render.get_window_height())
+	update_window(self)
+end
+
+function update(self)
+	render.set_depth_mask(true)
+	render.set_stencil_mask(0xff)
+
+	local clear_buffers = {}
+	if COLOR_BIT then clear_buffers[COLOR_BIT] = self.clear_color end
+	if DEPTH_BIT then clear_buffers[DEPTH_BIT] = 1 end
+	if STENCIL_BIT then clear_buffers[STENCIL_BIT] = 0 end
+	render.clear(clear_buffers)
+
+	render.set_viewport(vp.x, vp.y, vp.width, vp.height)
+
+	render.set_view(rendercam.calculate_view())
+	render.set_projection(rendercam.calculate_proj())
+
+	-- Sprite and particle rendering
+	render.set_depth_mask(false)
+	if STATE_DEPTH_TEST then render.disable_state(STATE_DEPTH_TEST) end
+	if STATE_STENCIL_TEST then render.disable_state(STATE_STENCIL_TEST) end
+	if STATE_BLEND then render.enable_state(STATE_BLEND) end
+	if BLEND_SRC_ALPHA and BLEND_ONE_MINUS_SRC_ALPHA then
+		render.set_blend_func(BLEND_SRC_ALPHA, BLEND_ONE_MINUS_SRC_ALPHA)
+	end
+	if STATE_CULL_FACE then render.disable_state(STATE_CULL_FACE) end
+
+	render.draw(self.tile_pred)
+	render.draw(self.particle_pred)
+
+	-- Model rendering
+	if BLEND_SRC_ALPHA and BLEND_ONE_MINUS_SRC_ALPHA then
+		render.set_blend_func(BLEND_SRC_ALPHA, BLEND_ONE_MINUS_SRC_ALPHA)
+	end
+	if STATE_CULL_FACE then render.enable_state(STATE_CULL_FACE) end
+	if STATE_DEPTH_TEST then render.enable_state(STATE_DEPTH_TEST) end
+	render.set_depth_mask(true)
+	render.draw(self.model_pred)
+
+	-- Debug rendering - physics debug, draw_line
+	if STATE_DEPTH_TEST then render.disable_state(STATE_DEPTH_TEST) end
+	if STATE_CULL_FACE then render.disable_state(STATE_CULL_FACE) end
+	render.draw_debug3d()
+
+	-- GUI Rendering
+	render.set_viewport(0, 0, rendercam.window.x, rendercam.window.y)
+	render.set_view(IDENTITY_MATRIX)
+	render.set_projection(self.gui_proj) -- gui_proj only calculated on update_window
+
+	if STATE_STENCIL_TEST then render.enable_state(STATE_STENCIL_TEST) end
+	render.draw(self.gui_pred)
+	render.draw(self.text_pred) -- Includes debug text from "draw_text" messages.
+	if STATE_STENCIL_TEST then render.disable_state(STATE_STENCIL_TEST) end
+end
+
+function on_message(self, message_id, message)
+	if message_id == CLEAR_COLOR then
+		self.clear_color = message.color
+	elseif message_id == WINDOW_RESIZED then -- sent by engine
+		update_window(self)
+	elseif message_id == UPDATE_WINDOW then -- sent by rendercam when a camera is activated ("window_resized" engine message requires data)
+		update_window(self)
+	end
+end

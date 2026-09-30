@@ -13,14 +13,14 @@ M.turret_stats = {
 }
 --враги
 M.enemy_stats = {
-	kamikaze = {type = 1, unlock_wave = 1, hp = 15, damage = 10, speed = 60, is_fireable = false, shield = 0, move = "straight" },
-	swarmer = {type = 1, unlock_wave = 1, hp = 5, damage = 5, speed = 90, is_fireable = false, shield = 0 , move = "straight"},
-	swing = {type = 2, unlock_wave = 3,hp = 10, damage = 10, speed = 90, is_fireable = false, shield = 0 , move = "sinuos"},
-	shooter = {type = 2, unlock_wave = 5, speed = 80, is_fireable = true, shield = 0 , move = "straight"},
-	tank = {type = 2, unlock_wave = 8,hp = 30, damage = 10, speed = 40, is_fireable = false, shield = 3 , move = "straight"},
-	splitter = {type = 3, unlock_wave = 12,hp = 30, damage = 10, speed = 70, is_fireable = true, shield = 0 , move = "straight"},
-	mini_splitter = {type = 3, unlock_wave = 30, hp = 10, damage = 5, speed = 90, is_fireable = false, shield = 0 , move = "straight"},
-	warp = {type = 3, unlock_wave = 20, hp = 20, damage = 15, speed = 50, is_fireable = true, shield = 2 , move = "warp"}
+	kamikaze = {type = 1, unlock_wave = 1, hp = 14, damage = 10, speed = 60, is_fireable = false, shield = 0, move = "straight" },
+	swarmer = {type = 1, unlock_wave = 1, hp = 5, damage = 4, speed = 90, is_fireable = false, shield = 0 , move = "straight"},
+	swing = {type = 2, unlock_wave = 3, hp = 12, damage = 8, speed = 85, is_fireable = false, shield = 0 , move = "sinuos"},
+	shooter = {type = 2, unlock_wave = 4, hp = 18, damage = 6, speed = 75, is_fireable = true, shield = 0 , move = "straight"},
+	tank = {type = 2, unlock_wave = 6, hp = 35, damage = 12, speed = 40, is_fireable = false, shield = 2 , move = "straight"},
+	splitter = {type = 3, unlock_wave = 8, hp = 28, damage = 10, speed = 65, is_fireable = false, shield = 0 , move = "straight"},
+	mini_splitter = {type = 3, unlock_wave = 30, hp = 8, damage = 4, speed = 95, is_fireable = false, shield = 0 , move = "straight"},
+	warp = {type = 3, unlock_wave = 11, hp = 24, damage = 12, speed = 55, is_fireable = true, shield = 1 , move = "warp"}
 }
 
 
@@ -42,8 +42,8 @@ M.upgrades.piercing_shots = { type = 3, levels = {2, 3, 5}, owner = "blaster", s
 M.upgrades.gold_per_kill = { type = 1, levels = {1.2, 1.5, 2.0, 3.0}, owner = "planet", sprite = "u_p_gold", info = "More gold for each enemy defeated" }
 M.upgrades.lucky_drop = { type = 2, levels = {1.05, 1.1, 1.15}, owner = "all", sprite = "u_a_lucky", info = "Chance to drop a bonus chest from enemies" }
 M.upgrades.planet_orbit = { type = 2, levels = {2, 3, 4, 5, 6}, owner = "all", sprite = "u_a_orbit", info = "Add new orbit" }
-M.upgrades.planet_hp = { type = 3, levels = {1.1, 1.2, 1.5, 2, 3}, owner = "planet", sprite = "u_p_hp", info = "Increase the planet's HP" }
-M.upgrades.planet_hp = { type = 2, levels = {1.01, 1.05, 1.1, 1.2, 1.3}, owner = "planet", sprite = "u_p_hp_regen", info = "HP regeneration rate" }
+M.upgrades.planet_hp = { type = 3, levels = {1.2, 1.5, 1.8, 2.2, 3.0}, owner = "planet", sprite = "u_p_hp", info = "Increase the planet's max HP" }
+M.upgrades.planet_hp_regen = { type = 2, levels = {1, 2, 4, 7, 12}, owner = "planet", sprite = "u_p_hp_regen", info = "HP regeneration (per sec)" }
 
 -- CLICKER MECHANICS (Overdrive)
 M.upgrades.click_overdrive_charge = { type = 2, levels = {1.15, 1.3, 1.6}, owner = "planet", sprite = "u_p_charge", info = "Overdrive gauge fills faster" }

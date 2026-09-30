@@ -1,10 +1,24 @@
 -- entities/rocket/rocket.script
+local prog = require "main.progression"
+
 go.property("damage", 0)
 go.property("speed", 300)
 go.property("target_id", hash(""))
 
+function init(self)
+	self.life = 4.0
+end
+
 function update(self, dt)
-	if go.exists(self.target_id) then
+	if prog.is_paused then return end
+
+	self.life = self.life - dt
+	if self.life <= 0 then
+		go.delete()
+		return
+	end
+
+	if self.target_id and go.exists(self.target_id) then
 		local my_pos = go.get_world_position()
 		local target_pos = go.get_world_position(self.target_id)
 
@@ -13,7 +27,7 @@ function update(self, dt)
 		local current_dir = vmath.rotate(go.get_rotation(), vmath.vector3(1, 0, 0))
 
 		-- Плавный поворот (интерполяция направления)
-		local new_dir = vmath.lerp(0.1, current_dir, target_dir)
+		local new_dir = vmath.lerp(0.12, current_dir, target_dir)
 		local angle = math.atan2(new_dir.y, new_dir.x)
 		go.set_rotation(vmath.quat_rotation_z(angle))
 	end
@@ -26,8 +40,31 @@ end
 
 function on_message(self, message_id, message, sender)
 	if message_id == hash("collision_response") then
-		-- Логика взрыва: наносим урон и удаляемся
-		msg.post(message.other_id, "take_damage", { amount = self.damage })
+		local hit_enemy = message.other_id
+		local my_pos = go.get_world_position()
+
+		-- Наносим прямой урон основной цели
+		if go.exists(hit_enemy) then
+			msg.post(hit_enemy, "take_damage", { amount = self.damage })
+		end
+
+		-- Логика сплеш-урона по площади
+		local splash_mult = prog.get_splash_radius_mult()
+		local splash_radius = 50 * splash_mult
+
+		if prog.active_enemies then
+			for enemy_id, _ in pairs(prog.active_enemies) do
+				if enemy_id ~= hit_enemy and go.exists(enemy_id) then
+					local dist = vmath.length(go.get_world_position(enemy_id) - my_pos)
+					if dist <= splash_radius then
+						local area_damage = math.floor(self.damage * 0.6)
+						msg.post(enemy_id, "take_damage", { amount = math.max(1, area_damage) })
+					end
+				end
+			end
+		end
+
+		msg.post("main:/camera_root#camera_shake", "shake", { intensity = 6, duration = 0.22 })
 		go.delete()
 	end
 end

@@ -1,10 +1,29 @@
--- bullet.script
+local prog = require "main.progression"
+
 go.property("speed", 300)
 go.property("damage", 10)
 go.property("is_enemy", false)
+go.property("pierce", 0)
 
 function init(self)
 	self.life = 3.0
+	self.hit_enemies = {}
+
+	if self.is_enemy then
+		sprite.play_flipbook("#sprite", "p_red")
+	else
+		if prog.is_overdrive then
+			-- Огненная плазма в режиме Overdrive
+			go.set("#sprite", "tint", vmath.vector4(2.5, 1.8, 0.4, 1.0))
+			go.set_scale(vmath.vector3(1.35, 1.35, 1))
+		else
+			sprite.play_flipbook("#sprite", "p_blue")
+		end
+
+		-- Сочный вылет: пуля вытягивается как комета
+		go.set_scale(vmath.vector3(0.5, 1.5, 1))
+		go.animate(".", "scale", go.PLAYBACK_ONCE_FORWARD, vmath.vector3(1.0, 1.0, 1), go.EASING_OUTBACK, 0.12)
+	end
 end
 
 function update(self, dt)
@@ -24,17 +43,24 @@ function on_message(self, message_id, message, sender)
 
 		-- 1. Пуля ИГРОКА попадает во ВРАГА
 		if not self.is_enemy and target_group == hash("enemy") then
-			-- Добавляем проверку, чтобы не отправить урон уже мертвому объекту
-			msg.post(message.other_id, "take_damage", { amount = self.damage or 10 })
-			go.delete()
-			return -- Важно: выходим из функции, так как объект удален
+			if not self.hit_enemies[message.other_id] then
+				self.hit_enemies[message.other_id] = true
+				msg.post(message.other_id, "take_damage", { amount = self.damage or 10 })
+
+				if self.pierce > 0 then
+					self.pierce = self.pierce - 1
+				else
+					go.delete()
+					return
+				end
+			end
 		end
 
 		-- 2. Пуля ВРАГА попадает в ПЛАНЕТУ
 		if self.is_enemy and target_group == hash("planet") then
 			msg.post(message.other_id, "take_damage", { 
 				amount = self.damage or 5,
-				attacker_id = go.get_id() -- Передаем ID, если планета должна знать, кто бил
+				attacker_id = go.get_id()
 			})
 			go.delete()
 			return

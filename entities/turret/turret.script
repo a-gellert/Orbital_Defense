@@ -1,64 +1,97 @@
 local config = require "main.game_config"
+local prog = require "main.progression"
 
 go.property("turret_type", hash("blaster"))
 go.property("level", 1)
 
 -- Таблица паттернов стрельбы
 local PATTERNS = {
-	-- Бластер и Пульсатор используют один и тот же метод (разница только в статах из конфига)
-	[hash("blaster")] = function(self, pos, rot)
+	[hash("blaster")] = function(self, pos, rot, speed, pierce)
 		factory.create("#bullet_factory", pos, rot, {
-			damage = self.damage, speed = self.stats.bullet_speed
+			damage = self.damage,
+			speed = speed,
+			pierce = pierce
 		})
-		self.out = factory.create("#bullet_out_factory", pos, rot	)
+		self.out = factory.create("#bullet_out_factory", pos, rot)
 		go.set_parent(self.out, go.get_id(), true)
 	end,
 
-	[hash("pulse")] = function(self, pos, rot)
+	[hash("pulse")] = function(self, pos, rot, speed, pierce)
 		factory.create("#bullet_factory", pos, rot, {
-			damage = self.damage, speed = self.stats.bullet_speed
+			damage = self.damage,
+			speed = speed,
+			pierce = pierce
 		})
-
-		self.out = factory.create("#bullet_out_factory", pos, rot	)
+		self.out = factory.create("#bullet_out_factory", pos, rot)
 		go.set_parent(self.out, go.get_id(), true)
 	end,
 
-	-- Ракетница спавнит ракету и передает ей цель для наведения
-	[hash("rocket")] = function(self, pos, rot)
-		-- Важно: ракете нужна цель (target_id)
+	[hash("rocket")] = function(self, pos, rot, speed, pierce)
 		factory.create("#rocket_factory", pos, rot, {
 			damage = self.damage, 
-			speed = self.stats.bullet_speed,
+			speed = speed,
 			target_id = self.current_target
 		})
 	end
 }
 
+local function update_damage(self)
+	local turret_data = prog.data.turrets[self.type_str]
+	local lvl = (turret_data and turret_data.level_dmg) or self.level or 1
+	self.damage = self.stats.damage * config.level_multiplier(lvl)
+end
+
 function init(self)
-	local type_str = "blaster"
+	self.type_str = "blaster"
 	sprite.play_flipbook("#sprite", "t_blaster")
 	if self.turret_type == hash("pulse") then 
-		type_str = "pulse"
+		self.type_str = "pulse"
 		sprite.play_flipbook("#sprite", "t_laser")
 	elseif self.turret_type == hash("rocket") then 
-		type_str = "rocket"
+		self.type_str = "rocket"
 		sprite.play_flipbook("#sprite", "t_racket")
-	 end
+	end
 
-	local stats = config.turret_stats[type_str] or config.turret_stats.blaster
+	local stats = config.turret_stats[self.type_str] or config.turret_stats.blaster
 	self.stats = stats
 	self.cooldown = 0
 	self.current_target = nil
-	self.damage = stats.damage * config.level_multiplier(self.level)
+	update_damage(self)
 end
 
-function fire(self, pos, rot)
-	self.cooldown = self.stats.rate
+function fire(self, pos, rot, target_angle)
+	local fire_rate_mult = prog.get_fire_rate_multiplier()
+	self.cooldown = self.stats.rate / fire_rate_mult
+
+	update_damage(self)
+
+	-- Отдача выстрела турели (Recoil Punch)
+	go.set("#sprite", "scale", vmath.vector3(0.075, 0.042, 1))
+	go.animate("#sprite", "scale", go.PLAYBACK_ONCE_FORWARD, vmath.vector3(0.06, 0.06, 1), go.EASING_OUTELASTIC, 0.18)
+
+	local speed = self.stats.bullet_speed * prog.get_projectile_speed_multiplier()
+	local pierce = (self.turret_type == hash("blaster")) and prog.get_pierce_count() or 0
+
+	-- Бонус урона в режиме Overdrive
+	if prog.is_overdrive then
+		self.damage = self.damage * prog.get_damage_multiplier()
+	end
+
 	local shoot_func = PATTERNS[self.turret_type] or PATTERNS[hash("blaster")]
-	shoot_func(self, pos, rot)
+	shoot_func(self, pos, rot, speed, pierce)
+
+	-- Механика Мультишота: шанс выстрелить дополнительным снарядом
+	local multi_chance = prog.get_multishot_chance()
+	if multi_chance > 0 and math.random() < multi_chance then
+		local spread = 0.18
+		local rot_extra = vmath.quat_rotation_z(target_angle + (math.random() > 0.5 and spread or -spread))
+		shoot_func(self, pos, rot_extra, speed, pierce)
+	end
 end
 
 function update(self, dt)
+	if prog.is_paused then return end
+
 	if self.cooldown > 0 then self.cooldown = self.cooldown - dt end
 
 	if self.current_target and go.exists(self.current_target) then
@@ -74,7 +107,7 @@ function update(self, dt)
 		go.set_rotation(vmath.conj(parent_quat) * target_quat)
 
 		if self.cooldown <= 0 then
-			fire(self, my_pos, vmath.quat_rotation_z(target_angle))
+			fire(self, my_pos, vmath.quat_rotation_z(target_angle), target_angle)
 		end
 	else
 		self.current_target = nil
@@ -86,6 +119,6 @@ function on_message(self, message_id, message, sender)
 		self.current_target = message.target_id
 	elseif message_id == hash("upgrade_turret") then
 		self.level = self.level + 1
-		self.damage = self.stats.damage * config.level_multiplier(self.level)
+		update_damage(self)
 	end
 end

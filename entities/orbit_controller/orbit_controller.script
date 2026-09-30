@@ -72,6 +72,8 @@ local function place_station(self, slot_id, slot_data, turret_type)
 		-- Привязываем к орбите, чтобы станция вращалась вместе с ней
 		msg.post(station_id, "set_parent", { parent_id = orbit_id, keep_world_transform = 0 })
 		go.set_position(local_pos, station_id)
+		go.set_scale(vmath.vector3(0.05, 0.05, 1), station_id)
+		go.animate(station_id, "scale", go.PLAYBACK_ONCE_FORWARD, vmath.vector3(1.0, 1.0, 1), go.EASING_OUTBACK, 0.28)
 
 		slot_data.occupied = true
 		msg.post(slot_id, "occupy_slot", { turret_id = station_id })
@@ -104,8 +106,10 @@ function on_message(self, message_id, message, sender)
 		local slot_id, slot_data = find_free_slot(self)
 		if slot_id then
 			place_station(self, slot_id, slot_data, message.id)
+			prog.has_free_slot = (find_free_slot(self) ~= nil)
 			msg.post("main:/gui#game", "turret_spawned", { success = true })
 		else
+			prog.has_free_slot = false
 			print("⚠️ No free slots available!")
 			msg.post("main:/gui#game", "turret_spawned", { success = false })
 		end
@@ -117,6 +121,8 @@ function on_message(self, message_id, message, sender)
 		if orbit and not orbit.unlocked then
 			orbit.unlocked = true
 			spawn_orbit_slots(self, key, orbit)
+			prog.has_free_slot = true
+			msg.post("main:/camera_root#camera_shake", "shake", { intensity = 6, duration = 0.3 })
 		end
 	end
 end

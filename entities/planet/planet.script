@@ -1,12 +1,15 @@
 -- planet.script
 local prog = require "main.progression"
+local rendercam = require "rendercam.rendercam"
 
 go.property("fire_rate", 1.0) -- Базовый откат стрельбы
 
 function init(self)
+	msg.post(".", "acquire_input_focus")
 	self.enemies_in_range = {}
 	self.cooldown = 0
 	self.current_target = nil
+	self.manual_cooldown = 0
 
 	-- Начальная анимация пульсации планеты
 	go.set_scale(vmath.vector3(1, 1, 1))
@@ -37,8 +40,27 @@ local function get_closest_enemy(self)
 	return nearest_id
 end
 
+local function apply_damage(self, amount)
+	prog.data.economy.planet_hp = prog.data.economy.planet_hp - amount
+
+	-- Визуальный отклик (вспышка красным)
+	go.set("#sprite", "tint", vmath.vector4(2, 0.5, 0.5, 1))
+	go.animate("#sprite", "tint", go.PLAYBACK_ONCE_FORWARD, vmath.vector4(1, 1, 1, 1), go.EASING_LINEAR, 0.2)
+
+	-- Тряска камеры
+	msg.post("main:/camera_root#camera_shake", "shake", { intensity = 10, duration = 0.4 })
+
+	msg.post("main:/gui#game", "update_planet_hp")
+
+	-- Проверка поражения
+	if prog.data.economy.planet_hp <= 0 then
+		msg.post("main:/gui#game", "show_defeat")
+	end
+end
+
 local function fire(self, target_id)
-	local speed_multiplier = 1 + prog.data.click_state 
+	local fire_rate_mult = prog.get_fire_rate_multiplier()
+	local speed_multiplier = (1 + prog.data.click_state) * fire_rate_mult
 	self.cooldown = self.fire_rate / speed_multiplier
 	local my_pos = go.get_position()
 	local target_pos = go.get_position(target_id)
@@ -48,9 +70,16 @@ local function fire(self, target_id)
 	local angle = math.atan2(dir.y, dir.x)
 	local rot = vmath.quat_rotation_z(angle)
 
-	-- Создаем пулю с текущим уроном из прогрессии
-	local dmg = prog.data.economy.planet_dmg
-	factory.create("#bullet_factory", my_pos, rot, { damage = dmg })
+	-- Урон с учетом овердрайва
+	local dmg = math.floor(prog.data.economy.planet_dmg * prog.get_damage_multiplier())
+	local spd = 300 * prog.get_projectile_speed_multiplier()
+	local pierce = prog.get_pierce_count()
+
+	factory.create("#bullet_factory", my_pos, rot, {
+		damage = dmg,
+		speed = spd,
+		pierce = pierce
+	})
 	-- Эффект выстрела (визуальный)
 	factory.create("#bullet_out_factory", my_pos, rot)
 end
@@ -58,9 +87,36 @@ end
 function update(self, dt)
 	if prog.is_paused then return end
 
+	-- Обновление таймера Ярости (Overdrive)
+	prog.update_overdrive(dt)
+
+	-- Визуальный эффект режима Overdrive
+	if prog.is_overdrive then
+		self.overdrive_hue = ((self.overdrive_hue or 0) + dt * 2.0) % 1.0
+		local r = 0.5 + 0.5 * math.sin(self.overdrive_hue * 6.28)
+		local g = 0.8 + 0.2 * math.cos(self.overdrive_hue * 6.28)
+		local b = 1.0
+		go.set("#sprite", "tint", vmath.vector4(r * 2.0, g * 2.0, b * 2.0, 1.0))
+	end
+
+	-- Регенерация HP планеты
+	local regen = prog.get_hp_regen()
+	local max_hp = prog.get_max_hp()
+	if regen > 0 and prog.data.economy.planet_hp < max_hp then
+		prog.data.economy.planet_hp = math.min(max_hp, prog.data.economy.planet_hp + regen * dt)
+		self.regen_timer = (self.regen_timer or 0) + dt
+		if self.regen_timer >= 0.5 then
+			self.regen_timer = 0
+			msg.post("main:/gui#game", "update_planet_hp")
+		end
+	end
+
 	-- Управление перезарядкой
 	if self.cooldown > 0 then
 		self.cooldown = self.cooldown - dt
+	end
+	if self.manual_cooldown > 0 then
+		self.manual_cooldown = self.manual_cooldown - dt
 	end
 
 	-- Находим цель и стреляем
@@ -70,78 +126,67 @@ function update(self, dt)
 	end
 end
 
-function on_message(self, message_id, message, sender)
-	-- 1. ПОЛУЧЕНИЕ ЦЕЛЕЙ ОТ РАДАРА
-	if message_id == hash("take_damage") then
-		-- Учет щита: щит поглощает часть урона
-		prog.data.economy.planet_hp = prog.data.economy.planet_hp - message.amount 
+function on_input(self, action_id, action)
+	if prog.is_paused then return end
 
-		-- Визуальный отклик (вспышка красным)
-		go.set("#sprite", "tint", vmath.vector4(2, 0.5, 0.5, 1))
-		go.animate("#sprite", "tint", go.PLAYBACK_ONCE_FORWARD, vmath.vector4(1, 1, 1, 1), go.EASING_LINEAR, 0.2)
+	-- Ручной выстрел игрока по клику/тапу в сторону цели
+	if action_id == hash("touch") and action.pressed and self.manual_cooldown <= 0 then
+		self.manual_cooldown = prog.is_overdrive and 0.09 or 0.18 -- В овердрайве клик пулеметный!
 
-		-- Тряска камеры
-		msg.post("main:/camera_root#camera_shake", "shake", { intensity = 10, duration = 0.4 })
+		local click_world = rendercam.screen_to_world_2d(action.screen_x, action.screen_y)
+		local my_pos = go.get_position()
+		local dir = click_world - my_pos
+		local dist = vmath.length(dir)
 
-	
-		msg.post("main:/gui#game", "update_planet_hp")
+		-- Не стреляем, если кликнули прямо в центр планеты
+		if dist > 30 then
+			local angle = math.atan2(dir.y, dir.x)
+			local rot = vmath.quat_rotation_z(angle)
 
-		-- Проверка поражения
-		if prog.data.economy.planet_hp <= 0 then
-			msg.post("main:/gui#game", "show_defeat")
+			local dmg = math.floor(prog.data.economy.planet_dmg * 1.5 * prog.get_damage_multiplier())
+			local spd = 500 * prog.get_projectile_speed_multiplier()
+			local pierce = prog.get_pierce_count()
+
+			factory.create("#bullet_factory", my_pos, rot, {
+				damage = dmg,
+				speed = spd,
+				pierce = pierce
+			})
+			factory.create("#bullet_out_factory", my_pos, rot)
+
+			-- Накопление Ярости от каждого клика!
+			prog.add_overdrive(3.5)
+
+			-- Сочная отдача планеты
+			go.set_scale(vmath.vector3(1.1, 1.1, 1))
+			go.animate(".", "scale", go.PLAYBACK_ONCE_FORWARD, vmath.vector3(1.0, 1.0, 1), go.EASING_OUTBACK, 0.12)
 		end
 	end
-	if message_id == hash("target_update") then
+end
+
+function on_message(self, message_id, message, sender)
+	if message_id == hash("take_damage") then
+		apply_damage(self, message.amount or 10)
+
+	elseif message_id == hash("target_update") then
 		if message.enter then
 			self.enemies_in_range[message.id] = true
 		else
 			self.enemies_in_range[message.id] = nil
 		end
 
-		-- 2. ФИЗИЧЕСКИЙ КОНТАКТ (Урон планете)
 	elseif message_id == hash("collision_response") or message_id == hash("contact_point_response") then
-		if message.own_group == hash("planet") and message.other_group == hash("enemy") then
-
-			-- Вычитаем здоровье
-			prog.data.economy.planet_hp = prog.data.economy.planet_hp - 10 
-
-			-- Визуальный отклик (вспышка красным)
-			go.set("#sprite", "tint", vmath.vector4(2, 0.5, 0.5, 1))
-			go.animate("#sprite", "tint", go.PLAYBACK_ONCE_FORWARD, vmath.vector4(1, 1, 1, 1), go.EASING_LINEAR, 0.2)
-
-			-- Тряска камеры
-			msg.post("main:/camera_root#camera_shake", "shake", { intensity = 10, duration = 0.4 })
-
-			-- Враг уничтожается при столкновении
-			msg.post(message.other_id, "die_from_crash")
-			msg.post("main:/gui#game", "update_planet_hp")
-
-			-- Проверка поражения
-			if prog.data.economy.planet_hp <= 0 then
-				msg.post("main:/gui#game", "show_defeat")
+		if message.own_group == hash("planet") then
+			if message.other_group == hash("enemy") then
+				apply_damage(self, 10)
+				msg.post(message.other_id, "die_from_crash")
+			elseif message.other_group == hash("enemy_bullet") then
+				apply_damage(self, 5)
+				go.delete(message.other_id)
 			end
 		end
-elseif message_id == hash("collision_response") or message_id == hash("contact_point_response") then
-	if message.own_group == hash("planet") and message.other_group == hash("enemy_bullet") then
 
-		-- Вычитаем здоровье
-		prog.data.economy.planet_hp = prog.data.economy.planet_hp - 10
-
-		-- Визуальный отклик (вспышка красным)
-		go.set("#sprite", "tint", vmath.vector4(2, 0.5, 0.5, 1))
-		go.animate("#sprite", "tint", go.PLAYBACK_ONCE_FORWARD, vmath.vector4(1, 1, 1, 1), go.EASING_LINEAR, 0.2)
-
-		-- Тряска камеры
-		msg.post("main:/camera_root#camera_shake", "shake", { intensity = 10, duration = 0.4 })
-
-		-- Враг уничтожается при столкновении
-		go.delete(message.other_id)
-		msg.post("main:/gui#game", "update_planet_hp")
-
-		-- Проверка поражения
-		if prog.data.economy.planet_hp <= 0 then
-			msg.post("main:/gui#game", "show_defeat")
-		end
+	elseif message_id == hash("overdrive_ended") then
+		go.set("#sprite", "tint", vmath.vector4(1, 1, 1, 1))
 	end
-end
 end
