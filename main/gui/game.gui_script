@@ -1,36 +1,37 @@
-local function safe_node(name)
-    local n = gui.get_node(name)
-    if not n then
-        print("[WARN] Missing GUI node: " .. name)
-    end
-    return n
-end
-
 local druid = require "druid.druid"
 local prog = require "main.progression"
 local config = require "main.game_config"
 local poki = require "main.poki"
+local locale = require "main.locale"
 
 local DIMS = 180
 local DIMS_LEFTPANEL = 36
 local MAX_TEXT_WIDTH = 70 
 local time_for_refresh = 2
 local current_time = 2
-local function debug_nodes(node_id)
-	local success, error = pcall(function() gui.get_node(node_id) end)
-	if not success then print("вќЊ РћС€РёР±РєР°: РќРµ РІРёР¶Сѓ " .. node_id) end
-end
-local function update_active_panel(self)
+local show_event_banner = nil
+
+local function update_dynamic_ui_scaling(self)
 	local window_w, window_h = window.get_size()
-	local scale_val = 1 -- РџРѕ СѓРјРѕР»С‡Р°РЅРёСЋ РїРѕСЂС‚СЂРµС‚
+	local scale_val = 1
+	local choose_scale = 0.4
 
 	if window_w > window_h then
-		scale_val = 1.4 -- Р›Р°РЅРґС€Р°С„С‚
+		scale_val = 1.4
+		choose_scale = 0.65
 	end
 	gui.set_scale(gui.get_node("active_panel"), vmath.vector3(scale_val, scale_val, 1))
+	gui.set_scale(gui.get_node("left_panel"), vmath.vector3(scale_val, scale_val, 1))
+	local choose_panel = gui.get_node("choose_panel")
+	if choose_panel then
+		gui.set_scale(choose_panel, vmath.vector3(choose_scale, choose_scale, 1))
+	end
+end
+
+local function update_active_panel(self)
+	update_dynamic_ui_scaling(self)
 	
 	local i = 1
-	-- РЎРЅР°С‡Р°Р»Р° РѕС‡РёСЃС‚РёРј/СЃРєСЂРѕРµРј РІСЃРµ С…РѕР»РґРµСЂС‹, С‡С‚РѕР±С‹ РЅРµ РІРёСЃРµР»Рё СЃС‚Р°СЂС‹Рµ
 	for j = 1, 5 do
 		gui.set_enabled(gui.get_node("cardholder_" .. j), false)
 	end
@@ -40,77 +41,58 @@ local function update_active_panel(self)
 
 		local upg_data = config.upgrades[id]
 		if upg_data then
-			-- 1. РўРµРєСЃС‚ РЅР° СЃР°РјРѕР№ РєР°СЂС‚РѕС‡РєРµ (РјРЅРѕР¶РёС‚РµР»СЊ)
 			gui.set_text(gui.get_node("card_txt" .. i), "x" .. upg_data.levels[level])
-
-			-- 2. РўРµРєСЃС‚ РІ РїРѕРїР°РїРµ (РѕРїРёСЃР°РЅРёРµ + Р·РЅР°С‡РµРЅРёРµ)
-			--local full_info = upg_data.info .. "\nР‘РѕРЅСѓСЃ: x" .. upg_data.levels[level]
-			gui.set_text(gui.get_node("card_info_popup_txt" .. i), upg_data.info)
-
-			-- 3. РРєРѕРЅРєР° (РµСЃР»Рё СЂР°СЃРєРѕРјРјРµРЅС‚РёСЂСѓРµС€СЊ)
-			-- gui.set_texture(gui.get_node("card_img" .. i), upg_data.sprite)
+			gui.set_text(gui.get_node("card_info_popup_txt" .. i), upg_data.info or "")
 			gui.play_flipbook(gui.get_node("card_img" .. i), upg_data.sprite)
 			gui.set_enabled(gui.get_node("cardholder_" .. i), true)
 		end
 		i = i + 1
 	end
 end
+
 local function show_info(self, slot_index)
-	local popup = gui.get_node("card_info_popup"..slot_index)
+	local popup = gui.get_node("card_info_popup" .. slot_index)
 	gui.set_enabled(popup, true)
 
-	-- РЎРєСЂС‹С‚СЊ С‡РµСЂРµР· 3 СЃРµРєСѓРЅРґС‹
 	timer.delay(3, false, function()
 		gui.set_enabled(popup, false)
 	end)
 end
+
 local function show_choices(self)
 	local panel = gui.get_node("choose_panel")
-	-- РћСЃС‚Р°РЅР°РІР»РёРІР°РµРј Р»РѕРіРёРєСѓ С‡РµСЂРµР· С„Р»Р°Рі РІ РјРѕРґСѓР»Рµ
 	prog.is_paused = true 
 	poki.gameplay_stop()
 	gui.set_enabled(panel, true)
 	local options = prog.get_random_upgrades(3)
-	self.current_options = options -- Р—Р°РїРѕРјРёРЅР°РµРј РґР»СЏ РєР»РёРєР°
-	local window_w, window_h = window.get_size()
-	local scale_val = 0.4 -- РџРѕ СѓРјРѕР»С‡Р°РЅРёСЋ РїРѕСЂС‚СЂРµС‚
-
-	if window_w > window_h then
-		scale_val = 0.6 -- Р›Р°РЅРґС€Р°С„С‚
-	end
-	gui.set_scale(panel, vmath.vector3(scale_val, scale_val, 1))
+	self.current_options = options
+	update_dynamic_ui_scaling(self)
 	for i, option in ipairs(options) do
 		local card = "choose_card_" .. i
 		local data = option.data
 		local cur_lvl = prog.data.active_upgrades[option.id] or 0
 
-		-- РљСЂР°СЃРёРј РєР°СЂС‚Сѓ
 		gui.set_color(gui.get_node(card), prog.rarity_colors[data.type])
-		--gui.set_texture(gui.get_node("icon_card".. i), data.sprite)
+		gui.play_flipbook(gui.get_node("icon_card" .. i), data.sprite)
+		gui.set_text(gui.get_node("card_info" .. i), data.info or "")
 
-		gui.play_flipbook(gui.get_node("icon_card".. i), data.sprite)
-		gui.set_text(gui.get_node("card_info".. i), data.info)
+		local prev = cur_lvl == 0 and "1" or tostring(data.levels[cur_lvl])
+		local next_val = tostring(data.levels[cur_lvl + 1] or data.levels[cur_lvl])
+		gui.set_text(gui.get_node("prev_txt" .. i), prev)
+		gui.set_text(gui.get_node("next_txt" .. i), next_val)
 
-		-- Р—РЅР°С‡РµРЅРёСЏ
-		local prev = cur_lvl == 0 and "1" or data.levels[cur_lvl]
-		local next_val = data.levels[cur_lvl + 1]
-		gui.set_text(gui.get_node( "prev_txt".. i), prev)
-		gui.set_text(gui.get_node("next_txt".. i),  next_val)
-
-		-- Р—РІРµР·РґС‹ (СѓСЂРѕРІРµРЅСЊ)
 		for s = 1, 5 do
-			local star = gui.get_node("star_"  .. i .. s)
+			local star = gui.get_node("star_" .. i .. s)
 			gui.set_enabled(star, s <= (cur_lvl + 1))
 		end
 	end
 end
---- 1. Р’РЎРџРћРњРћР“РђРўР•Р›Р¬РќР«Р• Р¤РЈРќРљР¦РР ---
+
 local function update_tab_highlights(self)
 	if prog.is_paused then return end
 	for name, node in pairs(self.tab_nodes) do
 		if name == self.current_tab then
 			gui.set_color(node, self.color_active)
-			-- РњРѕР¶РЅРѕ РґР°Р¶Рµ РЅРµРјРЅРѕРіРѕ СѓРІРµР»РёС‡РёС‚СЊ Р°РєС‚РёРІРЅСѓСЋ РєРЅРѕРїРєСѓ
 			gui.animate(node, "scale", vmath.vector3(1.1, 1.1, 1), gui.EASING_OUTQUAD, 0.2)
 		else
 			gui.set_color(node, self.color_inactive)
@@ -123,9 +105,34 @@ local function update_progress_bar(node_name, current, max)
 	local progress_node = gui.get_node(node_name)
 	if node_name == "health_fill" then
 		local health_node = gui.get_node("health_txt")
+		local shield = prog.data.economy.shield or 0
 		if health_node then
-			gui.set_text(health_node, current .. "/" .. max)
+			gui.set_text(health_node, locale.t("hp_only", math.floor(current), max))
 		end
+
+		local shield_node = gui.get_node("shield_txt")
+		if shield_node then
+			gui.set_text(shield_node, tostring(math.max(0, math.floor(shield))))
+		end
+
+		local shield_bg = gui.get_node("shield_bg")
+		if shield_bg then
+			if shield > 0 then
+				gui.set_alpha(shield_bg, 1.0)
+				gui.set_color(shield_bg, vmath.vector4(1, 1, 1, 1))
+			else
+				gui.set_alpha(shield_bg, 0.45)
+				gui.set_color(shield_bg, vmath.vector4(0.6, 0.6, 0.7, 1))
+			end
+		end
+
+		local ratio = current / max
+		ratio = math.min(math.max(ratio, 0), 1)
+		gui.animate(progress_node, "scale.x", ratio, gui.EASING_OUTQUAD, 0.25)
+
+		local color = vmath.vector4(1 - ratio, ratio, 0, 1) 
+		gui.set_color(progress_node, color)
+		return
 	end
 
 	local ratio = current / max
@@ -167,8 +174,6 @@ local function fit_text(text_node, max_width)
 	end
 end
 
---- 2. РЎРРЎРўР•РњРђ РћР§РРЎРўРљР ---
-
 local function clear_tab_content(self)
 	if self.upgrade_buttons then
 		for _, btn in ipairs(self.upgrade_buttons) do self.druid:remove(btn) end
@@ -195,8 +200,6 @@ local function clear_purchase_panel(self)
 	self.turret_buy_data = {}
 end
 
---- 3. РЎРћР—Р”РђРќРР• Р­Р›Р•РњР•РќРўРћР’ ---
-
 local function add_purchase_button(self, turret_id, turret_data, index)
 	local template = gui.get_node("btn_buy_turret")
 	local nodes = gui.clone_tree(template)
@@ -208,10 +211,10 @@ local function add_purchase_button(self, turret_id, turret_data, index)
 	gui.set_visible(root, true)
 
 	local name_node = nodes[hash("turret_name")]
-	gui.set_text(name_node, "BUY " .. turret_id:upper())
+	gui.set_text(name_node, turret_id:upper())
 	fit_text(name_node, MAX_TEXT_WIDTH)
 
-	gui.set_text(nodes[hash("turret_price")], prog.format_num(turret_data.price) .. " рџ’°")
+	gui.set_text(nodes[hash("turret_price")], prog.format_num(turret_data.price))
 	gui.set_position(root, vmath.vector3(0, -(20 + index * DIMS_LEFTPANEL), 0))
 
 	self.turret_buy_data[turret_id] = { nodes = nodes, price = turret_data.price }
@@ -224,7 +227,7 @@ local function add_upgrade_item(self, title, price, callback, index, is_meta)
 	local template = gui.get_node("btn_buy_turret")
 	local nodes = gui.clone_tree(template)
 	table.insert(self.spawned_upgrade_nodes, nodes)
-	--poki.gameplay_start()
+
 	local root = nodes[hash("btn_buy_turret")]
 	gui.set_parent(root, gui.get_node("content_node"))
 	gui.set_enabled(root, true)
@@ -234,7 +237,7 @@ local function add_upgrade_item(self, title, price, callback, index, is_meta)
 	gui.set_text(name_node, title)
 	fit_text(name_node, MAX_TEXT_WIDTH)
 
-	local icon = is_meta and " рџ’Ћ" or " рџ’°"
+	local icon = is_meta and " V" or ""
 	gui.set_text(nodes[hash("turret_price")], prog.format_num(price) .. icon)
 	gui.set_position(root, vmath.vector3(0, -(20 + index * DIMS), 0))
 
@@ -244,9 +247,7 @@ local function add_upgrade_item(self, title, price, callback, index, is_meta)
 	table.insert(self.upgrade_buttons, btn)
 end
 
---- 4. Р›РћР“РРљРђ РџРђРќР•Р›Р•Р™ ---
 local function update_purchase_panel(self)
-	-- РћС‡РёС‰Р°РµРј РїР°РЅРµР»СЊ РїРµСЂРµРґ РїРµСЂРµСЂРёСЃРѕРІРєРѕР№, С‡С‚РѕР±С‹ РєРЅРѕРїРєРё РЅРµ РґСѓР±Р»РёСЂРѕРІР°Р»РёСЃСЊ
 	clear_purchase_panel(self)
 
 	local turret_order = {"blaster", "pulse", "rocket", "laser", "plasma", "tesla"}
@@ -254,8 +255,6 @@ local function update_purchase_panel(self)
 
 	for _, id in ipairs(turret_order) do
 		local turret = prog.data.turrets[id]
-
-		-- РџРѕРєР°Р·С‹РІР°РµРј РґРѕСЃС‚СѓРїРЅС‹Рµ С‚СѓСЂРµР»Рё, РїРѕРєР° РµСЃС‚СЊ СЃРІРѕР±РѕРґРЅС‹Рµ СЃР»РѕС‚С‹
 		if turret and turret.unlocked and prog.has_free_slot then
 			add_purchase_button(self, id, turret, displayed_count)
 			displayed_count = displayed_count + 1
@@ -266,10 +265,13 @@ end
 local function build_turret_upgrades(self)
 	clear_tab_content(self)
 	local count = 0
-	for id, turret in pairs(prog.data.turrets) do
-		if turret.owned then
+	local turret_order = {"blaster", "pulse", "rocket", "laser", "plasma", "tesla"}
+	for _, id in ipairs(turret_order) do
+		local turret = prog.data.turrets[id]
+		if turret and turret.owned then
 			local dmg_price = math.floor(turret.price * 0.5 * (1.2 ^ (turret.level_dmg or 1)))
-			add_upgrade_item(self, id:upper() .. " DMG Lvl." .. (turret.level_dmg or 1), dmg_price, function()
+			local title = locale.t("turret_dmg", id:upper(), (turret.level_dmg or 1))
+			add_upgrade_item(self, title, dmg_price, function()
 				if prog.data.gold >= dmg_price then
 					prog.data.gold = prog.data.gold - dmg_price
 					turret.level_dmg = (turret.level_dmg or 1) + 1
@@ -282,16 +284,15 @@ local function build_turret_upgrades(self)
 	end
 end
 
--- РќРћР’РђРЇ РџРђРќР•Р›Р¬ РћР Р‘РРў
 local function build_orbits_panel(self)
 	clear_tab_content(self)
 	local count = 0
-	-- РС‰РµРј РїРµСЂРІСѓСЋ Р·Р°РєСЂС‹С‚СѓСЋ РѕСЂР±РёС‚Сѓ
 	local orbit_order = {"or1", "or2", "or3", "or4", "or5", "or6"}
 	for _, key in ipairs(orbit_order) do
 		local orbit = prog.data.orbits_data[key]
 		if orbit and not orbit.unlocked then
-			add_upgrade_item(self, "UNLOCK ORBIT " .. key:upper(), orbit.price, function()
+			local title = locale.t("unlock_orbit", key:upper())
+			add_upgrade_item(self, title, orbit.price, function()
 				if prog.data.gold >= orbit.price then
 					prog.data.gold = prog.data.gold - orbit.price
 					msg.post("main:/orbit_controller#orbit_controller", "unlock_orbit", { key = key })
@@ -304,18 +305,17 @@ local function build_orbits_panel(self)
 	end
 end
 
--- РџРђРќР•Р›Р¬ РџР›РђРќР•РўР« Р РњР•РўРђ-РџР РћР“Р Р•РЎРЎРР
 local function build_planet_panel(self)
 	clear_tab_content(self)
 	local count = 0
 	local econ = prog.data.economy
 	local max_hp = prog.get_max_hp()
 
-	-- 1. Р РµРјРѕРЅС‚ РїР»Р°РЅРµС‚С‹ РІ Р±РѕСЋ
+	-- 1. Repair
 	local repair_amount = math.floor(max_hp * 0.4)
 	local repair_price = 40 + math.floor((econ.repair_count or 0) * 15)
 	if econ.planet_hp < max_hp then
-		add_upgrade_item(self, "REPAIR +" .. repair_amount .. " HP", repair_price, function()
+		add_upgrade_item(self, locale.t("repair_hp", repair_amount), repair_price, function()
 			if prog.data.gold >= repair_price and econ.planet_hp < max_hp then
 				prog.data.gold = prog.data.gold - repair_price
 				econ.planet_hp = math.min(max_hp, econ.planet_hp + repair_amount)
@@ -327,14 +327,14 @@ local function build_planet_panel(self)
 		end, count)
 		count = count + 1
 	else
-		add_upgrade_item(self, "HP FULL (" .. math.floor(econ.planet_hp) .. "/" .. max_hp .. ")", 0, function() end, count)
+		add_upgrade_item(self, locale.t("hp_full", math.floor(econ.planet_hp), max_hp), 0, function() end, count)
 		count = count + 1
 	end
 
-	-- 2. РџСЂРѕРєР°С‡РєР° СѓСЂРѕРЅР° СЏРґСЂР° (Planet Tap & Auto Damage)
+	-- 2. Core Damage
 	local lvl_dmg = econ.level_dmg or 1
 	local dmg_price = math.floor(60 * (1.3 ^ (lvl_dmg - 1)))
-	add_upgrade_item(self, "CORE DMG Lvl." .. lvl_dmg, dmg_price, function()
+	add_upgrade_item(self, locale.t("core_dmg", lvl_dmg), dmg_price, function()
 		if prog.data.gold >= dmg_price then
 			prog.data.gold = prog.data.gold - dmg_price
 			econ.planet_dmg = (econ.planet_dmg or 10) + 4
@@ -345,10 +345,26 @@ local function build_planet_panel(self)
 	end, count)
 	count = count + 1
 
-	-- 3. РџСЂРѕРєР°С‡РєР° РјР°РєСЃ. Р·РґРѕСЂРѕРІСЊСЏ РїР»Р°РЅРµС‚С‹
+	-- 3. Max Shield
+	local lvl_sh = econ.level_shield or 1
+	local sh_price = math.floor(55 * (1.3 ^ (lvl_sh - 1)))
+	add_upgrade_item(self, locale.t("max_shield", lvl_sh), sh_price, function()
+		if prog.data.gold >= sh_price then
+			prog.data.gold = prog.data.gold - sh_price
+			econ.shield_max = (econ.shield_max or 10) + 15
+			econ.shield = (econ.shield or 0) + 15
+			econ.level_shield = lvl_sh + 1
+			update_progress_bar("health_fill", econ.planet_hp, prog.get_max_hp())
+			self:refresh_tab("economy")
+			self:update_balance()
+		end
+	end, count)
+	count = count + 1
+
+	-- 4. Max HP
 	local lvl_hp = econ.level_hp or 1
 	local hp_price = math.floor(70 * (1.35 ^ (lvl_hp - 1)))
-	add_upgrade_item(self, "MAX HP Lvl." .. lvl_hp, hp_price, function()
+	add_upgrade_item(self, locale.t("max_hp", lvl_hp), hp_price, function()
 		if prog.data.gold >= hp_price then
 			prog.data.gold = prog.data.gold - hp_price
 			econ.planet_max_hp = (econ.planet_max_hp or 100) + 35
@@ -361,10 +377,10 @@ local function build_planet_panel(self)
 	end, count)
 	count = count + 1
 
-	-- 4. РџСЂРѕРєР°С‡РєР° Р·РѕР»РѕС‚Р° Р·Р° СѓР±РёР№СЃС‚РІРѕ (Gold Per Kill)
+	-- 4. Gold Per Kill
 	local lvl_gpk = econ.level_gpk or 1
 	local gpk_price = math.floor(80 * (1.35 ^ (lvl_gpk - 1)))
-	add_upgrade_item(self, "GOLD/KILL Lvl." .. lvl_gpk, gpk_price, function()
+	add_upgrade_item(self, locale.t("gold_kill", lvl_gpk), gpk_price, function()
 		if prog.data.gold >= gpk_price then
 			prog.data.gold = prog.data.gold - gpk_price
 			econ.base_gold_per_kill = (econ.base_gold_per_kill or 10) + 3
@@ -376,23 +392,24 @@ local function build_planet_panel(self)
 	end, count)
 	count = count + 1
 
-	-- 5. РџСЂРѕРєР°С‡РєР° СЂР°РґРёСѓСЃР° СЂР°РґР°СЂР°
+	-- 5. Radar Range
 	local lvl_rad = econ.level_radar or 1
 	local rad_price = math.floor(90 * (1.25 ^ (lvl_rad - 1)))
-	add_upgrade_item(self, "RADAR Lvl." .. lvl_rad, rad_price, function()
+	add_upgrade_item(self, locale.t("radar", lvl_rad), rad_price, function()
 		if prog.data.gold >= rad_price then
 			prog.data.gold = prog.data.gold - rad_price
-			econ.planet_damage_radius = (econ.planet_damage_radius or 250) + 30
+			econ.planet_damage_radius = (econ.planet_damage_radius or 165) + 15
 			econ.level_radar = lvl_rad + 1
+			msg.post("main:/range_circle#range_circle", "planet_stats_updated")
 			self:refresh_tab("economy")
 			self:update_balance()
 		end
 	end, count)
 	count = count + 1
 
-	-- 6. РџР•Р РњРђРќР•РќРўРќР«Р• РђРџР“Р Р•Р™Р”Р« РР— РҐР РђРќРР›РР©Рђ (VAULT META)
+	-- 6. Permanent Meta Upgrades
 	local meta_hp_price = prog.get_meta_price("hp")
-	add_upgrade_item(self, "рџ’Ћ PERMA HP Lvl." .. (prog.meta.hp_level or 0), meta_hp_price, function()
+	add_upgrade_item(self, locale.t("perma_hp", prog.meta.hp_level or 0), meta_hp_price, function()
 		local success = prog.buy_meta_upgrade("hp")
 		if success then
 			update_progress_bar("health_fill", econ.planet_hp, prog.get_max_hp())
@@ -403,7 +420,7 @@ local function build_planet_panel(self)
 	count = count + 1
 
 	local meta_dmg_price = prog.get_meta_price("dmg")
-	add_upgrade_item(self, "рџ’Ћ PERMA DMG Lvl." .. (prog.meta.dmg_level or 0), meta_dmg_price, function()
+	add_upgrade_item(self, locale.t("perma_dmg", prog.meta.dmg_level or 0), meta_dmg_price, function()
 		local success = prog.buy_meta_upgrade("dmg")
 		if success then
 			self:refresh_tab("economy")
@@ -413,7 +430,7 @@ local function build_planet_panel(self)
 	count = count + 1
 
 	local meta_regen_price = prog.get_meta_price("regen")
-	add_upgrade_item(self, "рџ’Ћ PERMA REGEN Lvl." .. (prog.meta.regen_level or 0), meta_regen_price, function()
+	add_upgrade_item(self, locale.t("perma_regen", prog.meta.regen_level or 0), meta_regen_price, function()
 		local success = prog.buy_meta_upgrade("regen")
 		if success then
 			self:refresh_tab("economy")
@@ -423,7 +440,7 @@ local function build_planet_panel(self)
 	count = count + 1
 
 	local meta_gold_price = prog.get_meta_price("gold")
-	add_upgrade_item(self, "рџ’Ћ START GOLD Lvl." .. (prog.meta.gold_level or 0), meta_gold_price, function()
+	add_upgrade_item(self, locale.t("perma_gold", prog.meta.gold_level or 0), meta_gold_price, function()
 		local success = prog.buy_meta_upgrade("gold")
 		if success then
 			self:refresh_tab("economy")
@@ -454,7 +471,7 @@ end
 local function update_balance(self)
 	local coin_node = gui.get_node("coin_balance_txt")
 	if coin_node then 
-		gui.set_text(coin_node, prog.format_num(prog.data.gold or 0) .. " рџ’°") 
+		gui.set_text(coin_node, prog.format_num(prog.data.gold or 0)) 
 		gui.set_scale(coin_node, vmath.vector3(1, 1, 1))
 		gui.animate(coin_node, "scale", vmath.vector3(1.2, 1.2, 1), gui.EASING_OUTBACK, 0.2, 0, nil, gui.PLAYBACK_ONCE_PINGPONG)
 	end
@@ -469,11 +486,7 @@ local function toggle_menu(self)
 	gui.set_enabled(root, self.is_menu_open)
 	gui.set_visible(root, self.is_menu_open)
 
-	-- РџР°СѓР·Р° РїСЂРё РѕС‚РєСЂС‹С‚РёРё РјРµРЅСЋ (РѕРїС†РёРѕРЅР°Р»СЊРЅРѕ)
-	-- msg.post("@system:", "set_time_step", {factor = self.is_menu_open and 0 or 1, mode = 0})
-
 	if self.is_menu_open then
-		--self:update_purchase_panel() 
 		self:refresh_tab(self.current_tab or "turrets")
 		self:update_balance()
 	end
@@ -504,9 +517,214 @@ local function buy_turret(self, turret_id)
 		self:update_purchase_panel() 
 		if self.is_menu_open then self:refresh_tab(self.current_tab) end
 		self:update_balance()
+
+		local q_rew = prog.check_quest("turret")
+		if q_rew then
+			show_event_banner(self, string.format("QUEST COMPLETE! +%d V", q_rew))
+		end
 	end
 end
--- Р”РѕР±Р°РІСЊ СЌС‚Рѕ РІ GUI СЃРєСЂРёРїС‚ Р”Рћ С„СѓРЅРєС†РёРё init
+
+local function hide_tutorial(self)
+	if not self.tutorial_active then return end
+	self.tutorial_active = false
+	if prog.complete_tutorial then
+		prog.complete_tutorial()
+	end
+	local hint = gui.get_node("tutorial_hint")
+	if hint and gui.is_enabled(hint) then
+		gui.cancel_animations(hint, "scale")
+		gui.animate(hint, "scale", vmath.vector3(0.01, 0.01, 1), gui.EASING_INBACK, 0.25, 0, function()
+			gui.set_enabled(hint, false)
+		end)
+	end
+end
+
+show_event_banner = function(self, text)
+	local banner = gui.get_node("event_banner")
+	local txt = gui.get_node("event_banner_txt")
+	if not banner or not txt then return end
+	gui.set_text(txt, text)
+	gui.set_enabled(banner, true)
+	gui.set_scale(banner, vmath.vector3(0.5, 0.5, 1))
+	gui.animate(banner, "scale", vmath.vector3(1.0, 1.0, 1), gui.EASING_OUTBACK, 0.22)
+	timer.delay(2.2, false, function()
+		if gui.is_enabled(banner) then
+			gui.animate(banner, "scale", vmath.vector3(0.01, 0.01, 1), gui.EASING_INBACK, 0.2, 0, function()
+				gui.set_enabled(banner, false)
+			end)
+		end
+	end)
+end
+
+local function trigger_emp(self)
+	if prog.is_paused or (self.emp_cooldown and self.emp_cooldown > 0) then return end
+	self.emp_cooldown = 22.0
+	local btn = gui.get_node("btn_emp")
+	if btn then
+		gui.set_scale(btn, vmath.vector3(1.25, 1.25, 1))
+		gui.animate(btn, "scale", vmath.vector3(1.0, 1.0, 1), gui.EASING_OUTBACK, 0.2)
+	end
+
+	msg.post("main:/planet#planet", "trigger_emp")
+	show_event_banner(self, "EMP SHOCKWAVE!")
+end
+
+local function play_flying_coins(self, start_x, start_y, amount)
+	local target_x = 35
+	local target_y = 735
+
+	for i = 1, 5 do
+		local coin_node = gui.get_node("flying_coin_" .. i)
+		if coin_node then
+			local burst_x = start_x + math.random(-25, 25)
+			local burst_y = start_y + math.random(-25, 25)
+			gui.set_position(coin_node, vmath.vector3(start_x, start_y, 0))
+			gui.set_scale(coin_node, vmath.vector3(0.7, 0.7, 1))
+			gui.set_enabled(coin_node, true)
+
+			gui.animate(coin_node, "position", vmath.vector3(burst_x, burst_y, 0), gui.EASING_OUTQUAD, 0.14, 0, function()
+				local delay = (i - 1) * 0.05
+				timer.delay(delay, false, function()
+					gui.animate(coin_node, "position", vmath.vector3(target_x, target_y, 0), gui.EASING_INQUAD, 0.42, 0, function()
+						gui.set_enabled(coin_node, false)
+						local coin_txt = gui.get_node("coin_balance_txt")
+						if coin_txt then
+							gui.set_scale(coin_txt, vmath.vector3(1.3, 1.3, 1))
+							gui.animate(coin_txt, "scale", vmath.vector3(1.0, 1.0, 1), gui.EASING_OUTBACK, 0.15)
+						end
+					end)
+				end)
+			end)
+		end
+	end
+
+	prog.data.gold = prog.data.gold + amount
+	self:update_balance()
+	show_event_banner(self, string.format("+%d G", amount))
+end
+
+local function clear_meta_hub(self)
+	if self.meta_hub_buttons then
+		for _, btn in ipairs(self.meta_hub_buttons) do pcall(function() self.druid:remove(btn) end) end
+	end
+	self.meta_hub_buttons = {}
+
+	for _, nodes in ipairs(self.spawned_meta_hub_nodes or {}) do
+		for _, node in pairs(nodes) do pcall(function() gui.delete_node(node) end) end
+	end
+	self.spawned_meta_hub_nodes = {}
+end
+
+local function update_diamonds_display(self)
+	local diamonds = prog.meta and prog.meta.diamonds or 0
+	local str = string.format("💎 DIAMONDS: %d", diamonds)
+
+	local play_txt = gui.get_node("play_diamonds_txt")
+	if play_txt then gui.set_text(play_txt, str) end
+
+	local defeat_txt = gui.get_node("defeat_diamonds_txt")
+	if defeat_txt then gui.set_text(defeat_txt, str) end
+end
+
+local function build_meta_hub_cards(self, parent_node_name)
+	local parent = gui.get_node(parent_node_name)
+	if not parent then return end
+
+	local template = gui.get_node("meta_card_template")
+	local defs = prog.meta_upgrades_def or {}
+	local upgrades_saved = prog.meta.upgrades or {}
+
+	local y_positions = { 215, 148, 81, 14, -53, -120, -187 }
+
+	for i, def in ipairs(defs) do
+		local nodes = gui.clone_tree(template)
+		table.insert(self.spawned_meta_hub_nodes, nodes)
+
+		local root = nodes[hash("meta_card_template")]
+		gui.set_parent(root, parent)
+		gui.set_enabled(root, true)
+		gui.set_visible(root, true)
+
+		local y_pos = y_positions[i] or (215 - (i - 1) * 67)
+		gui.set_position(root, vmath.vector3(0, y_pos, 0))
+
+		local cur_level_idx = upgrades_saved[def.id] or 0
+		local current_level = cur_level_idx + 1
+		local is_max = (cur_level_idx >= 3)
+
+		local icon_node = nodes[hash("meta_icon")]
+		if icon_node then
+			gui.play_flipbook(icon_node, def.sprite)
+		end
+
+		local name_node = nodes[hash("meta_name")]
+		if name_node then
+			gui.set_text(name_node, def.name)
+		end
+
+		local info_node = nodes[hash("meta_info")]
+		if info_node then
+			gui.set_text(info_node, def.get_info(current_level))
+		end
+
+		local pips_node = nodes[hash("meta_pips")]
+		if pips_node then
+			local pips = ""
+			for lvl = 1, 3 do
+				if lvl <= cur_level_idx then pips = pips .. "★"
+				else pips = pips .. "☆" end
+			end
+			gui.set_text(pips_node, string.format("L%d/3 %s", cur_level_idx, pips))
+		end
+
+		local buy_btn_node = nodes[hash("meta_buy_btn")]
+		local price_node = nodes[hash("meta_price")]
+		local next_price = is_max and 0 or (def.prices[cur_level_idx + 1] or def.prices[3])
+
+		if is_max then
+			gui.set_text(price_node, "MAX")
+			gui.set_color(price_node, vmath.vector4(1.0, 0.85, 0.2, 1.0))
+			gui.set_color(buy_btn_node, vmath.vector4(0.18, 0.22, 0.32, 0.8))
+		else
+			gui.set_text(price_node, string.format("%d 💎", next_price))
+			local user_diamonds = prog.meta.diamonds or 0
+			if user_diamonds >= next_price then
+				gui.set_color(price_node, vmath.vector4(1.0, 1.0, 1.0, 1.0))
+				gui.set_color(buy_btn_node, vmath.vector4(0.12, 0.48, 0.88, 1.0))
+			else
+				gui.set_color(price_node, vmath.vector4(1.0, 0.4, 0.4, 1.0))
+				gui.set_color(buy_btn_node, vmath.vector4(0.35, 0.15, 0.18, 0.8))
+			end
+		end
+
+		local btn = self.druid:new_button(buy_btn_node, function()
+			if not is_max then
+				local success, new_lvl = prog.buy_hard_meta_upgrade(def.id)
+				if success then
+					self:refresh_meta_hub()
+					show_event_banner(self, string.format("%s UPGRADED!", def.name))
+				end
+			end
+		end)
+		table.insert(self.meta_hub_buttons, btn)
+	end
+end
+
+local function refresh_meta_hub(self)
+	clear_meta_hub(self)
+	update_diamonds_display(self)
+
+	local play_panel = gui.get_node("play_panel")
+	if play_panel and gui.is_enabled(play_panel) then
+		build_meta_hub_cards(self, "play_panel")
+	end
+
+	local defeat_root = gui.get_node("defeat_root")
+	if defeat_root and gui.is_enabled(defeat_root) then
+		build_meta_hub_cards(self, "defeat_root")
+	end
+end
 
 function init(self)
 	self.update_balance = update_balance
@@ -515,7 +733,9 @@ function init(self)
 	self.update_button_colors = update_button_colors
 	self.toggle_menu = toggle_menu
 	self.update_purchase_panel = update_purchase_panel
-	self.current_options = {} -- РЎРѕР·РґР°РµРј РїСѓСЃС‚СѓСЋ С‚Р°Р±Р»РёС†Сѓ СЃСЂР°Р·Сѓ
+	self.refresh_meta_hub = refresh_meta_hub
+	self.current_options = {}
+
 	msg.post(".", "acquire_input_focus")
 	self.druid = druid.new(self)
 	self.scroll = self.druid:new_scroll("view_port", "content_node")
@@ -527,40 +747,91 @@ function init(self)
 	self.druid:new_blocker("play_panel")
 	self.spawned_purchase_nodes = {}
 	self.spawned_upgrade_nodes = {}
+	self.spawned_meta_hub_nodes = {}
 	self.purchase_buttons = {}
 	self.upgrade_buttons = {}
+	self.meta_hub_buttons = {}
 	self.turret_buy_data = {}
 	self.upgrade_items = {}
 	self.is_menu_open = false
 	self.current_tab = "turrets"
 	local node = gui.get_node("play_visual")
-	-- РџРѕСЂСЏРґРѕРє: node, property, to, easing, duration, [delay], [callback], [playback]
-	gui.animate(node, gui.PROP_SCALE, vmath.vector3(0.36, 0.36, 1), go.EASING_INOUTSINE, 2.2, 0, nil, gui.PLAYBACK_LOOP_PINGPONG)
+	gui.animate(node, gui.PROP_SCALE, vmath.vector3(0.36, 0.36, 1), gui.EASING_INOUTSINE, 2.2, 0, nil, gui.PLAYBACK_LOOP_PINGPONG)
+
 	self.tab_nodes = {
 		orbits = gui.get_node("btn_tab_orbits"),
 		turrets = gui.get_node("btn_tab_turrets"),
 		economy = gui.get_node("btn_tab_economy")
 	}
 
-	-- Р¦РІРµС‚Р° РґР»СЏ РїРѕРґСЃРІРµС‚РєРё
-	self.color_active = vmath.vector4(1, 1, 1, 1)      -- Р‘РµР»С‹Р№/РЇСЂРєРёР№
-	self.color_inactive = vmath.vector4(0.5, 0.5, 0.5, 1) -- РЎРµСЂС‹Р№
+	self.color_active = vmath.vector4(1, 1, 1, 1)
+	self.color_inactive = vmath.vector4(0.5, 0.5, 0.5, 1)
 
 	self.druid:new_button("btn_tab_orbits", function() self:refresh_tab("orbits") end)
 	self.druid:new_button("btn_tab_turrets", function() self:refresh_tab("turrets") end)
 	self.druid:new_button("btn_tab_economy", function() self:refresh_tab("economy") end)
 	self.druid:new_button("btn_toggle_menu", function() self:toggle_menu() end)
-	
+	self.emp_cooldown = 0
+	self.druid:new_button("btn_emp", function()
+		trigger_emp(self)
+	end)
+	self.druid:new_button("emp_icon", function()
+		trigger_emp(self)
+	end)
+
+	-- 2X Game Speed Toggle Button
+	self.game_speed = 1.0
+	local speed_btn = gui.get_node("btn_speed")
+	local speed_txt = gui.get_node("speed_txt")
+	if speed_btn and speed_txt then
+		self.druid:new_button(speed_btn, function()
+			self.game_speed = (self.game_speed == 1.0) and 2.0 or 1.0
+			msg.post("loader:/loader#game_proxy", "set_time_step", { factor = self.game_speed, mode = 0 })
+			if self.game_speed == 2.0 then
+				gui.set_text(speed_txt, "2X")
+				gui.set_color(speed_txt, vmath.vector4(1.0, 0.85, 0.2, 1.0))
+				gui.set_color(speed_btn, vmath.vector4(0.45, 0.30, 0.05, 0.95))
+				show_event_banner(self, "SPEED: 2X")
+			else
+				gui.set_text(speed_txt, "1X")
+				gui.set_color(speed_txt, vmath.vector4(0.35, 0.95, 1.0, 1.0))
+				gui.set_color(speed_btn, vmath.vector4(0.08, 0.18, 0.38, 0.95))
+				show_event_banner(self, "SPEED: 1X")
+			end
+			gui.animate(speed_btn, "scale", vmath.vector3(1.25, 1.25, 1), gui.EASING_OUTBACK, 0.14, 0, function()
+				gui.animate(speed_btn, "scale", vmath.vector3(1.0, 1.0, 1), gui.EASING_OUTQUAD, 0.1)
+			end)
+		end)
+	end
+
+	self.tutorial_active = not (prog.meta and prog.meta.tutorial_completed)
+	self.tutorial_taps = 0
+	self.tutorial_timer = 0
+
+	local tut_txt = gui.get_node("tutorial_txt")
+	if tut_txt then
+		gui.set_text(tut_txt, locale.t("tutorial_shoot"))
+	end
+
 	self.druid:new_button("play_btn", function()
 		poki.gameplay_start()
 		prog.is_paused = false
 		gui.set_enabled(gui.get_node("play_panel"), false)
+
+		local hint = gui.get_node("tutorial_hint")
+		if hint and self.tutorial_active then
+			gui.set_enabled(hint, true)
+			gui.set_scale(hint, vmath.vector3(0.75, 0.75, 1))
+			gui.animate(hint, "scale", vmath.vector3(0.85, 0.85, 1), gui.EASING_INOUTSINE, 0.7, 0, nil, gui.PLAYBACK_LOOP_PINGPONG)
+		else
+			if hint then gui.set_enabled(hint, false) end
+		end
 	end)
+
 	self.druid:new_button("btn_restart", function() 
 		gui.set_enabled(gui.get_node("defeat_root"), false)
 		self.defeat_active = false
 
-		-- Poki СЂРµРєР»Р°РјР° РјРµР¶РґСѓ Р·Р°Р±РµРіР°РјРё
 		poki.commercial_break(function()
 			poki.gameplay_start()
 			prog.reset_progress()
@@ -572,31 +843,58 @@ function init(self)
 		gui.set_enabled(gui.get_node("play_panel"), false)
 	else 
 		gui.set_enabled(gui.get_node("play_panel"), true)
+		self:refresh_meta_hub()
 	end
+
+	gui.set_enabled(gui.get_node("btn_toggle_menu"), false)
+	gui.set_enabled(gui.get_node("tabs"), true)
+	gui.set_enabled(gui.get_node("view_port"), true)
+
 	update_progress_bar("health_fill", prog.data.economy.planet_hp, prog.get_max_hp())
 	gui.set_enabled(gui.get_node("root"), false)
-	gui.set_enabled(gui.get_node("defeat_root"), false) -- РЎРєСЂС‹РІР°РµРј СЌРєСЂР°РЅ СЃРјРµСЂС‚Рё
+	gui.set_enabled(gui.get_node("defeat_root"), false)
 
 	self:update_purchase_panel()
 	self:update_balance()
 	gui.set_enabled(gui.get_node("choose_panel"), false)
-
-
 end
 
 function update(self, dt)
 	self.druid:update(dt)
-	current_time = current_time + dt
-	if(current_time <= time_for_refresh) then return end
-	
-	local window_w, window_h = window.get_size()
-	local scale_val = 1 -- РџРѕ СѓРјРѕР»С‡Р°РЅРёСЋ РїРѕСЂС‚СЂРµС‚
 
-	if window_w > window_h then
-		scale_val = 1.5 -- Р›Р°РЅРґС€Р°С„С‚
+	if self.tutorial_active and not prog.is_paused then
+		self.tutorial_timer = (self.tutorial_timer or 0) + dt
+		if self.tutorial_timer >= 4.0 then
+			hide_tutorial(self)
+		end
 	end
-	gui.set_scale(gui.get_node("active_panel"), vmath.vector3(scale_val, scale_val, 1))
-	gui.set_scale(gui.get_node("left_panel"), vmath.vector3(scale_val, scale_val, 1))
+
+	-- EMP Cooldown timer & text
+	if self.emp_cooldown and self.emp_cooldown > 0 then
+		self.emp_cooldown = self.emp_cooldown - dt
+		local emp_txt = gui.get_node("emp_txt")
+		local emp_icon = gui.get_node("emp_icon")
+		local btn_emp = gui.get_node("btn_emp")
+		if emp_txt and btn_emp and emp_icon then
+			gui.set_text(emp_txt, string.format("%ds", math.ceil(self.emp_cooldown)))
+			gui.set_color(btn_emp, vmath.vector4(0.06, 0.14, 0.24, 0.6))
+			gui.set_color(emp_icon, vmath.vector4(0.35, 0.45, 0.55, 0.4))
+		end
+	else
+		local emp_txt = gui.get_node("emp_txt")
+		local emp_icon = gui.get_node("emp_icon")
+		local btn_emp = gui.get_node("btn_emp")
+		if emp_txt and btn_emp and emp_icon and self.emp_cooldown <= 0 then
+			gui.set_text(emp_txt, "EMP")
+			gui.set_color(btn_emp, vmath.vector4(0.1, 0.35, 0.75, 1.0))
+			gui.set_color(emp_icon, vmath.vector4(0.35, 0.95, 1.0, 1.0))
+		end
+	end
+
+	current_time = current_time + dt
+	if (current_time <= time_for_refresh) then return end
+	
+	update_dynamic_ui_scaling(self)
 	current_time = 0
 end
 
@@ -604,16 +902,13 @@ function on_input(self, action_id, action)
 	if action_id == hash("touch") and action.pressed then
 		local choose_panel = gui.get_node("choose_panel")
 
-		-- РџСЂРѕРІРµСЂСЏРµРј: РїР°РЅРµР»СЊ РІРєР»СЋС‡РµРЅР° Р Сѓ РЅР°СЃ РµСЃС‚СЊ СЃРїРёСЃРѕРє РѕРїС†РёР№
 		if gui.is_enabled(choose_panel) and self.current_options then
 			for i = 1, #self.current_options do
 				local node = gui.get_node("choose_card_" .. i)
 
-				-- РџСЂРѕРІРµСЂСЏРµРј РїРѕРїР°РґР°РЅРёРµ РёРјРµРЅРЅРѕ РїРѕ РЅРѕРґРµ РєР°СЂС‚РѕС‡РєРё
 				if gui.pick_node(node, action.x, action.y) then
 					local choice = self.current_options[i]
 
-					-- РџСЂРёРјРµРЅСЏРµРј РІС‹Р±РѕСЂ
 					local current_lvl = prog.data.active_upgrades[choice.id] or 0
 					prog.data.active_upgrades[choice.id] = current_lvl + 1
 
@@ -625,7 +920,6 @@ function on_input(self, action_id, action)
 						update_progress_bar("health_fill", prog.data.economy.planet_hp, new_max)
 					end
 
-					-- Р—Р°РєСЂС‹РІР°РµРј РїР°РЅРµР»СЊ СЃ СЃРѕС‡РЅС‹Рј РѕС‚СЃРєРѕРєРѕРј
 					gui.animate(node, "scale", vmath.vector3(1.15, 1.15, 1), gui.EASING_OUTBACK, 0.14, 0, function()
 						gui.set_enabled(choose_panel, false)
 						update_active_panel(self)
@@ -641,7 +935,6 @@ function on_input(self, action_id, action)
 		end
 	end
 
-	-- РџРµСЂРµРґР°РµРј РѕСЃС‚Р°Р»СЊРЅС‹Рµ РЅР°Р¶Р°С‚РёСЏ РІ Druid (РґР»СЏ РєРЅРѕРїРѕРє РјРµРЅСЋ Рё С‚.Рґ.)
 	return self.druid:on_input(action_id, action)
 end
 
@@ -661,28 +954,30 @@ function on_message(self, message_id, message, sender)
 			prog.is_paused = true 
 			poki.gameplay_stop()
 
-			local wave = tonumber(self.last_wave) or tonumber(tostring(self.last_wave or ""):match("%d+")) or 1
-			local best = tonumber(prog.meta.best_wave) or tonumber(tostring(prog.meta.best_wave or ""):match("%d+")) or 1
-			local earned = tonumber(prog.data.gold) or 0
+			local wave = tonumber(self.last_wave) or 1
+			local kills = prog.session_stats and prog.session_stats.kills or 0
+			local best = tonumber(prog.meta.best_wave) or 1
+			local earned_gold = tonumber(prog.data.gold) or 0
+
 			if wave > best then
 				prog.meta.best_wave = wave
-			else
-				prog.meta.best_wave = best
 			end
-			prog.meta.total_coins = (tonumber(prog.meta.total_coins) or 0) + earned
+
+			local earned_diamonds = math.max(10, math.floor(wave * 3 + kills / 4))
+			prog.meta.diamonds = (prog.meta.diamonds or 0) + earned_diamonds
+			prog.meta.total_coins = (tonumber(prog.meta.total_coins) or 0) + earned_gold
 			prog.save_progress()
 
 			local txt_node = gui.get_node("game_over_txt")
 			if txt_node then
-				local summary = string.format("DEFEAT\n\nWAVE %d (BEST: %d)\nEARNED: %s 💰\nVAULT: %s 💎", 
-					wave, 
-					prog.meta.best_wave, 
-					prog.format_num(earned), 
-					prog.format_num(prog.meta.total_coins))
-				gui.set_text(txt_node, summary)
-				gui.set_scale(txt_node, vmath.vector3(0.55, 0.55, 1))
+				gui.set_text(txt_node, string.format("GAME OVER\nWAVE %d  •  +%d 💎 EARNED", wave, earned_diamonds))
 			end
+
+			self:refresh_meta_hub()
 		end
+
+	elseif message_id == hash("show_event_banner") then
+		show_event_banner(self, message.text or "")
 
 	elseif message_id == hash("update_wave_progress") then
 		local node = gui.get_node("wave_fill")
@@ -693,12 +988,24 @@ function on_message(self, message_id, message, sender)
 		self.last_wave = num
 		local wave_node = gui.get_node("wave_txt")
 		if wave_node and not prog.is_overdrive then
-			local str = message.text or (tostring(message.wave):find("WAVE") and tostring(message.wave) or ("WAVE " .. num))
+			local str = message.text or (tostring(message.wave):find("WAVE") and tostring(message.wave) or locale.t("wave", num))
 			gui.set_text(wave_node, str)
 		end
 
+	elseif message_id == hash("player_tapped") then
+		self.tutorial_taps = (self.tutorial_taps or 0) + 1
+		if self.tutorial_taps >= 1 and self.tutorial_active then
+			hide_tutorial(self)
+		end
+
 	elseif message_id == hash("show_card_selection") then
+		hide_tutorial(self)
 		show_choices(self)
+
+	elseif message_id == hash("asteroid_destroyed") then
+		local screen_x = (message.pos and message.pos.x or 0) + 195
+		local screen_y = (message.pos and message.pos.y or 0) + 390
+		play_flying_coins(self, screen_x, screen_y, message.amount or 80)
 
 	elseif message_id == hash("turret_spawned") then
 		self:update_purchase_panel()
@@ -707,7 +1014,7 @@ function on_message(self, message_id, message, sender)
 	elseif message_id == hash("overdrive_started") then
 		local wave_node = gui.get_node("wave_txt")
 		if wave_node then
-			gui.set_text(wave_node, "рџ”Ґ OVERDRIVE рџ”Ґ")
+			gui.set_text(wave_node, locale.t("overdrive"))
 			gui.animate(wave_node, "scale", vmath.vector3(0.68, 0.68, 1), gui.EASING_INOUTSINE, 0.22, 0, nil, gui.PLAYBACK_LOOP_PINGPONG)
 		end
 		local header = gui.get_node("header")
@@ -720,7 +1027,7 @@ function on_message(self, message_id, message, sender)
 		if wave_node then
 			gui.cancel_animations(wave_node, "scale")
 			gui.set_scale(wave_node, vmath.vector3(0.5, 0.5, 1))
-			gui.set_text(wave_node, "WAVE " .. (self.last_wave or 1))
+			gui.set_text(wave_node, locale.t("wave", (self.last_wave or 1)))
 		end
 		local header = gui.get_node("header")
 		if header then

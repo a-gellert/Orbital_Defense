@@ -12,6 +12,11 @@ function on_message(self, message_id, message, sender)
 		local reward = message.amount or prog.get_gold_per_kill()
 		prog.data.gold = prog.data.gold + reward
 
+		local quest_reward = prog.check_quest("kill")
+		if quest_reward and msg.url("main:/gui#game") then
+			msg.post("main:/gui#game", "show_event_banner", { text = string.format("QUEST COMPLETE! +%d V", quest_reward) })
+		end
+
 		msg.post("main:/gui#game", "refresh_balance")
 	end
 end

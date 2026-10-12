@@ -97,6 +97,8 @@ function init(self)
 		end
 	end
 
+	prog.has_free_slot = (find_free_slot(self) ~= nil)
+
 	print("✅ Orbit Controller Ready. Active slots:", table_size(self.slot_map))
 end
 

@@ -58,4 +58,28 @@ images {
 images {
   image: "/assets/sprites/gui/u_p_hp_regen.png"
 }
+images {
+  image: "/assets/sprites/gui/shield.png"
+}
+images {
+  image: "/assets/sprites/gui/m_orbit.png"
+}
+images {
+  image: "/assets/sprites/gui/m_speed.png"
+}
+images {
+  image: "/assets/sprites/gui/m_dmg.png"
+}
+images {
+  image: "/assets/sprites/gui/m_shield.png"
+}
+images {
+  image: "/assets/sprites/gui/m_hp.png"
+}
+images {
+  image: "/assets/sprites/gui/m_regen.png"
+}
+images {
+  image: "/assets/sprites/gui/m_radar.png"
+}
 extrude_borders: 2

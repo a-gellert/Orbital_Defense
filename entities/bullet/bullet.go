@@ -10,7 +10,7 @@ components {
 embedded_components {
   id: "sprite"
   type: "sprite"
-  data: "default_animation: \"p_purple\"\n"
+  data: "default_animation: \"p_blue\"\n"
   "material: \"/builtins/materials/sprite.material\"\n"
   "textures {\n"
   "  sampler: \"texture_sampler\"\n"
@@ -18,8 +18,8 @@ embedded_components {
   "}\n"
   ""
   scale {
-    x: 0.05
-    y: 0.05
+    x: 0.11
+    y: 0.11
   }
 }
 embedded_components {

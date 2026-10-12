@@ -91,3 +91,10 @@ embedded_components {
   data: "prototype: \"/assets/particles/bullet_out.go\"\n"
   ""
 }
+embedded_components {
+  id: "fx_factory"
+  type: "factory"
+  data: "prototype: \"/assets/particles/destroy.go\"\n"
+  ""
+}
+

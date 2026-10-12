@@ -13,8 +13,8 @@ embedded_components {
   "}\n"
   ""
   scale {
-    x: 0.06
-    y: 0.06
+    x: 0.11
+    y: 0.11
   }
 }
 embedded_components {

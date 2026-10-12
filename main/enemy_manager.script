@@ -3,28 +3,84 @@ local balance = require "main.balance"
 local config = require "main.game_config"
 local prog = require "main.progression"
 
-local SPAWN_RADIUS = 500 
-local WAVE_DELAY = 3.0
+local rendercam = require "rendercam.rendercam"
+
+-- Function to get a spawn position uniformly distributed around the screen border adaptively
+local function get_spawn_pos()
+	local win_w = rendercam.window.x or 390
+	local win_h = rendercam.window.y or 780
+	local p_min = rendercam.screen_to_world_2d(0, 0)
+	local p_max = rendercam.screen_to_world_2d(win_w, win_h)
+	local half_w = math.max(195, math.abs((p_max and p_max.x or 195) - (p_min and p_min.x or -195)) * 0.5)
+	local half_h = math.max(390, math.abs((p_max and p_max.y or 390) - (p_min and p_min.y or -390)) * 0.5)
+	local margin = 60
+
+	local angle = math.random() * math.pi * 2
+	local cos_a = math.cos(angle)
+	local sin_a = math.sin(angle)
+	local bound_x = half_w + margin
+	local bound_y = half_h + margin
+	local t_x = (cos_a ~= 0) and math.abs(bound_x / cos_a) or 99999
+	local t_y = (sin_a ~= 0) and math.abs(bound_y / sin_a) or 99999
+	local t = math.min(t_x, t_y)
+	return vmath.vector3(cos_a * t, sin_a * t, 0.2)
+end 
 
 -- Веса редкости для спавна (чем выше, тем чаще)
 local RARITY_WEIGHTS = {
 	[1] = 100, -- Обычные (Kamikaze, Swarmer)
-	[2] = 30,  -- Элитные (Shooter, Tank)
-	[3] = 10,  -- Редкие (Splitter, Warp)
-	[4] = 2    -- Эпические (Боссы или супер-редкие)
+	[2] = 35,  -- Элитные (Shooter, Tank)
+	[3] = 12,  -- Редкие (Splitter, Warp)
+	[4] = 3    -- Эпические
 }
+
+local function get_wave_title(wave)
+	if wave % 5 == 0 then
+		return "BOSS WAVE " .. wave
+	elseif wave == 4 then
+		return "WAVE 4 (BOSS APPROACHING!)"
+	elseif wave < 5 then
+		return string.format("WAVE %d (BOSS IN %d)", wave, 5 - wave)
+	else
+		local next_boss = 5 - (wave % 5)
+		if next_boss == 1 then
+			return string.format("WAVE %d (BOSS NEXT!)", wave)
+		else
+			return string.format("WAVE %d (BOSS IN %d)", wave, next_boss)
+		end
+	end
+end
+
+local function spawn_gold_asteroid(self)
+	local from_left = math.random() > 0.5
+	local start_x = from_left and -230 or 230
+	local end_x = from_left and 230 or -230
+	local start_y = math.random(-150, 200)
+	local end_y = start_y + math.random(-80, 80)
+	local start_pos = vmath.vector3(start_x, start_y, 0.25)
+	local target_pos = vmath.vector3(end_x, end_y, 0.25)
+	local dir = vmath.normalize(target_pos - start_pos)
+
+	factory.create("#enemy_factory", start_pos, nil, {
+		type = hash("gold_asteroid"),
+		drift_dir = dir
+	})
+end
 
 function init(self)
 	self.current_wave = 1
-	self.enemies_to_spawn = 4 
-	self.spawned_count = 0
+	self.wave_duration = 20.0
+	self.wave_time_left = self.wave_duration
+	self.spawn_timer = 0.5
+	self.asteroid_timer = math.random(14, 20)
 	self.active_enemies = 0 
-	self.timer = 0.5
 	self.state = "SPAWNING" 
 	self.cards_shown = false
+	self.boss_spawned = false
+	self.timer = 1.8
 
 	if msg.url("main:/gui#game") then
-		msg.post("main:/gui#game", "update_wave_number", { wave = self.current_wave })
+		msg.post("main:/gui#game", "update_wave_number", { wave = self.current_wave, text = get_wave_title(1) })
 		msg.post("main:/gui#game", "update_wave_progress", { ratio = 0 })
 	end
 end
@@ -33,7 +89,6 @@ end
 local function get_random_enemy_type(wave)
 	local pool = {}
 	for name, stats in pairs(config.enemy_stats) do
-		-- Условие разблокировки: например, Tank появляется только после 5 волны
 		local unlock_wave = stats.unlock_wave or 1 
 		if wave >= unlock_wave then
 			local weight = RARITY_WEIGHTS[stats.type] or 10
@@ -42,33 +97,26 @@ local function get_random_enemy_type(wave)
 			end
 		end
 	end
+	if #pool == 0 then return hash("kamikaze") end
 	return pool[math.random(#pool)]
 end
 
-local function spawn_enemy(self)
-	local angle = math.random() * math.pi * 2
-	local pos = vmath.vector3(math.cos(angle) * SPAWN_RADIUS, math.sin(angle) * SPAWN_RADIUS, 0.2)
+local function spawn_enemy(self, override_type, is_boss)
+	local pos = get_spawn_pos()
 
-	-- 1. Выбираем КТО заспавнится
-	local enemy_type = get_random_enemy_type(self.current_wave)
+	local enemy_type = override_type or get_random_enemy_type(self.current_wave)
 
-	-- 2. Берем базовые множители волны
 	local wave_hp, wave_reward = balance.get_enemy_stats(self.current_wave)
 	local hp_mult = wave_hp / balance.base_hp
 	local reward_mult = wave_reward / balance.base_reward
 
-	local is_boss_wave = (self.current_wave % 10 == 0)
-	local is_this_boss = is_boss_wave and (self.spawned_count == 0)
-
-	-- 3. Создаем врага, передавая ему тип и множители волны
 	factory.create("#enemy_factory", pos, nil, { 
-		type = is_this_boss and hash("tank") or enemy_type,
-		hp_multiplier = is_this_boss and (hp_mult * 1.5) or hp_mult,
+		type = is_boss and hash("tank") or enemy_type,
+		hp_multiplier = is_boss and (hp_mult * 1.6) or hp_mult,
 		reward_multiplier = reward_mult,
-		is_boss = is_this_boss
+		is_boss = is_boss or false
 	})
 
-	self.spawned_count = self.spawned_count + 1
 	self.active_enemies = self.active_enemies + 1
 end
 
@@ -76,50 +124,78 @@ function update(self, dt)
 	if prog.is_paused then return end
 
 	if self.state == "SPAWNING" then
-		self.timer = self.timer - dt
-		if self.timer <= 0 then
+		self.wave_time_left = self.wave_time_left - dt
+		self.spawn_timer = self.spawn_timer - dt
+
+		-- Спавн врагов по таймеру
+		if self.spawn_timer <= 0 then
 			spawn_enemy(self)
-
-			-- Ускоряем темп спавна с каждой волной
-			local spawn_speed = math.max(0.15, 0.8 - (self.current_wave * 0.03))
-			self.timer = spawn_speed
-
-			if self.spawned_count >= self.enemies_to_spawn then
-				self.state = "WAITING"
-			end
+			local spawn_speed = math.max(0.4, 1.2 - (self.current_wave * 0.04))
+			self.spawn_timer = spawn_speed
 		end
 
-	elseif self.state == "WAITING" then
+		-- Спавн золотого астероида
+		self.asteroid_timer = (self.asteroid_timer or 18) - dt
+		if self.asteroid_timer <= 0 then
+			self.asteroid_timer = math.random(20, 30)
+			spawn_gold_asteroid(self)
+		end
+
+		-- Спавн Босса на волнах 5, 10, 15, 20...
+		local is_boss_wave = (self.current_wave % 5 == 0)
+		if is_boss_wave and not self.boss_spawned and self.wave_time_left <= (self.wave_duration * 0.5) then
+			self.boss_spawned = true
+			local boss_type = hash("tank")
+			if self.current_wave >= 15 then
+				boss_type = hash("dreadnought")
+			elseif self.current_wave >= 10 then
+				boss_type = hash("shield_bearer")
+			end
+			spawn_enemy(self, boss_type, true)
+			msg.post("main:/camera_root#camera_shake", "shake", { intensity = 14, duration = 0.6 })
+		end
+
+		-- Плавное обновление таймера волны в GUI
+		local progress = math.min(1.0, math.max(0, 1.0 - (self.wave_time_left / self.wave_duration)))
+		if msg.url("main:/gui#game") then
+			msg.post("main:/gui#game", "update_wave_progress", { ratio = progress })
+		end
+
+		-- Время волны истекло -> ждем уничтожения оставшихся врагов
+		if self.wave_time_left <= 0 then
+			self.state = "WAITING_CLEAR"
+		end
+
+	elseif self.state == "WAITING_CLEAR" then
+		-- Все враги уничтожены -> ПОБЕДА ВОЛНЫ!
 		if self.active_enemies <= 0 then
-			-- Вызов карточек: волна 1 (ранний хук) и каждые 3 волны
-			local is_perk_wave = (self.current_wave == 1 or self.current_wave % 3 == 0)
-			if is_perk_wave and not self.cards_shown then
+			if not self.cards_shown then
+				-- Выдача 3 карт улучшений после КАЖДОЙ волны!
 				msg.post("main:/gui#game", "show_card_selection")
 				self.cards_shown = true
-				return 
+				return
 			end
 
 			self.timer = self.timer - dt
 			if self.timer <= 0 then
 				self.current_wave = self.current_wave + 1
-				self.cards_shown = false 
-				self.spawned_count = 0
-
-				-- Прогрессия количества врагов
-				self.enemies_to_spawn = 4 + (self.current_wave * 2)
-
+				self.cards_shown = false
+				self.boss_spawned = false
+				self.wave_duration = 20.0 + (self.current_wave * 2.0)
+				self.wave_time_left = self.wave_duration
+				self.spawn_timer = 0.6
 				self.state = "SPAWNING"
-				self.timer = 1.8 -- Комфортная пауза перед началом новой волны
+				self.timer = 1.8
 
-				local is_boss = (self.current_wave % 10 == 0)
-				if is_boss then
-					msg.post("main:/camera_root#camera_shake", "shake", { intensity = 10, duration = 0.5 })
-				end
-
+				local text = get_wave_title(self.current_wave)
 				if msg.url("main:/gui#game") then
-					local text = is_boss and ("⚠️ BOSS " .. self.current_wave) or ("WAVE " .. self.current_wave)
 					msg.post("main:/gui#game", "update_wave_number", { wave = self.current_wave, text = text })
 					msg.post("main:/gui#game", "update_wave_progress", { ratio = 0 })
+				end
+
+				local quest_reward = prog.check_quest("wave", self.current_wave)
+				if quest_reward and msg.url("main:/gui#game") then
+					msg.post("main:/gui#game", "show_event_banner", { text = string.format("QUEST COMPLETE! +%d V", quest_reward) })
 				end
 			end
 		end
@@ -129,11 +205,5 @@ end
 function on_message(self, message_id, message, sender)
 	if message_id == hash("enemy_died") then
 		self.active_enemies = math.max(0, self.active_enemies - 1)
-
-		-- Обновляем прогресс-бар в GUI
-		local progress = self.spawned_count > 0 and ((self.spawned_count - self.active_enemies) / self.enemies_to_spawn) or 0
-		if msg.url("main:/gui#game") then
-			msg.post("main:/gui#game", "update_wave_progress", { ratio = progress })
-		end
 	end
 end

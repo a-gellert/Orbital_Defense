@@ -1,0 +1,2462 @@
+script: "/main/gui/game.gui_script"
+fonts {
+  name: "druid_text_bold"
+  font: "/druid/fonts/druid_text_bold.font"
+}
+textures {
+  name: "gui"
+  texture: "/assets/sprites/gui/gui.atlas"
+}
+nodes {
+  position {
+    x: 345.0
+    y: 203.0
+  }
+  size {
+    x: 48.0
+    y: 48.0
+  }
+  color {
+    x: 0.1
+    y: 0.35
+    z: 0.75
+  }
+  type: TYPE_BOX
+  texture: "gui/circle"
+  id: "btn_emp"
+  inherit_alpha: true
+}
+nodes {
+  size {
+    x: 32.0
+    y: 32.0
+  }
+  color {
+    x: 0.35
+    y: 0.95
+  }
+  type: TYPE_BOX
+  texture: "gui/u_p_charge"
+  id: "emp_icon"
+  parent: "btn_emp"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    y: -12.0
+  }
+  scale {
+    x: 0.2
+    y: 0.2
+  }
+  size {
+    x: 60.0
+    y: 18.0
+  }
+  type: TYPE_TEXT
+  text: "EMP"
+  font: "druid_text_bold"
+  id: "emp_txt"
+  parent: "btn_emp"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    x: 195.0
+    y: 390.0
+  }
+  size {
+    x: 390.0
+    y: 780.0
+  }
+  type: TYPE_BOX
+  id: "root"
+  xanchor: XANCHOR_LEFT
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+  enabled: false
+}
+nodes {
+  position {
+    x: 50.0
+    y: 360.0
+  }
+  size {
+    x: 195.0
+    y: 10.0
+  }
+  type: TYPE_BOX
+  id: "tabs"
+  parent: "root"
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    x: -200.0
+    y: -60.0
+  }
+  size {
+    x: 198.0
+    y: 100.0
+  }
+  type: TYPE_BOX
+  id: "btn_tab_orbits"
+  parent: "tabs"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  type: TYPE_TEXT
+  text: "ORBITS"
+  font: "druid_text_bold"
+  id: "orbits_txt"
+  parent: "btn_tab_orbits"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    y: -60.0
+  }
+  size {
+    x: 198.0
+    y: 100.0
+  }
+  type: TYPE_BOX
+  id: "btn_tab_turrets"
+  parent: "tabs"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  type: TYPE_TEXT
+  text: "TURRETS"
+  font: "druid_text_bold"
+  id: "turrets_txt"
+  parent: "btn_tab_turrets"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    x: 200.0
+    y: -60.0
+  }
+  size {
+    x: 198.0
+    y: 100.0
+  }
+  type: TYPE_BOX
+  id: "btn_tab_economy"
+  parent: "tabs"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  type: TYPE_TEXT
+  text: "PLANET"
+  font: "druid_text_bold"
+  id: "planet_txt"
+  parent: "btn_tab_economy"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    x: 100.0
+    y: 95.0
+  }
+  size {
+    x: 390.0
+    y: 780.0
+  }
+  type: TYPE_BOX
+  id: "view_port"
+  parent: "root"
+  clipping_mode: CLIPPING_MODE_STENCIL
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    x: -278.0
+    y: 456.0
+  }
+  size {
+    x: 1.0
+    y: 1.0
+  }
+  color {
+    y: 0.0
+    z: 0.0
+  }
+  type: TYPE_BOX
+  id: "content_node"
+  pivot: PIVOT_NW
+  parent: "view_port"
+  alpha: 0.0
+}
+nodes {
+  size {
+    x: 100.0
+    y: 100.0
+  }
+  type: TYPE_BOX
+  id: "templates"
+  inherit_alpha: true
+  alpha: 0.0
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  size {
+    x: 200.0
+    y: 200.0
+  }
+  color {
+    x: 0.0
+    y: 0.0
+    z: 0.5019608
+  }
+  type: TYPE_BOX
+  id: "upgrade_template"
+  parent: "templates"
+  alpha: 0.0
+  enabled: false
+}
+nodes {
+  size {
+    x: 180.0
+    y: 180.0
+  }
+  color {
+    x: 0.3019608
+    y: 0.4
+    z: 0.8
+  }
+  type: TYPE_BOX
+  id: "box"
+  parent: "upgrade_template"
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    y: 58.0
+  }
+  size {
+    x: 50.0
+    y: 50.0
+  }
+  color {
+    x: 0.8745098
+    y: 0.69803923
+    z: 0.07058824
+  }
+  type: TYPE_BOX
+  id: "icon"
+  parent: "box"
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    y: -37.0
+  }
+  scale {
+    x: 0.5
+    y: 0.5
+  }
+  size {
+    x: 165.0
+    y: 100.0
+  }
+  type: TYPE_TEXT
+  text: "100\n"
+  ""
+  font: "druid_text_bold"
+  id: "label_price"
+  parent: "box"
+}
+nodes {
+  scale {
+    x: 0.5
+    y: 0.5
+  }
+  size {
+    x: 165.0
+    y: 100.0
+  }
+  type: TYPE_TEXT
+  text: "BLASTER DMG\n"
+  ""
+  font: "druid_text_bold"
+  id: "label_title"
+  parent: "box"
+}
+nodes {
+  size {
+    x: 80.0
+    y: 32.0
+  }
+  color {
+    x: 0.101960786
+    y: 0.2
+    z: 0.6
+  }
+  type: TYPE_BOX
+  id: "btn_buy_turret"
+  parent: "templates"
+  enabled: false
+}
+nodes {
+  position {
+    y: 8.0
+  }
+  scale {
+    x: 0.4
+    y: 0.4
+  }
+  size {
+    x: 50.0
+    y: 50.0
+  }
+  type: TYPE_TEXT
+  text: "blaster"
+  font: "druid_text_bold"
+  id: "turret_name"
+  parent: "btn_buy_turret"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    x: 18.0
+    y: -8.0
+  }
+  scale {
+    x: 0.4
+    y: 0.4
+  }
+  size {
+    x: 50.0
+    y: 25.0
+  }
+  type: TYPE_TEXT
+  text: "300000\n"
+  ""
+  font: "druid_text_bold"
+  id: "turret_price"
+  pivot: PIVOT_E
+  parent: "btn_buy_turret"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    x: 28.0
+    y: -8.0
+  }
+  scale {
+    x: 0.15
+    y: 0.15
+  }
+  type: TYPE_BOX
+  texture: "gui/coin"
+  id: "box1"
+  parent: "btn_buy_turret"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  size {
+    x: 80.0
+    y: 1.0
+  }
+  color {
+    x: 0.0
+    y: 0.101960786
+    z: 0.5019608
+  }
+  type: TYPE_BOX
+  id: "box7"
+  parent: "btn_buy_turret"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    x: 8.0
+    y: 780.0
+  }
+  scale {
+    x: 2.0
+    y: 2.0
+  }
+  size {
+    x: 100.0
+    y: 256.0
+  }
+  type: TYPE_BOX
+  id: "left_panel"
+  xanchor: XANCHOR_LEFT
+  yanchor: YANCHOR_TOP
+  pivot: PIVOT_NW
+  inherit_alpha: true
+  alpha: 0.17
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    x: 24.0
+    y: -287.5
+  }
+  scale {
+    x: 0.25
+    y: 0.25
+  }
+  size {
+    x: 180.0
+    y: 100.0
+  }
+  color {
+    x: 0.2
+    y: 0.101960786
+    z: 0.5019608
+  }
+  type: TYPE_BOX
+  id: "btn_toggle_menu"
+  parent: "left_panel"
+  size_mode: SIZE_MODE_AUTO
+  enabled: false
+}
+nodes {
+  scale {
+    x: 0.8
+    y: 0.8
+  }
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  type: TYPE_TEXT
+  text: "UPGRADES\n"
+  ""
+  font: "druid_text_bold"
+  id: "text"
+  parent: "btn_toggle_menu"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    x: 50.0
+    y: -10.0
+  }
+  size {
+    x: 1.0
+    y: 1.0
+  }
+  type: TYPE_BOX
+  id: "left_panel_node"
+  parent: "left_panel"
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    x: 195.0
+    y: 390.0
+  }
+  size {
+    x: 390.0
+    y: 780.0
+  }
+  type: TYPE_BOX
+  id: "card_panel"
+  yanchor: YANCHOR_TOP
+  adjust_mode: ADJUST_MODE_STRETCH
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+  visible: false
+}
+nodes {
+  position {
+    y: -353.0
+  }
+  size {
+    x: 350.0
+    y: 128.0
+  }
+  type: TYPE_BOX
+  id: "active_panel"
+  yanchor: YANCHOR_BOTTOM
+  pivot: PIVOT_S
+  parent: "card_panel"
+  inherit_alpha: true
+  alpha: 0.5
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    y: 50.0
+  }
+  size {
+    x: 350.0
+    y: 50.0
+  }
+  type: TYPE_BOX
+  id: "box8"
+  parent: "active_panel"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+  visible: false
+}
+nodes {
+  position {
+    x: -140.0
+    y: 14.0
+  }
+  size {
+    x: 64.0
+    y: 125.0
+  }
+  type: TYPE_BOX
+  id: "box9"
+  parent: "box8"
+  alpha: 0.4
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    x: -70.0
+    y: 14.0
+  }
+  size {
+    x: 64.0
+    y: 125.0
+  }
+  type: TYPE_BOX
+  id: "box10"
+  parent: "box8"
+  alpha: 0.4
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    y: 14.0
+  }
+  size {
+    x: 64.0
+    y: 125.0
+  }
+  type: TYPE_BOX
+  id: "box11"
+  parent: "box8"
+  alpha: 0.4
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    x: 70.0
+    y: 14.0
+  }
+  size {
+    x: 64.0
+    y: 125.0
+  }
+  type: TYPE_BOX
+  id: "box12"
+  parent: "box8"
+  alpha: 0.4
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    x: 140.0
+    y: 14.0
+  }
+  size {
+    x: 64.0
+    y: 125.0
+  }
+  type: TYPE_BOX
+  id: "box13"
+  parent: "box8"
+  alpha: 0.4
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    x: -140.0
+    y: 64.0
+  }
+  size {
+    x: 65.0
+    y: 125.0
+  }
+  color {
+    x: 0.3019608
+    y: 0.101960786
+    z: 0.3019608
+  }
+  type: TYPE_BOX
+  id: "cardholder_1"
+  parent: "active_panel"
+  size_mode: SIZE_MODE_AUTO
+  enabled: false
+}
+nodes {
+  position {
+    y: 15.0
+  }
+  scale {
+    x: 0.3
+    y: 0.3
+  }
+  type: TYPE_BOX
+  texture: "gui/u_t_atk_spd"
+  id: "card_img1"
+  parent: "cardholder_1"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    y: -50.0
+  }
+  scale {
+    x: 0.3
+    y: 0.3
+  }
+  size {
+    x: 100.0
+    y: 25.0
+  }
+  color {
+    y: 0.8
+    z: 0.7019608
+  }
+  type: TYPE_TEXT
+  text: "1.05x"
+  font: "druid_text_bold"
+  id: "card_txt1"
+  parent: "cardholder_1"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    y: 84.0
+  }
+  size {
+    x: 64.0
+    y: 40.0
+  }
+  color {
+    x: 0.0
+    y: 0.2
+    z: 0.2
+  }
+  type: TYPE_BOX
+  id: "card_info_popup1"
+  parent: "cardholder_1"
+  inherit_alpha: true
+  alpha: 0.5
+  size_mode: SIZE_MODE_AUTO
+  enabled: false
+}
+nodes {
+  scale {
+    x: 0.18
+    y: 0.18
+  }
+  size {
+    x: 360.0
+    y: 200.0
+  }
+  color {
+    x: 0.9019608
+    y: 0.8
+  }
+  type: TYPE_TEXT
+  text: "Upgrade info\n"
+  ""
+  font: "druid_text_bold"
+  id: "card_info_popup_txt1"
+  line_break: true
+  parent: "card_info_popup1"
+}
+nodes {
+  position {
+    x: -70.0
+    y: 64.0
+  }
+  size {
+    x: 65.0
+    y: 125.0
+  }
+  color {
+    x: 0.3019608
+    y: 0.101960786
+    z: 0.3019608
+  }
+  type: TYPE_BOX
+  id: "cardholder_2"
+  parent: "active_panel"
+  size_mode: SIZE_MODE_AUTO
+  enabled: false
+}
+nodes {
+  position {
+    y: 15.0
+  }
+  scale {
+    x: 0.3
+    y: 0.3
+  }
+  type: TYPE_BOX
+  texture: "gui/u_t_atk_spd"
+  id: "card_img2"
+  parent: "cardholder_2"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    y: -50.0
+  }
+  scale {
+    x: 0.3
+    y: 0.3
+  }
+  size {
+    x: 100.0
+    y: 25.0
+  }
+  color {
+    y: 0.8
+    z: 0.7019608
+  }
+  type: TYPE_TEXT
+  text: "1.05x"
+  font: "druid_text_bold"
+  id: "card_txt2"
+  parent: "cardholder_2"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    y: 84.0
+  }
+  size {
+    x: 64.0
+    y: 40.0
+  }
+  color {
+    x: 0.0
+    y: 0.2
+    z: 0.2
+  }
+  type: TYPE_BOX
+  id: "card_info_popup2"
+  parent: "cardholder_2"
+  inherit_alpha: true
+  alpha: 0.5
+  size_mode: SIZE_MODE_AUTO
+  enabled: false
+}
+nodes {
+  scale {
+    x: 0.18
+    y: 0.18
+  }
+  size {
+    x: 360.0
+    y: 200.0
+  }
+  color {
+    x: 0.9019608
+    y: 0.8
+  }
+  type: TYPE_TEXT
+  text: "Upgrade info\n"
+  ""
+  font: "druid_text_bold"
+  id: "card_info_popup_txt2"
+  line_break: true
+  parent: "card_info_popup2"
+}
+nodes {
+  position {
+    y: 64.0
+  }
+  size {
+    x: 65.0
+    y: 125.0
+  }
+  color {
+    x: 0.3019608
+    y: 0.101960786
+    z: 0.3019608
+  }
+  type: TYPE_BOX
+  id: "cardholder_3"
+  parent: "active_panel"
+  size_mode: SIZE_MODE_AUTO
+  enabled: false
+}
+nodes {
+  position {
+    y: 15.0
+  }
+  scale {
+    x: 0.3
+    y: 0.3
+  }
+  type: TYPE_BOX
+  texture: "gui/u_t_atk_spd"
+  id: "card_img3"
+  parent: "cardholder_3"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    y: -50.0
+  }
+  scale {
+    x: 0.3
+    y: 0.3
+  }
+  size {
+    x: 100.0
+    y: 25.0
+  }
+  color {
+    y: 0.8
+    z: 0.7019608
+  }
+  type: TYPE_TEXT
+  text: "1.05x"
+  font: "druid_text_bold"
+  id: "card_txt3"
+  parent: "cardholder_3"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    y: 84.0
+  }
+  size {
+    x: 64.0
+    y: 40.0
+  }
+  color {
+    x: 0.0
+    y: 0.2
+    z: 0.2
+  }
+  type: TYPE_BOX
+  id: "card_info_popup3"
+  parent: "cardholder_3"
+  inherit_alpha: true
+  alpha: 0.5
+  size_mode: SIZE_MODE_AUTO
+  enabled: false
+}
+nodes {
+  scale {
+    x: 0.18
+    y: 0.18
+  }
+  size {
+    x: 360.0
+    y: 200.0
+  }
+  color {
+    x: 0.9019608
+    y: 0.8
+  }
+  type: TYPE_TEXT
+  text: "Upgrade info\n"
+  ""
+  font: "druid_text_bold"
+  id: "card_info_popup_txt3"
+  line_break: true
+  parent: "card_info_popup3"
+}
+nodes {
+  position {
+    x: 70.0
+    y: 64.0
+  }
+  size {
+    x: 65.0
+    y: 125.0
+  }
+  color {
+    x: 0.3019608
+    y: 0.101960786
+    z: 0.3019608
+  }
+  type: TYPE_BOX
+  id: "cardholder_4"
+  parent: "active_panel"
+  size_mode: SIZE_MODE_AUTO
+  enabled: false
+}
+nodes {
+  position {
+    y: 15.0
+  }
+  scale {
+    x: 0.3
+    y: 0.3
+  }
+  type: TYPE_BOX
+  texture: "gui/u_t_atk_spd"
+  id: "card_img4"
+  parent: "cardholder_4"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    y: -50.0
+  }
+  scale {
+    x: 0.3
+    y: 0.3
+  }
+  size {
+    x: 100.0
+    y: 25.0
+  }
+  color {
+    y: 0.8
+    z: 0.7019608
+  }
+  type: TYPE_TEXT
+  text: "1.05x"
+  font: "druid_text_bold"
+  id: "card_txt4"
+  parent: "cardholder_4"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    y: 84.0
+  }
+  size {
+    x: 64.0
+    y: 40.0
+  }
+  color {
+    x: 0.0
+    y: 0.2
+    z: 0.2
+  }
+  type: TYPE_BOX
+  id: "card_info_popup4"
+  parent: "cardholder_4"
+  inherit_alpha: true
+  alpha: 0.5
+  size_mode: SIZE_MODE_AUTO
+  enabled: false
+}
+nodes {
+  scale {
+    x: 0.18
+    y: 0.18
+  }
+  size {
+    x: 360.0
+    y: 200.0
+  }
+  color {
+    x: 0.9019608
+    y: 0.8
+  }
+  type: TYPE_TEXT
+  text: "Upgrade info\n"
+  ""
+  font: "druid_text_bold"
+  id: "card_info_popup_txt4"
+  line_break: true
+  parent: "card_info_popup4"
+}
+nodes {
+  position {
+    x: 140.0
+    y: 64.0
+  }
+  size {
+    x: 65.0
+    y: 125.0
+  }
+  color {
+    x: 0.3019608
+    y: 0.101960786
+    z: 0.3019608
+  }
+  type: TYPE_BOX
+  id: "cardholder_5"
+  parent: "active_panel"
+  size_mode: SIZE_MODE_AUTO
+  enabled: false
+}
+nodes {
+  position {
+    y: 15.0
+  }
+  scale {
+    x: 0.3
+    y: 0.3
+  }
+  type: TYPE_BOX
+  texture: "gui/u_t_atk_spd"
+  id: "card_img5"
+  parent: "cardholder_5"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    y: -50.0
+  }
+  scale {
+    x: 0.3
+    y: 0.3
+  }
+  size {
+    x: 100.0
+    y: 25.0
+  }
+  color {
+    y: 0.8
+    z: 0.7019608
+  }
+  type: TYPE_TEXT
+  text: "1.05x"
+  font: "druid_text_bold"
+  id: "card_txt5"
+  parent: "cardholder_5"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    y: 84.0
+  }
+  size {
+    x: 64.0
+    y: 40.0
+  }
+  color {
+    x: 0.0
+    y: 0.2
+    z: 0.2
+  }
+  type: TYPE_BOX
+  id: "card_info_popup5"
+  parent: "cardholder_5"
+  inherit_alpha: true
+  alpha: 0.5
+  size_mode: SIZE_MODE_AUTO
+  enabled: false
+}
+nodes {
+  scale {
+    x: 0.18
+    y: 0.18
+  }
+  size {
+    x: 360.0
+    y: 200.0
+  }
+  color {
+    x: 0.9019608
+    y: 0.8
+  }
+  type: TYPE_TEXT
+  text: "Upgrade info\n"
+  ""
+  font: "druid_text_bold"
+  id: "card_info_popup_txt5"
+  line_break: true
+  parent: "card_info_popup5"
+}
+nodes {
+  position {
+    y: 64.0
+  }
+  scale {
+    x: 0.6
+    y: 0.6
+  }
+  size {
+    x: 971.0
+    y: 700.0
+  }
+  color {
+    x: 0.7019608
+    y: 0.3019608
+    z: 0.101960786
+  }
+  type: TYPE_BOX
+  id: "choose_panel"
+  yanchor: YANCHOR_BOTTOM
+  parent: "card_panel"
+  inherit_alpha: true
+  alpha: 0.27
+  size_mode: SIZE_MODE_AUTO
+  enabled: false
+}
+nodes {
+  position {
+    x: -325.0
+    y: 50.0
+  }
+  size {
+    x: 256.0
+    y: 512.0
+  }
+  color {
+    x: 0.4
+    y: 0.4
+    z: 0.4
+  }
+  type: TYPE_BOX
+  id: "choose_card_1"
+  parent: "choose_panel"
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    y: 80.0
+  }
+  color {
+    z: 0.8
+  }
+  type: TYPE_BOX
+  texture: "gui/u_a_lucky"
+  id: "icon_card1"
+  parent: "choose_card_1"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    y: -125.0
+  }
+  size {
+    x: 200.0
+    y: 50.0
+  }
+  color {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  }
+  type: TYPE_BOX
+  id: "back_for_text"
+  parent: "icon_card1"
+  inherit_alpha: true
+  alpha: 0.3
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    x: -50.0
+    y: -125.0
+  }
+  scale {
+    x: 0.7
+    y: 0.7
+  }
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  color {
+    y: 0.4
+    z: 0.4
+  }
+  type: TYPE_TEXT
+  text: "1.0"
+  font: "druid_text_bold"
+  id: "prev_txt1"
+  parent: "icon_card1"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    x: 50.0
+    y: -125.0
+  }
+  scale {
+    x: 0.7
+    y: 0.7
+  }
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  color {
+    x: 0.22870196
+    y: 0.75409836
+    z: 0.22870196
+  }
+  type: TYPE_TEXT
+  text: "1.05"
+  font: "druid_text_bold"
+  id: "next_txt1"
+  parent: "icon_card1"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    y: -125.0
+  }
+  scale {
+    x: 0.7
+    y: 0.7
+  }
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  color {
+    y: 0.4
+    z: 0.4
+  }
+  type: TYPE_TEXT
+  text: "=>"
+  font: "druid_text_bold"
+  id: "txt"
+  parent: "icon_card1"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    y: -190.0
+  }
+  size {
+    x: 256.0
+    y: 132.0
+  }
+  color {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  }
+  type: TYPE_BOX
+  id: "box4"
+  parent: "choose_card_1"
+  inherit_alpha: true
+  alpha: 0.5
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    x: -70.0
+    y: -100.0
+  }
+  size {
+    x: 32.0
+    y: 32.0
+  }
+  color {
+    x: 0.6
+    y: 0.0
+    z: 0.0
+  }
+  type: TYPE_BOX
+  id: "star_11"
+  parent: "choose_card_1"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    x: -35.0
+    y: -100.0
+  }
+  size {
+    x: 32.0
+    y: 32.0
+  }
+  color {
+    x: 0.6
+    y: 0.0
+    z: 0.0
+  }
+  type: TYPE_BOX
+  id: "star_12"
+  parent: "choose_card_1"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    y: -100.0
+  }
+  size {
+    x: 32.0
+    y: 32.0
+  }
+  color {
+    x: 0.6
+    y: 0.0
+    z: 0.0
+  }
+  type: TYPE_BOX
+  id: "star_13"
+  parent: "choose_card_1"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    x: 35.0
+    y: -100.0
+  }
+  size {
+    x: 32.0
+    y: 32.0
+  }
+  color {
+    x: 0.6
+    y: 0.0
+    z: 0.0
+  }
+  type: TYPE_BOX
+  id: "star_14"
+  parent: "choose_card_1"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    x: 70.0
+    y: -100.0
+  }
+  size {
+    x: 32.0
+    y: 32.0
+  }
+  color {
+    x: 0.6
+    y: 0.0
+    z: 0.0
+  }
+  type: TYPE_BOX
+  id: "star_15"
+  parent: "choose_card_1"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    y: -180.0
+  }
+  scale {
+    x: 0.6
+    y: 0.6
+  }
+  size {
+    x: 400.0
+    y: 200.0
+  }
+  color {
+    y: 0.8
+    z: 0.7019608
+  }
+  type: TYPE_TEXT
+  text: "Upgrade info"
+  font: "druid_text_bold"
+  id: "card_info1"
+  outline {
+    x: 0.2
+    y: 0.2
+    z: 0.2
+  }
+  line_break: true
+  parent: "choose_card_1"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    y: -286.0
+  }
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  color {
+    x: 0.101960786
+    y: 0.101960786
+    z: 0.101960786
+  }
+  type: TYPE_BOX
+  id: "refresh_choose_panel"
+  parent: "choose_panel"
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    y: 50.0
+  }
+  size {
+    x: 256.0
+    y: 512.0
+  }
+  color {
+    x: 0.4
+    y: 0.4
+    z: 0.4
+  }
+  type: TYPE_BOX
+  id: "choose_card_2"
+  parent: "choose_panel"
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    y: 80.0
+  }
+  color {
+    z: 0.8
+  }
+  type: TYPE_BOX
+  texture: "gui/u_r_splash"
+  id: "icon_card2"
+  parent: "choose_card_2"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    y: -125.0
+  }
+  size {
+    x: 200.0
+    y: 50.0
+  }
+  color {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  }
+  type: TYPE_BOX
+  id: "back_for_text2"
+  parent: "icon_card2"
+  inherit_alpha: true
+  alpha: 0.3
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    x: -50.0
+    y: -125.0
+  }
+  scale {
+    x: 0.7
+    y: 0.7
+  }
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  color {
+    y: 0.4
+    z: 0.4
+  }
+  type: TYPE_TEXT
+  text: "1.0"
+  font: "druid_text_bold"
+  id: "prev_txt2"
+  parent: "icon_card2"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    x: 50.0
+    y: -125.0
+  }
+  scale {
+    x: 0.7
+    y: 0.7
+  }
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  color {
+    x: 0.22870196
+    y: 0.75409836
+    z: 0.22870196
+  }
+  type: TYPE_TEXT
+  text: "1.05"
+  font: "druid_text_bold"
+  id: "next_txt2"
+  parent: "icon_card2"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    y: -125.0
+  }
+  scale {
+    x: 0.7
+    y: 0.7
+  }
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  type: TYPE_TEXT
+  text: "=>"
+  font: "druid_text_bold"
+  id: "txt2"
+  parent: "icon_card2"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    x: -70.0
+    y: -100.0
+  }
+  size {
+    x: 32.0
+    y: 32.0
+  }
+  color {
+    x: 0.6
+    y: 0.0
+    z: 0.0
+  }
+  type: TYPE_BOX
+  id: "star_21"
+  parent: "choose_card_2"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    x: -35.0
+    y: -100.0
+  }
+  size {
+    x: 32.0
+    y: 32.0
+  }
+  color {
+    x: 0.6
+    y: 0.0
+    z: 0.0
+  }
+  type: TYPE_BOX
+  id: "star_22"
+  parent: "choose_card_2"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    y: -100.0
+  }
+  size {
+    x: 32.0
+    y: 32.0
+  }
+  color {
+    x: 0.6
+    y: 0.0
+    z: 0.0
+  }
+  type: TYPE_BOX
+  id: "star_23"
+  parent: "choose_card_2"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    x: 35.0
+    y: -100.0
+  }
+  size {
+    x: 32.0
+    y: 32.0
+  }
+  color {
+    x: 0.6
+    y: 0.0
+    z: 0.0
+  }
+  type: TYPE_BOX
+  id: "star_24"
+  parent: "choose_card_2"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    x: 70.0
+    y: -100.0
+  }
+  size {
+    x: 32.0
+    y: 32.0
+  }
+  color {
+    x: 0.6
+    y: 0.0
+    z: 0.0
+  }
+  type: TYPE_BOX
+  id: "star_25"
+  parent: "choose_card_2"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    y: -190.0
+  }
+  size {
+    x: 256.0
+    y: 132.0
+  }
+  color {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  }
+  type: TYPE_BOX
+  id: "box5"
+  parent: "choose_card_2"
+  inherit_alpha: true
+  alpha: 0.5
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    y: -180.0
+  }
+  scale {
+    x: 0.6
+    y: 0.6
+  }
+  size {
+    x: 400.0
+    y: 200.0
+  }
+  color {
+    y: 0.8
+    z: 0.7019608
+  }
+  type: TYPE_TEXT
+  text: "Upgrade info"
+  font: "druid_text_bold"
+  id: "card_info2"
+  outline {
+    x: 0.2
+    y: 0.2
+    z: 0.2
+  }
+  line_break: true
+  parent: "choose_card_2"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    x: 325.0
+    y: 50.0
+  }
+  size {
+    x: 256.0
+    y: 512.0
+  }
+  color {
+    x: 0.4
+    y: 0.4
+    z: 0.4
+  }
+  type: TYPE_BOX
+  id: "choose_card_3"
+  parent: "choose_panel"
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    y: 80.0
+  }
+  color {
+    z: 0.8
+  }
+  type: TYPE_BOX
+  texture: "gui/u_t_multi"
+  id: "icon_card3"
+  parent: "choose_card_3"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    y: -125.0
+  }
+  size {
+    x: 200.0
+    y: 50.0
+  }
+  color {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  }
+  type: TYPE_BOX
+  id: "back_for_text1"
+  parent: "icon_card3"
+  inherit_alpha: true
+  alpha: 0.3
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    x: -50.0
+    y: -125.0
+  }
+  scale {
+    x: 0.7
+    y: 0.7
+  }
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  color {
+    y: 0.4
+    z: 0.4
+  }
+  type: TYPE_TEXT
+  text: "1.0"
+  font: "druid_text_bold"
+  id: "prev_txt3"
+  parent: "icon_card3"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    x: 50.0
+    y: -125.0
+  }
+  scale {
+    x: 0.7
+    y: 0.7
+  }
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  color {
+    x: 0.22870196
+    y: 0.75409836
+    z: 0.22870196
+  }
+  type: TYPE_TEXT
+  text: "1.05"
+  font: "druid_text_bold"
+  id: "next_txt3"
+  parent: "icon_card3"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    y: -125.0
+  }
+  scale {
+    x: 0.7
+    y: 0.7
+  }
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  type: TYPE_TEXT
+  text: "=>"
+  font: "druid_text_bold"
+  id: "txt1"
+  parent: "icon_card3"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    x: -70.0
+    y: -100.0
+  }
+  size {
+    x: 32.0
+    y: 32.0
+  }
+  color {
+    x: 0.6
+    y: 0.0
+    z: 0.0
+  }
+  type: TYPE_BOX
+  id: "star_31"
+  parent: "choose_card_3"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    x: -35.0
+    y: -100.0
+  }
+  size {
+    x: 32.0
+    y: 32.0
+  }
+  color {
+    x: 0.6
+    y: 0.0
+    z: 0.0
+  }
+  type: TYPE_BOX
+  id: "star_32"
+  parent: "choose_card_3"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    y: -100.0
+  }
+  size {
+    x: 32.0
+    y: 32.0
+  }
+  color {
+    x: 0.6
+    y: 0.0
+    z: 0.0
+  }
+  type: TYPE_BOX
+  id: "star_33"
+  parent: "choose_card_3"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    x: 35.0
+    y: -100.0
+  }
+  size {
+    x: 32.0
+    y: 32.0
+  }
+  color {
+    x: 0.6
+    y: 0.0
+    z: 0.0
+  }
+  type: TYPE_BOX
+  id: "star_34"
+  parent: "choose_card_3"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    x: 70.0
+    y: -100.0
+  }
+  size {
+    x: 32.0
+    y: 32.0
+  }
+  color {
+    x: 0.6
+    y: 0.0
+    z: 0.0
+  }
+  type: TYPE_BOX
+  id: "star_35"
+  parent: "choose_card_3"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    y: -190.0
+  }
+  size {
+    x: 256.0
+    y: 132.0
+  }
+  color {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  }
+  type: TYPE_BOX
+  id: "box6"
+  parent: "choose_card_3"
+  inherit_alpha: true
+  alpha: 0.5
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    y: -180.0
+  }
+  scale {
+    x: 0.6
+    y: 0.6
+  }
+  size {
+    x: 400.0
+    y: 200.0
+  }
+  color {
+    y: 0.8
+    z: 0.7019608
+  }
+  type: TYPE_TEXT
+  text: "Upgrade info"
+  font: "druid_text_bold"
+  id: "card_info3"
+  outline {
+    x: 0.2
+    y: 0.2
+    z: 0.2
+  }
+  line_break: true
+  parent: "choose_card_3"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    x: 247.0
+    y: 780.0
+  }
+  scale {
+    x: 0.4
+    y: 0.4
+  }
+  size {
+    x: 700.0
+    y: 100.0
+  }
+  color {
+    x: 0.101960786
+    y: 0.2
+    z: 0.6
+  }
+  type: TYPE_BOX
+  id: "header"
+  yanchor: YANCHOR_TOP
+  pivot: PIVOT_N
+  inherit_alpha: true
+  alpha: 0.3
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    x: -187.0
+    y: -50.0
+  }
+  size {
+    x: 64.0
+    y: 100.0
+  }
+  color {
+    y: 0.8
+    z: 0.8
+  }
+  type: TYPE_TEXT
+  text: "1000000\n"
+  ""
+  font: "druid_text_bold"
+  id: "coin_balance_txt"
+  pivot: PIVOT_E
+  parent: "header"
+}
+nodes {
+  position {
+    x: 85.0
+    y: -50.0
+  }
+  size {
+    x: 300.0
+    y: 50.0
+  }
+  color {
+    x: 0.5019608
+    y: 0.5019608
+    z: 0.5019608
+  }
+  type: TYPE_BOX
+  id: "health_bg"
+  parent: "header"
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    x: -145.5
+  }
+  size {
+    x: 290.0
+    y: 45.0
+  }
+  color {
+    x: 0.7019608
+    y: 0.101960786
+    z: 0.101960786
+  }
+  type: TYPE_BOX
+  id: "health_fill"
+  pivot: PIVOT_W
+  parent: "health_bg"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  type: TYPE_TEXT
+  text: "<text>"
+  font: "druid_text_bold"
+  id: "health_txt"
+  parent: "health_bg"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    x: -143.5
+    y: -50.0
+  }
+  scale {
+    x: 0.7
+    y: 0.7
+  }
+  type: TYPE_BOX
+  texture: "gui/coin"
+  id: "box2"
+  parent: "header"
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    x: 294.0
+    y: -50.0
+  }
+  scale {
+    x: 0.7
+    y: 0.7
+  }
+  type: TYPE_BOX
+  texture: "gui/shield"
+  id: "shield_bg"
+  parent: "header"
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  color {
+    x: 0.0
+  }
+  type: TYPE_TEXT
+  text: "120"
+  font: "druid_text_bold"
+  id: "shield_txt"
+  outline {
+    x: 0.8
+    y: 1.0
+    z: 1.0
+  }
+  parent: "shield_bg"
+  inherit_alpha: true
+  alpha: 0.84
+  outline_alpha: 0.2
+}
+nodes {
+  position {
+    x: 118.0
+    y: 1800.0
+  }
+  size {
+    x: 100.0
+    y: 100.0
+  }
+  type: TYPE_BOX
+  id: "pause"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+  enabled: false
+}
+nodes {
+  position {
+    x: 195.0
+    y: 18.0
+  }
+  size {
+    x: 300.0
+    y: 32.0
+  }
+  color {
+    y: 0.8
+    z: 0.7019608
+  }
+  type: TYPE_BOX
+  id: "wave_bg"
+  xanchor: XANCHOR_LEFT
+  yanchor: YANCHOR_BOTTOM
+  adjust_mode: ADJUST_MODE_STRETCH
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    x: -147.5
+  }
+  size {
+    x: 295.0
+    y: 30.0
+  }
+  color {
+    x: 0.8
+    y: 0.4
+    z: 0.2
+  }
+  type: TYPE_BOX
+  id: "wave_fill"
+  xanchor: XANCHOR_LEFT
+  pivot: PIVOT_W
+  adjust_mode: ADJUST_MODE_STRETCH
+  parent: "wave_bg"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  scale {
+    x: 0.5
+    y: 0.5
+  }
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  color {
+    x: 0.0
+    y: 0.2
+    z: 0.2
+  }
+  type: TYPE_TEXT
+  text: "WAVE 1"
+  font: "druid_text_bold"
+  id: "wave_txt"
+  outline {
+    x: 0.8
+    y: 1.0
+    z: 1.0
+  }
+  parent: "wave_bg"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    x: 195.0
+    y: 390.0
+  }
+  size {
+    x: 390.0
+    y: 780.0
+  }
+  color {
+    x: 0.9019608
+    y: 0.3019608
+    z: 0.3019608
+  }
+  type: TYPE_BOX
+  id: "defeat_root"
+  adjust_mode: ADJUST_MODE_STRETCH
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+  enabled: false
+}
+nodes {
+  position {
+    y: 244.0
+  }
+  size {
+    x: 100.0
+    y: 100.0
+  }
+  type: TYPE_TEXT
+  text: "GAME OVER"
+  font: "druid_text_bold"
+  id: "game_over_txt"
+  parent: "defeat_root"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    y: -87.0
+  }
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  color {
+    z: 0.8
+  }
+  type: TYPE_BOX
+  id: "btn_restart"
+  parent: "defeat_root"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  color {
+    x: 0.9019608
+    y: 0.9019608
+    z: 0.3019608
+  }
+  type: TYPE_TEXT
+  text: "RESTART"
+  font: "druid_text_bold"
+  id: "text1"
+  parent: "btn_restart"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    x: 195.0
+    y: 390.0
+  }
+  size {
+    x: 390.0
+    y: 780.0
+  }
+  color {
+    x: 0.0
+    y: 0.2
+    z: 0.2
+  }
+  type: TYPE_BOX
+  id: "play_panel"
+  adjust_mode: ADJUST_MODE_STRETCH
+  inherit_alpha: true
+  alpha: 0.82
+  size_mode: SIZE_MODE_AUTO
+  enabled: false
+}
+nodes {
+  position {
+    y: -100.0
+  }
+  scale {
+    x: 3.0
+    y: 3.0
+  }
+  type: TYPE_BOX
+  texture: "gui/g_play"
+  id: "play_btn"
+  parent: "play_panel"
+  alpha: 0.0
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  scale {
+    x: 0.3
+    y: 0.3
+  }
+  type: TYPE_BOX
+  texture: "gui/g_play"
+  id: "play_visual"
+  parent: "play_btn"
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    x: 540.0
+    y: 960.0
+    z: -1.0
+  }
+  size {
+    x: 1080.0
+    y: 1920.0
+  }
+  type: TYPE_BOX
+  id: "box3"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+  visible: false
+}
+nodes {
+  color {
+    x: 0.6
+    y: 0.0
+    z: 0.0
+  }
+  type: TYPE_BOX
+  texture: "gui/circle"
+  id: "range_circle_template"
+  parent: "box3"
+  inherit_alpha: true
+  alpha: 0.3
+  size_mode: SIZE_MODE_AUTO
+  visible: false
+}
+nodes {
+  position {
+    x: 195.0
+    y: 530.0
+  }
+  size {
+    x: 280.0
+    y: 46.0
+  }
+  color {
+    x: 0.05
+    y: 0.1
+    z: 0.2
+  }
+  type: TYPE_BOX
+  id: "tutorial_hint"
+  inherit_alpha: true
+  alpha: 0.88
+  enabled: false
+}
+nodes {
+  size {
+    x: 280.0
+    y: 46.0
+  }
+  color {
+    x: 0.3
+    z: 0.95
+  }
+  type: TYPE_TEXT
+  text: "TAP ANYWHERE TO SHOOT"
+  font: "druid_text_bold"
+  id: "tutorial_txt"
+  parent: "tutorial_hint"
+  inherit_alpha: true
+}
+nodes {
+  scale {
+    x: 0.4
+    y: 0.4
+  }
+  type: TYPE_BOX
+  texture: "gui/coin"
+  id: "flying_coin_1"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  scale {
+    x: 0.4
+    y: 0.4
+  }
+  type: TYPE_BOX
+  texture: "gui/coin"
+  id: "flying_coin_2"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+  enabled: false
+}
+nodes {
+  scale {
+    x: 0.4
+    y: 0.4
+  }
+  type: TYPE_BOX
+  texture: "gui/coin"
+  id: "flying_coin_3"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+  enabled: false
+}
+nodes {
+  scale {
+    x: 0.4
+    y: 0.4
+  }
+  type: TYPE_BOX
+  texture: "gui/coin"
+  id: "flying_coin_4"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+  enabled: false
+}
+nodes {
+  scale {
+    x: 0.4
+    y: 0.4
+  }
+  type: TYPE_BOX
+  texture: "gui/coin"
+  id: "flying_coin_5"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+  enabled: false
+}
+nodes {
+  position {
+    x: 195.0
+    y: 470.0
+  }
+  scale {
+    x: 0.75
+    y: 0.75
+  }
+  size {
+    x: 170.0
+    y: 28.0
+  }
+  color {
+    x: 0.05
+    y: 0.12
+    z: 0.28
+  }
+  type: TYPE_BOX
+  id: "event_banner"
+  inherit_alpha: true
+  alpha: 0.92
+  enabled: false
+}
+nodes {
+  size {
+    x: 160.0
+    y: 24.0
+  }
+  color {
+    y: 0.9
+    z: 0.2
+  }
+  type: TYPE_TEXT
+  text: "EVENT"
+  font: "druid_text_bold"
+  id: "event_banner_txt"
+  parent: "event_banner"
+  inherit_alpha: true
+}
+material: "/builtins/materials/gui.material"
+adjust_reference: ADJUST_REFERENCE_PARENT

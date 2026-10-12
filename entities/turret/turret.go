@@ -28,23 +28,16 @@ embedded_components {
 embedded_components {
   id: "sprite"
   type: "sprite"
-  data: "default_animation: \"t_racket\"\n"
+  data: "default_animation: \"t_blaster\"\n"
   "material: \"/builtins/materials/sprite.material\"\n"
   "textures {\n"
   "  sampler: \"texture_sampler\"\n"
   "  texture: \"/assets/all.atlas\"\n"
   "}\n"
   ""
-  position {
-    y: 6.0
-  }
-  rotation {
-    z: 0.70710677
-    w: 0.70710677
-  }
   scale {
-    x: 0.06
-    y: 0.06
+    x: 0.15
+    y: 0.15
   }
 }
 embedded_components {

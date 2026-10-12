@@ -1,37 +1,81 @@
+-- turret.script
 local config = require "main.game_config"
 local prog = require "main.progression"
 
 go.property("turret_type", hash("blaster"))
 go.property("level", 1)
 
--- Таблица паттернов стрельбы
+-- Таблица паттернов стрельбы для всех 6 турелей
 local PATTERNS = {
 	[hash("blaster")] = function(self, pos, rot, speed, pierce)
-		factory.create("#bullet_factory", pos, rot, {
+		factory.create("#bullet_factory", pos + vmath.vector3(0, 0, 0.2), rot, {
 			damage = self.damage,
 			speed = speed,
-			pierce = pierce
+			pierce = pierce,
+			bullet_type = hash("blaster"),
+			max_range = (self.stats.range or 150) * 1.3
 		})
 		self.out = factory.create("#bullet_out_factory", pos, rot)
 		go.set_parent(self.out, go.get_id(), true)
 	end,
 
 	[hash("pulse")] = function(self, pos, rot, speed, pierce)
-		factory.create("#bullet_factory", pos, rot, {
+		factory.create("#bullet_factory", pos + vmath.vector3(0, 0, 0.2), rot, {
 			damage = self.damage,
 			speed = speed,
-			pierce = pierce
+			pierce = pierce,
+			bullet_type = hash("pulse"),
+			max_range = (self.stats.range or 140) * 1.3
 		})
 		self.out = factory.create("#bullet_out_factory", pos, rot)
 		go.set_parent(self.out, go.get_id(), true)
 	end,
 
 	[hash("rocket")] = function(self, pos, rot, speed, pierce)
-		factory.create("#rocket_factory", pos, rot, {
+		factory.create("#rocket_factory", pos + vmath.vector3(0, 0, 0.2), rot, {
 			damage = self.damage, 
 			speed = speed,
 			target_id = self.current_target
 		})
+	end,
+
+	[hash("laser")] = function(self, pos, rot, speed, pierce)
+		factory.create("#bullet_factory", pos + vmath.vector3(0, 0, 0.2), rot, {
+			damage = self.damage,
+			speed = speed,
+			pierce = 3 + pierce,
+			bullet_type = hash("laser"),
+			max_range = (self.stats.range or 160) * 1.4
+		})
+		self.out = factory.create("#bullet_out_factory", pos, rot)
+		go.set_parent(self.out, go.get_id(), true)
+	end,
+
+	[hash("plasma")] = function(self, pos, rot, speed, pierce)
+		factory.create("#bullet_factory", pos + vmath.vector3(0, 0, 0.2), rot, {
+			damage = self.damage,
+			speed = speed,
+			pierce = pierce,
+			bullet_type = hash("plasma"),
+			splash_radius = 70,
+			max_range = (self.stats.range or 150) * 1.3
+		})
+		self.out = factory.create("#bullet_out_factory", pos, rot)
+		go.set_parent(self.out, go.get_id(), true)
+	end,
+
+	[hash("tesla")] = function(self, pos, rot, speed, pierce)
+		local extra_chains = prog.get_chain_count and prog.get_chain_count() or 0
+		factory.create("#bullet_factory", pos + vmath.vector3(0, 0, 0.2), rot, {
+			damage = self.damage,
+			speed = speed,
+			pierce = 0,
+			bullet_type = hash("tesla"),
+			chain_count = 2 + extra_chains,
+			max_range = (self.stats.range or 150) * 1.3
+		})
+		self.out = factory.create("#bullet_out_factory", pos, rot)
+		go.set_parent(self.out, go.get_id(), true)
 	end
 }
 
@@ -43,14 +87,26 @@ end
 
 function init(self)
 	self.type_str = "blaster"
-	sprite.play_flipbook("#sprite", "t_blaster")
+	local anim = "t_blaster"
+
 	if self.turret_type == hash("pulse") then 
 		self.type_str = "pulse"
-		sprite.play_flipbook("#sprite", "t_laser")
+		anim = "t_pulse"
 	elseif self.turret_type == hash("rocket") then 
 		self.type_str = "rocket"
-		sprite.play_flipbook("#sprite", "t_racket")
+		anim = "t_racket"
+	elseif self.turret_type == hash("laser") then 
+		self.type_str = "laser"
+		anim = "t_laser"
+	elseif self.turret_type == hash("plasma") then 
+		self.type_str = "plasma"
+		anim = "t_plasma"
+	elseif self.turret_type == hash("tesla") then 
+		self.type_str = "tesla"
+		anim = "t_tesla"
 	end
+
+	sprite.play_flipbook("#sprite", anim)
 
 	local stats = config.turret_stats[self.type_str] or config.turret_stats.blaster
 	self.stats = stats
@@ -66,8 +122,8 @@ function fire(self, pos, rot, target_angle)
 	update_damage(self)
 
 	-- Отдача выстрела турели (Recoil Punch)
-	go.set("#sprite", "scale", vmath.vector3(0.075, 0.042, 1))
-	go.animate("#sprite", "scale", go.PLAYBACK_ONCE_FORWARD, vmath.vector3(0.06, 0.06, 1), go.EASING_OUTELASTIC, 0.18)
+	go.set("#sprite", "scale", vmath.vector3(0.12, 0.17, 1))
+	go.animate("#sprite", "scale", go.PLAYBACK_ONCE_FORWARD, vmath.vector3(0.15, 0.15, 1), go.EASING_OUTELASTIC, 0.18)
 
 	local speed = self.stats.bullet_speed * prog.get_projectile_speed_multiplier()
 	local pierce = (self.turret_type == hash("blaster")) and prog.get_pierce_count() or 0
@@ -100,14 +156,18 @@ function update(self, dt)
 		local dir = target_pos - my_pos
 		local target_angle = math.atan2(dir.y, dir.x) 
 
-		-- Поворот спрайта
-		local offset = - math.pi / 2 
-		local target_quat = vmath.quat_rotation_z(target_angle + offset)
-		local parent_quat = go.get_world_rotation(go.get_parent())
-		go.set_rotation(vmath.conj(parent_quat) * target_quat)
+		-- Прямой поворот к цели вдоль направления стрельбы
+		local target_quat = vmath.quat_rotation_z(target_angle)
+		local parent = go.get_parent()
+		if parent then
+			local parent_quat = go.get_world_rotation(parent)
+			go.set_rotation(vmath.conj(parent_quat) * target_quat)
+		else
+			go.set_rotation(target_quat)
+		end
 
 		if self.cooldown <= 0 then
-			fire(self, my_pos, vmath.quat_rotation_z(target_angle), target_angle)
+			fire(self, my_pos, target_quat, target_angle)
 		end
 	else
 		self.current_target = nil

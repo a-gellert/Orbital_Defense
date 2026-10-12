@@ -2,6 +2,15 @@ images {
   image: "/assets/sprites/p_blue.png"
 }
 images {
+  image: "/assets/sprites/p_green.png"
+}
+images {
+  image: "/assets/sprites/p_laser.png"
+}
+images {
+  image: "/assets/sprites/p_plasma.png"
+}
+images {
   image: "/assets/sprites/p_purple.png"
 }
 images {
@@ -9,6 +18,9 @@ images {
 }
 images {
   image: "/assets/sprites/p_red.png"
+}
+images {
+  image: "/assets/sprites/p_tesla.png"
 }
 images {
   image: "/assets/sprites/s_blue.png"
@@ -26,10 +38,19 @@ images {
   image: "/assets/sprites/t_blaster.png"
 }
 images {
-  image: "/assets/sprites/t_laser.png"
+  image: "/assets/sprites/t_pulse.png"
 }
 images {
   image: "/assets/sprites/t_racket.png"
+}
+images {
+  image: "/assets/sprites/t_laser.png"
+}
+images {
+  image: "/assets/sprites/t_plasma.png"
+}
+images {
+  image: "/assets/sprites/t_tesla.png"
 }
 images {
   image: "/assets/sprites/gui/coin.png"
@@ -38,24 +59,45 @@ images {
   image: "/assets/sprites/kamikaze.png"
 }
 images {
-  image: "/assets/sprites/mini_splitter.png"
-}
-images {
-  image: "/assets/sprites/shooter.png"
-}
-images {
-  image: "/assets/sprites/splitter.png"
-}
-images {
   image: "/assets/sprites/swarmer.png"
 }
 images {
   image: "/assets/sprites/swing.png"
 }
 images {
+  image: "/assets/sprites/shooter.png"
+}
+images {
   image: "/assets/sprites/tank.png"
 }
 images {
+  image: "/assets/sprites/splitter.png"
+}
+images {
+  image: "/assets/sprites/mini_splitter.png"
+}
+images {
   image: "/assets/sprites/warp.png"
+}
+images {
+  image: "/assets/sprites/speeder.png"
+}
+images {
+  image: "/assets/sprites/ghost.png"
+}
+images {
+  image: "/assets/sprites/shield_bearer.png"
+}
+images {
+  image: "/assets/sprites/dreadnought.png"
+}
+images {
+  image: "/assets/sprites/fx_ring.png"
+}
+images {
+  image: "/assets/sprites/fx_spark.png"
+}
+images {
+  image: "/assets/sprites/gold_asteroid.png"
 }
 extrude_borders: 2

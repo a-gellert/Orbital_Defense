@@ -7,6 +7,9 @@ go.property("target_id", hash(""))
 
 function init(self)
 	self.life = 4.0
+	local pos = go.get_position()
+	go.set_position(vmath.vector3(pos.x, pos.y, 0.4))
+	go.set_scale(vmath.vector3(1.0, 1.0, 1.0))
 end
 
 function update(self, dt)
@@ -27,7 +30,7 @@ function update(self, dt)
 		local current_dir = vmath.rotate(go.get_rotation(), vmath.vector3(1, 0, 0))
 
 		-- Плавный поворот (интерполяция направления)
-		local new_dir = vmath.lerp(0.12, current_dir, target_dir)
+		local new_dir = vmath.lerp(0.14, current_dir, target_dir)
 		local angle = math.atan2(new_dir.y, new_dir.x)
 		go.set_rotation(vmath.quat_rotation_z(angle))
 	end
@@ -49,8 +52,8 @@ function on_message(self, message_id, message, sender)
 		end
 
 		-- Логика сплеш-урона по площади
-		local splash_mult = prog.get_splash_radius_mult()
-		local splash_radius = 50 * splash_mult
+		local splash_mult = prog.get_splash_radius_mult and prog.get_splash_radius_mult() or 1.0
+		local splash_radius = 55 * splash_mult
 
 		if prog.active_enemies then
 			for enemy_id, _ in pairs(prog.active_enemies) do
