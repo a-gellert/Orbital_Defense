@@ -24,6 +24,7 @@ show_fullscreen_button = 0
 show_console_banner = 0
 heap_size = 128
 cssfile = /builtins/manifests/web/dark_theme.css
+htmlfile = /template/custom_template.html
 
 [project]
 title = Orbital Defense

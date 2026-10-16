@@ -152,8 +152,38 @@
 	</script>
   <script id="engine-loader" type="text/javascript" src="dmloader.js"></script>
   <script id="engine-setup" type="text/javascript">
-		// From here you can configure game startup parameters via the CUSTOM_PARAMETERS object,
-		// override ProgressView to create your own loader. See dmloader.js for more details.
+		var extra_params = {
+			resize_window_callback: function() {
+				var is_iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+				if (is_iOS) {
+					window.scrollTo(0, 0);
+				}
+				var app_container = document.getElementById('app-container');
+				var game_canvas = document.getElementById('canvas');
+				var innerWidth = window.innerWidth;
+				var innerHeight = window.innerHeight;
+
+				if (CUSTOM_PARAMETERS.resize_window_prev_inner_width === innerWidth &&
+					CUSTOM_PARAMETERS.resize_window_prev_inner_height === innerHeight) {
+					return;
+				}
+				CUSTOM_PARAMETERS.resize_window_prev_inner_width = innerWidth;
+				CUSTOM_PARAMETERS.resize_window_prev_inner_height = innerHeight;
+
+				var dpi = window.devicePixelRatio || 1;
+
+				app_container.style.marginLeft = "0px";
+				app_container.style.marginTop = "0px";
+				app_container.style.width = innerWidth + "px";
+				app_container.style.height = innerHeight + "px";
+
+				game_canvas.style.width = innerWidth + "px";
+				game_canvas.style.height = innerHeight + "px";
+				game_canvas.width = Math.floor(innerWidth * dpi);
+				game_canvas.height = Math.floor(innerHeight * dpi);
+			}
+		};
+		Object.assign(CUSTOM_PARAMETERS, extra_params);
 	</script>
   <script id="engine-start" type="text/javascript">
 		var runningFromFileWarning = document.getElementById("running-from-file-warning");
