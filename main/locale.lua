@@ -28,6 +28,7 @@ M.strings = {
 		unlock_orbit = "ORBIT %s",
 		repair_hp = "REPAIR +%d",
 		hp_full = "HP FULL",
+		all_orbits = "ALL ORBITS UNLOCKED",
 		core_dmg = "CORE DMG +4 (L%d)",
 		max_shield = "MAX SHIELD +15 (L%d)",
 		max_hp = "MAX HP +35 (L%d)",

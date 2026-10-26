@@ -103,150 +103,6 @@ nodes {
   inherit_alpha: true
 }
 nodes {
-  position {
-    x: 195.0
-    y: 390.0
-  }
-  size {
-    x: 390.0
-    y: 780.0
-  }
-  type: TYPE_BOX
-  id: "root"
-  xanchor: XANCHOR_LEFT
-  inherit_alpha: true
-  size_mode: SIZE_MODE_AUTO
-  enabled: false
-}
-nodes {
-  position {
-    x: 50.0
-    y: 360.0
-  }
-  size {
-    x: 195.0
-    y: 10.0
-  }
-  type: TYPE_BOX
-  id: "tabs"
-  parent: "root"
-  size_mode: SIZE_MODE_AUTO
-}
-nodes {
-  position {
-    x: -200.0
-    y: -60.0
-  }
-  size {
-    x: 198.0
-    y: 100.0
-  }
-  type: TYPE_BOX
-  id: "btn_tab_orbits"
-  parent: "tabs"
-  inherit_alpha: true
-  size_mode: SIZE_MODE_AUTO
-}
-nodes {
-  size {
-    x: 200.0
-    y: 100.0
-  }
-  type: TYPE_TEXT
-  text: "ORBITS"
-  font: "druid_text_bold"
-  id: "orbits_txt"
-  parent: "btn_tab_orbits"
-  inherit_alpha: true
-}
-nodes {
-  position {
-    y: -60.0
-  }
-  size {
-    x: 198.0
-    y: 100.0
-  }
-  type: TYPE_BOX
-  id: "btn_tab_turrets"
-  parent: "tabs"
-  inherit_alpha: true
-  size_mode: SIZE_MODE_AUTO
-}
-nodes {
-  size {
-    x: 200.0
-    y: 100.0
-  }
-  type: TYPE_TEXT
-  text: "TURRETS"
-  font: "druid_text_bold"
-  id: "turrets_txt"
-  parent: "btn_tab_turrets"
-  inherit_alpha: true
-}
-nodes {
-  position {
-    x: 200.0
-    y: -60.0
-  }
-  size {
-    x: 198.0
-    y: 100.0
-  }
-  type: TYPE_BOX
-  id: "btn_tab_economy"
-  parent: "tabs"
-  inherit_alpha: true
-  size_mode: SIZE_MODE_AUTO
-}
-nodes {
-  size {
-    x: 200.0
-    y: 100.0
-  }
-  type: TYPE_TEXT
-  text: "PLANET"
-  font: "druid_text_bold"
-  id: "planet_txt"
-  parent: "btn_tab_economy"
-  inherit_alpha: true
-}
-nodes {
-  position {
-    x: 100.0
-    y: 95.0
-  }
-  size {
-    x: 390.0
-    y: 780.0
-  }
-  type: TYPE_BOX
-  id: "view_port"
-  parent: "root"
-  clipping_mode: CLIPPING_MODE_STENCIL
-  size_mode: SIZE_MODE_AUTO
-}
-nodes {
-  position {
-    x: -278.0
-    y: 456.0
-  }
-  size {
-    x: 1.0
-    y: 1.0
-  }
-  color {
-    y: 0.0
-    z: 0.0
-  }
-  type: TYPE_BOX
-  id: "content_node"
-  pivot: PIVOT_NW
-  parent: "view_port"
-  alpha: 0.0
-}
-nodes {
   size {
     x: 100.0
     y: 100.0
@@ -428,6 +284,97 @@ nodes {
   parent: "btn_buy_turret"
   inherit_alpha: true
   size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  size {
+    x: 342.0
+    y: 56.0
+  }
+  color {
+    x: 0.09
+    y: 0.17
+    z: 0.34
+  }
+  type: TYPE_BOX
+  id: "upgrade_row"
+  parent: "templates"
+  enabled: false
+}
+nodes {
+  position {
+    x: -160.0
+  }
+  scale {
+    x: 0.3
+    y: 0.3
+  }
+  size {
+    x: 700.0
+    y: 60.0
+  }
+  color {
+    x: 0.95
+    y: 0.98
+  }
+  type: TYPE_TEXT
+  text: "BLASTER DMG (L1)"
+  font: "druid_text_bold"
+  id: "row_title"
+  pivot: PIVOT_W
+  parent: "upgrade_row"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    x: 118.0
+  }
+  size {
+    x: 96.0
+    y: 38.0
+  }
+  color {
+    x: 0.12
+    y: 0.45
+    z: 0.85
+  }
+  type: TYPE_BOX
+  id: "row_price_bg"
+  parent: "upgrade_row"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    x: -32.0
+  }
+  scale {
+    x: 0.15
+    y: 0.15
+  }
+  type: TYPE_BOX
+  texture: "gui/coin"
+  id: "row_coin"
+  parent: "row_price_bg"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    x: 8.0
+  }
+  scale {
+    x: 0.3
+    y: 0.3
+  }
+  size {
+    x: 220.0
+    y: 60.0
+  }
+  type: TYPE_TEXT
+  text: "100"
+  font: "druid_text_bold"
+  id: "row_price"
+  parent: "row_price_bg"
+  inherit_alpha: true
 }
 nodes {
   size {
@@ -2354,6 +2301,315 @@ nodes {
   }
   parent: "wave_bg"
   inherit_alpha: true
+}
+nodes {
+  position {
+    x: 195.0
+    y: 390.0
+  }
+  size {
+    x: 390.0
+    y: 780.0
+  }
+  color {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  }
+  type: TYPE_BOX
+  id: "root"
+  alpha: 0.0
+  enabled: false
+}
+nodes {
+  size {
+    x: 2000.0
+    y: 2000.0
+  }
+  color {
+    x: 0.01
+    y: 0.02
+    z: 0.06
+  }
+  type: TYPE_BOX
+  id: "menu_dim"
+  parent: "root"
+  alpha: 0.82
+}
+nodes {
+  size {
+    x: 370.0
+    y: 700.0
+  }
+  color {
+    x: 0.06
+    y: 0.1
+    z: 0.2
+  }
+  type: TYPE_BOX
+  id: "menu_panel"
+  parent: "root"
+  alpha: 0.98
+}
+nodes {
+  position {
+    y: 348.5
+  }
+  size {
+    x: 370.0
+    y: 3.0
+  }
+  color {
+    x: 0.35
+    y: 0.95
+  }
+  type: TYPE_BOX
+  id: "menu_accent"
+  parent: "menu_panel"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    x: -170.0
+    y: 316.0
+  }
+  scale {
+    x: 0.5
+    y: 0.5
+  }
+  size {
+    x: 420.0
+    y: 70.0
+  }
+  color {
+    x: 0.35
+    y: 0.95
+  }
+  type: TYPE_TEXT
+  text: "UPGRADES"
+  font: "druid_text_bold"
+  id: "menu_title"
+  pivot: PIVOT_W
+  parent: "menu_panel"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    x: 52.0
+    y: 316.0
+  }
+  scale {
+    x: 0.2
+    y: 0.2
+  }
+  type: TYPE_BOX
+  texture: "gui/coin"
+  id: "menu_coin"
+  parent: "menu_panel"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    x: 70.0
+    y: 316.0
+  }
+  scale {
+    x: 0.42
+    y: 0.42
+  }
+  size {
+    x: 220.0
+    y: 60.0
+  }
+  color {
+    y: 0.85
+    z: 0.2
+  }
+  type: TYPE_TEXT
+  text: "250"
+  font: "druid_text_bold"
+  id: "menu_gold_txt"
+  pivot: PIVOT_W
+  parent: "menu_panel"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    x: 158.0
+    y: 316.0
+  }
+  size {
+    x: 40.0
+    y: 40.0
+  }
+  color {
+    x: 0.7
+    y: 0.18
+    z: 0.25
+  }
+  type: TYPE_BOX
+  id: "btn_close_menu"
+  parent: "menu_panel"
+  inherit_alpha: true
+}
+nodes {
+  scale {
+    x: 0.45
+    y: 0.45
+  }
+  size {
+    x: 80.0
+    y: 80.0
+  }
+  type: TYPE_TEXT
+  text: "X"
+  font: "druid_text_bold"
+  id: "close_txt"
+  parent: "btn_close_menu"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    y: 262.0
+  }
+  size {
+    x: 1.0
+    y: 1.0
+  }
+  type: TYPE_BOX
+  id: "tabs"
+  parent: "menu_panel"
+  alpha: 0.0
+}
+nodes {
+  position {
+    x: -120.0
+  }
+  size {
+    x: 114.0
+    y: 44.0
+  }
+  color {
+    x: 0.1
+    y: 0.16
+    z: 0.3
+  }
+  type: TYPE_BOX
+  id: "btn_tab_turrets"
+  parent: "tabs"
+}
+nodes {
+  scale {
+    x: 0.38
+    y: 0.38
+  }
+  size {
+    x: 280.0
+    y: 80.0
+  }
+  type: TYPE_TEXT
+  text: "TURRETS"
+  font: "druid_text_bold"
+  id: "turrets_txt"
+  parent: "btn_tab_turrets"
+  inherit_alpha: true
+}
+nodes {
+  size {
+    x: 114.0
+    y: 44.0
+  }
+  color {
+    x: 0.1
+    y: 0.16
+    z: 0.3
+  }
+  type: TYPE_BOX
+  id: "btn_tab_orbits"
+  parent: "tabs"
+}
+nodes {
+  scale {
+    x: 0.38
+    y: 0.38
+  }
+  size {
+    x: 280.0
+    y: 80.0
+  }
+  type: TYPE_TEXT
+  text: "ORBITS"
+  font: "druid_text_bold"
+  id: "orbits_txt"
+  parent: "btn_tab_orbits"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    x: 120.0
+  }
+  size {
+    x: 114.0
+    y: 44.0
+  }
+  color {
+    x: 0.1
+    y: 0.16
+    z: 0.3
+  }
+  type: TYPE_BOX
+  id: "btn_tab_economy"
+  parent: "tabs"
+}
+nodes {
+  scale {
+    x: 0.38
+    y: 0.38
+  }
+  size {
+    x: 280.0
+    y: 80.0
+  }
+  type: TYPE_TEXT
+  text: "PLANET"
+  font: "druid_text_bold"
+  id: "planet_txt"
+  parent: "btn_tab_economy"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    y: -40.0
+  }
+  size {
+    x: 350.0
+    y: 580.0
+  }
+  color {
+    x: 0.04
+    y: 0.07
+    z: 0.15
+  }
+  type: TYPE_BOX
+  id: "view_port"
+  parent: "menu_panel"
+  alpha: 0.6
+  clipping_mode: CLIPPING_MODE_STENCIL
+}
+nodes {
+  position {
+    y: 290.0
+  }
+  size {
+    x: 350.0
+    y: 1.0
+  }
+  type: TYPE_BOX
+  id: "content_node"
+  pivot: PIVOT_N
+  parent: "view_port"
+  alpha: 0.0
 }
 nodes {
   position {

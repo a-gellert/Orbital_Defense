@@ -1,12 +1,25 @@
 local druid = require "druid.druid"
+local druid_const = require "druid.const"
 local prog = require "main.progression"
 local config = require "main.game_config"
 local poki = require "main.poki"
 local locale = require "main.locale"
 
-local DIMS = 180
 local DIMS_LEFTPANEL = 36
-local MAX_TEXT_WIDTH = 70 
+local MAX_TEXT_WIDTH = 70
+
+-- Список в окне улучшений: строки 342x56 (шаблон upgrade_row), шаг 62
+local ROW_STEP = 62
+local ROW_TOP_PAD = 34        -- центр первой строки от верхнего края списка
+local LIST_WIDTH = 350
+local LIST_VIEW_HEIGHT = 580  -- высота view_port
+local TAB_ACTIVE = vmath.vector4(0.12, 0.45, 0.85, 1)
+local TAB_INACTIVE = vmath.vector4(0.1, 0.16, 0.3, 1)
+local PRICE_OK = vmath.vector4(0.12, 0.45, 0.85, 1)
+local PRICE_META_OK = vmath.vector4(0.1, 0.55, 0.6, 1)
+local PRICE_NO = vmath.vector4(0.35, 0.15, 0.18, 1)
+-- Окно улучшений модальное: его компоненты получают ввод раньше кнопок HUD под ним
+local MENU_INPUT_PRIORITY = druid_const.PRIORITY_INPUT_HIGH
 local time_for_refresh = 2
 local current_time = 2
 local show_event_banner = nil
@@ -90,15 +103,8 @@ local function show_choices(self)
 end
 
 local function update_tab_highlights(self)
-	if prog.is_paused then return end
 	for name, node in pairs(self.tab_nodes) do
-		if name == self.current_tab then
-			gui.set_color(node, self.color_active)
-			gui.animate(node, "scale", vmath.vector3(1.1, 1.1, 1), gui.EASING_OUTQUAD, 0.2)
-		else
-			gui.set_color(node, self.color_inactive)
-			gui.animate(node, "scale", vmath.vector3(1, 1, 1), gui.EASING_OUTQUAD, 0.2)
-		end
+		gui.set_color(node, name == self.current_tab and TAB_ACTIVE or TAB_INACTIVE)
 	end
 end
 
@@ -144,7 +150,9 @@ local function update_progress_bar(node_name, current, max)
 	gui.set_color(progress_node, color)
 end
 
-local function fit_text(text_node, max_width)
+-- Уменьшает текст, если он шире max_width (в единицах родителя). base_scale - обычный масштаб текста
+local function fit_text(text_node, max_width, base_scale)
+	base_scale = base_scale or 1
 	local width = nil
 	if resource and resource.get_text_metrics and gui.get_font_resource then
 		local ok, metrics = pcall(function()
@@ -167,12 +175,11 @@ local function fit_text(text_node, max_width)
 		width = #text * 8
 	end
 
-	if width and width > max_width and width > 0 then
-		local scale_factor = max_width / width
-		gui.set_scale(text_node, vmath.vector3(scale_factor, scale_factor, 1))
-	else
-		gui.set_scale(text_node, vmath.vector3(1, 1, 1))
+	local scale = base_scale
+	if width > 0 and width * base_scale > max_width then
+		scale = max_width / width
 	end
+	gui.set_scale(text_node, vmath.vector3(scale, scale, 1))
 end
 
 local function clear_tab_content(self)
@@ -181,8 +188,8 @@ local function clear_tab_content(self)
 	end
 	self.upgrade_buttons = {}
 
-	for _, nodes in ipairs(self.spawned_upgrade_nodes or {}) do
-		for _, node in pairs(nodes) do gui.delete_node(node) end
+	for _, root in ipairs(self.spawned_upgrade_nodes or {}) do
+		gui.delete_node(root)
 	end
 	self.spawned_upgrade_nodes = {}
 	self.upgrade_items = {}
@@ -195,7 +202,7 @@ local function clear_purchase_panel(self)
 	self.purchase_buttons = {}
 
 	for _, nodes in ipairs(self.spawned_purchase_nodes or {}) do
-		for _, node in pairs(nodes) do gui.delete_node(node) end
+		gui.delete_node(nodes[hash("btn_buy_turret")])
 	end
 	self.spawned_purchase_nodes = {}
 	self.turret_buy_data = {}
@@ -224,28 +231,40 @@ local function add_purchase_button(self, turret_id, turret_data, index)
 	table.insert(self.purchase_buttons, btn)
 end
 
+-- Строка списка улучшений. price = nil - информационная строка без кнопки цены
 local function add_upgrade_item(self, title, price, callback, index, is_meta)
-	local template = gui.get_node("btn_buy_turret")
-	local nodes = gui.clone_tree(template)
-	table.insert(self.spawned_upgrade_nodes, nodes)
+	local nodes = gui.clone_tree(gui.get_node("upgrade_row"))
+	local root = nodes[hash("upgrade_row")]
+	table.insert(self.spawned_upgrade_nodes, root)
 
-	local root = nodes[hash("btn_buy_turret")]
 	gui.set_parent(root, gui.get_node("content_node"))
 	gui.set_enabled(root, true)
-	gui.set_visible(root, true)
+	gui.set_position(root, vmath.vector3(0, -(ROW_TOP_PAD + index * ROW_STEP), 0))
 
-	local name_node = nodes[hash("turret_name")]
-	gui.set_text(name_node, title)
-	fit_text(name_node, MAX_TEXT_WIDTH)
+	local title_node = nodes[hash("row_title")]
+	gui.set_text(title_node, title)
+	fit_text(title_node, 205, 0.3)
 
-	local icon = is_meta and " V" or ""
-	gui.set_text(nodes[hash("turret_price")], prog.format_num(price) .. icon)
-	gui.set_position(root, vmath.vector3(0, -(20 + index * DIMS), 0))
+	local price_bg = nodes[hash("row_price_bg")]
+	if price then
+		local price_node = nodes[hash("row_price")]
+		gui.set_text(price_node, prog.format_num(price) .. (is_meta and " V" or ""))
+		-- У мета-улучшений валюта "V" вместо монеты: текст по центру кнопки
+		gui.set_enabled(nodes[hash("row_coin")], not is_meta)
+		if is_meta then
+			gui.set_position(price_node, vmath.vector3(0, 0, 0))
+		end
+		fit_text(price_node, is_meta and 84 or 56, 0.3)
+		table.insert(self.upgrade_items, { bg = price_bg, price = price, is_meta = is_meta })
+	else
+		gui.set_enabled(price_bg, false)
+	end
 
-	table.insert(self.upgrade_items, { nodes = nodes, price = price, is_meta = is_meta })
-
-	local btn = self.druid:new_button(root, callback)
-	table.insert(self.upgrade_buttons, btn)
+	if callback then
+		local btn = self.druid:new_button(root, callback)
+		btn:set_input_priority(MENU_INPUT_PRIORITY)
+		table.insert(self.upgrade_buttons, btn)
+	end
 end
 
 local function update_purchase_panel(self)
@@ -304,6 +323,9 @@ local function build_orbits_panel(self)
 			count = count + 1
 		end
 	end
+	if count == 0 then
+		add_upgrade_item(self, locale.t("all_orbits"), nil, nil, 0)
+	end
 end
 
 local function build_planet_panel(self)
@@ -328,7 +350,7 @@ local function build_planet_panel(self)
 		end, count)
 		count = count + 1
 	else
-		add_upgrade_item(self, locale.t("hp_full", math.floor(econ.planet_hp), max_hp), 0, function() end, count)
+		add_upgrade_item(self, locale.t("hp_full", math.floor(econ.planet_hp), max_hp), nil, nil, count)
 		count = count + 1
 	end
 
@@ -458,14 +480,10 @@ local function update_button_colors(self)
 		local color = gold >= data.price and vmath.vector4(1, 1, 1, 1) or vmath.vector4(1, 0, 0, 1)
 		gui.set_color(data.nodes[hash("turret_price")], color)
 	end
+	-- Кнопка цены: синяя, если хватает золота (бирюзовая для мета-валюты), иначе темно-красная
 	for _, item in ipairs(self.upgrade_items or {}) do
-		if item.is_meta then
-			local color = vault >= item.price and vmath.vector4(0.3, 0.95, 1, 1) or vmath.vector4(1, 0.2, 0.2, 1)
-			gui.set_color(item.nodes[hash("turret_price")], color)
-		else
-			local color = gold >= item.price and vmath.vector4(1, 1, 1, 1) or vmath.vector4(1, 0, 0, 1)
-			gui.set_color(item.nodes[hash("turret_price")], color)
-		end
+		local can_buy = (item.is_meta and vault or gold) >= item.price
+		gui.set_color(item.bg, can_buy and (item.is_meta and PRICE_META_OK or PRICE_OK) or PRICE_NO)
 	end
 end
 
@@ -476,35 +494,42 @@ local function update_balance(self)
 		gui.set_scale(coin_node, vmath.vector3(1, 1, 1))
 		gui.animate(coin_node, "scale", vmath.vector3(1.2, 1.2, 1), gui.EASING_OUTBACK, 0.2, 0, nil, gui.PLAYBACK_ONCE_PINGPONG)
 	end
+	gui.set_text(gui.get_node("menu_gold_txt"), prog.format_num(prog.data.gold or 0))
 
 	self:update_button_colors()
 end
 
+-- Окно улучшений модальное: пока оно открыто, бой на паузе
 local function toggle_menu(self)
-	if prog.is_paused then return end
+	-- На другой паузе (выбор карты, поражение, старт) окно не открываем
+	if prog.is_paused and not self.is_menu_open then return end
 	self.is_menu_open = not self.is_menu_open
-	if self.is_menu_open then
-		self.upgrades_hint_done = true
-		hide_hint(self)
-	end
-	local root = gui.get_node("root")
-	gui.set_enabled(root, self.is_menu_open)
-	gui.set_visible(root, self.is_menu_open)
+	gui.set_enabled(gui.get_node("root"), self.is_menu_open)
+	prog.is_paused = self.is_menu_open
 
 	if self.is_menu_open then
-		self:refresh_tab(self.current_tab or "turrets")
+		poki.gameplay_stop()
+		self.upgrades_hint_done = true
+		hide_hint(self)
+		self:refresh_tab(self.current_tab or "turrets", true)
 		self:update_balance()
+	else
+		poki.gameplay_start()
 	end
 end
 
-local function refresh_tab(self, tab_name)
+-- reset_scroll: при смене вкладки и открытии окна список прокручивается в начало
+local function refresh_tab(self, tab_name, reset_scroll)
 	self.current_tab = tab_name
 	if tab_name == "turrets" then build_turret_upgrades(self)
 	elseif tab_name == "orbits" then build_orbits_panel(self)
 	elseif tab_name == "economy" then build_planet_panel(self) end
 
-	local total_height = #self.spawned_upgrade_nodes * DIMS
-	self.scroll:set_size(vmath.vector3(400, math.max(total_height, 1), 0))
+	local total_height = #self.spawned_upgrade_nodes * ROW_STEP + (ROW_TOP_PAD * 2 - ROW_STEP)
+	self.scroll:set_size(vmath.vector3(LIST_WIDTH, total_height, 0))
+	if reset_scroll then
+		self.scroll:scroll_to(vmath.vector3(0, -LIST_VIEW_HEIGHT / 2, 0), true)
+	end
 	self:update_button_colors()
 
 	update_tab_highlights(self)
@@ -551,7 +576,9 @@ end
 -- Подсказка в плашке туториала (переиспользуем ноду tutorial_hint)
 local function show_hint(self, text, duration)
 	local hint = gui.get_node("tutorial_hint")
-	gui.set_text(gui.get_node("tutorial_txt"), text)
+	local txt = gui.get_node("tutorial_txt")
+	gui.set_text(txt, text)
+	fit_text(txt, 270)
 	gui.cancel_animations(hint, "scale")
 	gui.set_enabled(hint, true)
 	gui.set_scale(hint, vmath.vector3(0.75, 0.75, 1))
@@ -789,13 +816,21 @@ function init(self)
 
 	msg.post(".", "acquire_input_focus")
 	self.druid = druid.new(self)
-	self.scroll = self.druid:new_scroll("view_port", "content_node")
 	for i = 1, 5 do
 		self.druid:new_button("cardholder_" .. i, function()
 			show_info(self, i)
 		end)
 	end
 	self.druid:new_blocker("play_panel")
+	-- Окно улучшений. Его компоненты имеют повышенный приоритет ввода, а внутри одного приоритета
+	-- Druid опрашивает сначала созданные позже. Затемнение создается первым: оно глотает тапы
+	-- мимо панели (в том числе по кнопкам HUD под окном), но не мешает самому окну
+	self.druid:new_blocker("menu_dim"):set_enabled(true):set_input_priority(MENU_INPUT_PRIORITY)
+	self.scroll = self.druid:new_scroll("view_port", "content_node")
+	self.scroll:set_horizontal_scroll(false)
+	-- Скролл выше строк: перетаскивание забирает ввод только после начала движения,
+	-- поэтому тап по строке остается кликом, а свайп по ней листает список
+	self.scroll:set_input_priority(MENU_INPUT_PRIORITY + 1)
 	self.spawned_purchase_nodes = {}
 	self.spawned_upgrade_nodes = {}
 	self.spawned_meta_hub_nodes = {}
@@ -815,12 +850,15 @@ function init(self)
 		economy = gui.get_node("btn_tab_economy")
 	}
 
-	self.color_active = vmath.vector4(1, 1, 1, 1)
-	self.color_inactive = vmath.vector4(0.5, 0.5, 0.5, 1)
-
-	self.druid:new_button("btn_tab_orbits", function() self:refresh_tab("orbits") end)
-	self.druid:new_button("btn_tab_turrets", function() self:refresh_tab("turrets") end)
-	self.druid:new_button("btn_tab_economy", function() self:refresh_tab("economy") end)
+	local menu_buttons = {
+		btn_tab_orbits = function() self:refresh_tab("orbits", true) end,
+		btn_tab_turrets = function() self:refresh_tab("turrets", true) end,
+		btn_tab_economy = function() self:refresh_tab("economy", true) end,
+		btn_close_menu = function() self:toggle_menu() end,
+	}
+	for node_id, callback in pairs(menu_buttons) do
+		self.druid:new_button(node_id, callback):set_input_priority(MENU_INPUT_PRIORITY)
+	end
 	self.druid:new_button("btn_toggle_menu", function() self:toggle_menu() end)
 	self.emp_cooldown = 0
 	self.druid:new_button("btn_emp", function()
@@ -862,6 +900,7 @@ function init(self)
 	local tut_txt = gui.get_node("tutorial_txt")
 	if tut_txt then
 		gui.set_text(tut_txt, locale.t("tutorial_shoot"))
+		fit_text(tut_txt, 270)
 	end
 
 	self.druid:new_button("play_btn", function()
