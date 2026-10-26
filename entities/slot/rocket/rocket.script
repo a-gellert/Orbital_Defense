@@ -1,15 +1,20 @@
--- entities/rocket/rocket.script
+-- rocket.script
 local prog = require "main.progression"
+local registry = require "main.enemy_registry"
 
 go.property("damage", 0)
 go.property("speed", 300)
 go.property("target_id", hash(""))
 
+local FORWARD = vmath.vector3(1, 0, 0)
+local TURN_RATE = 0.14       -- доля поворота к цели за кадр
+local RETARGET_RANGE = 200   -- если цель погибла, ракета ищет новую в этом радиусе
+local SPLASH_RADIUS = 55
+
 function init(self)
 	self.life = 4.0
 	local pos = go.get_position()
 	go.set_position(vmath.vector3(pos.x, pos.y, 0.4))
-	go.set_scale(vmath.vector3(1.0, 1.0, 1.0))
 end
 
 function update(self, dt)
@@ -21,53 +26,42 @@ function update(self, dt)
 		return
 	end
 
-	if self.target_id and go.exists(self.target_id) then
-		local my_pos = go.get_world_position()
-		local target_pos = go.get_world_position(self.target_id)
-
-		-- Направление к цели
-		local target_dir = vmath.normalize(target_pos - my_pos)
-		local current_dir = vmath.rotate(go.get_rotation(), vmath.vector3(1, 0, 0))
-
-		-- Плавный поворот (интерполяция направления)
-		local new_dir = vmath.lerp(0.14, current_dir, target_dir)
-		local angle = math.atan2(new_dir.y, new_dir.x)
-		go.set_rotation(vmath.quat_rotation_z(angle))
+	local my_pos = go.get_position()
+	if not registry.has(self.target_id) then
+		self.target_id = registry.find_closest(my_pos.x, my_pos.y, RETARGET_RANGE) or hash("")
 	end
 
-	-- Движение вперед
-	local distance = self.speed * dt
-	local direction = vmath.rotate(go.get_rotation(), vmath.vector3(1, 0, 0))
-	go.set_position(go.get_position() + direction * distance)
+	local tx, ty = registry.get_pos(self.target_id)
+	local current_dir = vmath.rotate(go.get_rotation(), FORWARD)
+	if tx then
+		-- Плавный поворот к цели
+		local target_dir = vmath.normalize(vmath.vector3(tx - my_pos.x, ty - my_pos.y, 0))
+		current_dir = vmath.lerp(TURN_RATE, current_dir, target_dir)
+		go.set_rotation(vmath.quat_rotation_z(math.atan2(current_dir.y, current_dir.x)))
+	end
+
+	go.set_position(my_pos + vmath.normalize(current_dir) * self.speed * dt)
 end
 
 function on_message(self, message_id, message, sender)
-	if message_id == hash("collision_response") then
-		local hit_enemy = message.other_id
-		local my_pos = go.get_world_position()
+	-- Ракета (kinematic) и враг (trigger) дают trigger_response, а не collision_response
+	local is_hit = message_id == hash("collision_response")
+		or (message_id == hash("trigger_response") and message.enter)
+	if not is_hit or self.exploded then return end
+	self.exploded = true
 
-		-- Наносим прямой урон основной цели
-		if go.exists(hit_enemy) then
-			msg.post(hit_enemy, "take_damage", { amount = self.damage })
-		end
+	local hit_enemy = message.other_id
+	local my_pos = go.get_world_position()
+	msg.post(hit_enemy, "take_damage", { amount = self.damage })
 
-		-- Логика сплеш-урона по площади
-		local splash_mult = prog.get_splash_radius_mult and prog.get_splash_radius_mult() or 1.0
-		local splash_radius = 55 * splash_mult
-
-		if prog.active_enemies then
-			for enemy_id, _ in pairs(prog.active_enemies) do
-				if enemy_id ~= hit_enemy and go.exists(enemy_id) then
-					local dist = vmath.length(go.get_world_position(enemy_id) - my_pos)
-					if dist <= splash_radius then
-						local area_damage = math.floor(self.damage * 0.6)
-						msg.post(enemy_id, "take_damage", { amount = math.max(1, area_damage) })
-					end
-				end
-			end
-		end
-
-		msg.post("main:/camera_root#camera_shake", "shake", { intensity = 6, duration = 0.22 })
-		go.delete()
+	-- Сплеш-урон по площади
+	local radius = SPLASH_RADIUS * prog.get_splash_radius_mult()
+	local area_damage = math.max(1, math.floor(self.damage * 0.6))
+	local targets = registry.query_radius(my_pos.x, my_pos.y, radius, hit_enemy)
+	for i = 1, #targets do
+		msg.post(targets[i], "take_damage", { amount = area_damage })
 	end
+
+	msg.post("main:/camera_root#camera_shake", "shake", { intensity = 6, duration = 0.22 })
+	go.delete()
 end

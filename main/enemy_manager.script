@@ -2,11 +2,13 @@
 local balance = require "main.balance" 
 local config = require "main.game_config"
 local prog = require "main.progression"
+local registry = require "main.enemy_registry"
+local vfx_budget = require "main.vfx_budget"
 
 local rendercam = require "rendercam.rendercam"
 
 -- Function to get a spawn position uniformly distributed around the screen border adaptively
-local function get_spawn_pos()
+local function get_spawn_pos(angle)
 	local win_w = rendercam.window.x or 390
 	local win_h = rendercam.window.y or 780
 	local p_min = rendercam.screen_to_world_2d(0, 0)
@@ -15,7 +17,7 @@ local function get_spawn_pos()
 	local half_h = math.max(390, math.abs((p_max and p_max.y or 390) - (p_min and p_min.y or -390)) * 0.5)
 	local margin = 60
 
-	local angle = math.random() * math.pi * 2
+	angle = angle or math.random() * math.pi * 2
 	local cos_a = math.cos(angle)
 	local sin_a = math.sin(angle)
 	local bound_x = half_w + margin
@@ -67,12 +69,83 @@ local function spawn_gold_asteroid(self)
 	})
 end
 
+-- ФОНОВЫЕ ОБЪЕКТЫ: дрейфующие обломки и падающие звезды (только декор, без коллизий)
+local DEBRIS_TINT = vmath.vector4(0.45, 0.55, 0.85, 0.45)
+local STAR_TINT = vmath.vector4(0.7, 0.9, 1.6, 0.9)
+
+local function spawn_debris(prewarm)
+	local from_left = math.random() > 0.5
+	local y = math.random(-420, 420)
+	-- prewarm: сразу раскидываем обломки по экрану, чтобы фон не был пустым на старте
+	local start_x = prewarm and math.random(-200, 200) or (from_left and -260 or 260)
+	local start_pos = vmath.vector3(start_x, y, -0.5)
+	local end_pos = vmath.vector3(from_left and 260 or -260, y + math.random(-160, 160), -0.5)
+	local id = factory.create("#debris_factory", start_pos)
+	if not id then return end
+	local sprite_url = msg.url(nil, id, "sprite")
+	sprite.play_flipbook(sprite_url, hash("gold_asteroid"))
+	local s = 0.5 + math.random() * 1.3
+	go.set_scale(vmath.vector3(s, s, 1), id)
+	local tint = vmath.vector4(DEBRIS_TINT.x, DEBRIS_TINT.y, DEBRIS_TINT.z, DEBRIS_TINT.w * (0.5 + math.random() * 0.5))
+	go.set(sprite_url, "tint", tint)
+	-- Крупные обломки "ближе" к камере и летят быстрее
+	local duration = (14 + math.random() * 10) / s
+	go.animate(id, "position", go.PLAYBACK_ONCE_FORWARD, end_pos, go.EASING_LINEAR, duration, 0, function()
+		go.delete(id)
+	end)
+	go.animate(id, "euler.z", go.PLAYBACK_LOOP_FORWARD, math.random() > 0.5 and 360 or -360, go.EASING_LINEAR, 6 + math.random() * 10)
+end
+
+local function spawn_shooting_star()
+	local angle = math.rad(math.random(200, 250))
+	local dir = vmath.vector3(math.cos(angle), math.sin(angle), 0)
+	local start_pos = vmath.vector3(math.random(-150, 260), math.random(250, 460), -0.4)
+	local end_pos = start_pos + dir * math.random(350, 600)
+	local id = factory.create("#debris_factory", start_pos, vmath.quat_rotation_z(angle))
+	if not id then return end
+	local sprite_url = msg.url(nil, id, "sprite")
+	sprite.play_flipbook(sprite_url, hash("fx_spark"))
+	go.set_scale(vmath.vector3(7, 0.7, 1), id)
+	go.set(sprite_url, "tint", STAR_TINT)
+	local duration = 0.5 + math.random() * 0.4
+	go.animate(id, "position", go.PLAYBACK_ONCE_FORWARD, end_pos, go.EASING_INQUAD, duration, 0, function()
+		go.delete(id)
+	end)
+	go.animate(sprite_url, "tint.w", go.PLAYBACK_ONCE_FORWARD, 0, go.EASING_INQUAD, duration)
+end
+
+local function update_ambient(self, dt)
+	self.debris_timer = self.debris_timer - dt
+	if self.debris_timer <= 0 then
+		self.debris_timer = 0.6 + math.random() * 0.8
+		spawn_debris()
+	end
+	self.star_timer = self.star_timer - dt
+	if self.star_timer <= 0 then
+		self.star_timer = 1.5 + math.random() * 3.0
+		spawn_shooting_star()
+	end
+end
+
+-- Как часто обновлять полоску прогресса волны в GUI (сообщение + анимация на каждый вызов)
+local PROGRESS_SYNC_INTERVAL = 0.2
+
 function init(self)
+	-- Новый забег: реестр врагов и лимиты эффектов с чистого листа
+	registry.clear()
+	vfx_budget.reset()
+	self.progress_sync_timer = 0
+
 	self.current_wave = 1
-	self.wave_duration = 20.0
+	self.wave_duration = balance.get_wave_duration(1)
 	self.wave_time_left = self.wave_duration
 	self.spawn_timer = 0.5
-	self.asteroid_timer = math.random(14, 20)
+	self.asteroid_timer = math.random(8, 12)
+	self.debris_timer = 0
+	self.star_timer = 1.0
+	for i = 1, 10 do
+		spawn_debris(true)
+	end
 	self.active_enemies = 0 
 	self.state = "SPAWNING" 
 	self.cards_shown = false
@@ -101,19 +174,25 @@ local function get_random_enemy_type(wave)
 	return pool[math.random(#pool)]
 end
 
-local function spawn_enemy(self, override_type, is_boss)
-	local pos = get_spawn_pos()
+local function spawn_enemy(self, override_type, is_boss, pos)
+	pos = pos or get_spawn_pos()
 
 	local enemy_type = override_type or get_random_enemy_type(self.current_wave)
 
-	local wave_hp, wave_reward = balance.get_enemy_stats(self.current_wave)
-	local hp_mult = wave_hp / balance.base_hp
-	local reward_mult = wave_reward / balance.base_reward
+	local wave = self.current_wave
+	local hp_mult = balance.get_hp_multiplier(wave)
+	local reward_mult = balance.get_reward_multiplier(wave)
+	if is_boss then
+		hp_mult = hp_mult * balance.get_boss_hp_multiplier(wave)
+		reward_mult = reward_mult * balance.boss_reward_mult
+	end
 
 	factory.create("#enemy_factory", pos, nil, { 
-		type = is_boss and hash("tank") or enemy_type,
-		hp_multiplier = is_boss and (hp_mult * 1.6) or hp_mult,
+		type = enemy_type,
+		hp_multiplier = hp_mult,
 		reward_multiplier = reward_mult,
+		damage_multiplier = balance.get_damage_multiplier(wave),
+		knockback_multiplier = is_boss and 0 or balance.get_knockback_multiplier(wave),
 		is_boss = is_boss or false
 	})
 
@@ -121,6 +200,9 @@ local function spawn_enemy(self, override_type, is_boss)
 end
 
 function update(self, dt)
+	-- Фон живет всегда, даже на паузе и в меню
+	update_ambient(self, dt)
+
 	if prog.is_paused then return end
 
 	if self.state == "SPAWNING" then
@@ -129,24 +211,36 @@ function update(self, dt)
 
 		-- Спавн врагов по таймеру
 		if self.spawn_timer <= 0 then
-			spawn_enemy(self)
-			local spawn_speed = math.max(0.4, 1.2 - (self.current_wave * 0.04))
-			self.spawn_timer = spawn_speed
+			if registry.count() < balance.max_alive then
+				local enemy_type = get_random_enemy_type(self.current_wave)
+				if enemy_type == hash("swarmer") then
+					-- Стая свармеров кучно заходит с одного направления
+					local angle = math.random() * math.pi * 2
+					for i = 1, balance.get_pack_size(self.current_wave) do
+						local pos = get_spawn_pos(angle + (math.random() - 0.5) * 0.25)
+						pos = pos + vmath.vector3(math.random(-20, 20), math.random(-20, 20), 0)
+						spawn_enemy(self, enemy_type, false, pos)
+					end
+				else
+					spawn_enemy(self, enemy_type)
+				end
+			end
+			self.spawn_timer = balance.get_spawn_interval(self.current_wave)
 		end
 
 		-- Спавн золотого астероида
 		self.asteroid_timer = (self.asteroid_timer or 18) - dt
 		if self.asteroid_timer <= 0 then
-			self.asteroid_timer = math.random(20, 30)
+			self.asteroid_timer = math.random(12, 18)
 			spawn_gold_asteroid(self)
 		end
 
 		-- Спавн Босса на волнах 5, 10, 15, 20...
-		local is_boss_wave = (self.current_wave % 5 == 0)
+		local is_boss_wave = balance.is_boss_wave(self.current_wave)
 		if is_boss_wave and not self.boss_spawned and self.wave_time_left <= (self.wave_duration * 0.5) then
 			self.boss_spawned = true
 			local boss_type = hash("tank")
-			if self.current_wave >= 15 then
+			if self.current_wave >= 20 then
 				boss_type = hash("dreadnought")
 			elseif self.current_wave >= 10 then
 				boss_type = hash("shield_bearer")
@@ -155,9 +249,11 @@ function update(self, dt)
 			msg.post("main:/camera_root#camera_shake", "shake", { intensity = 14, duration = 0.6 })
 		end
 
-		-- Плавное обновление таймера волны в GUI
-		local progress = math.min(1.0, math.max(0, 1.0 - (self.wave_time_left / self.wave_duration)))
-		if msg.url("main:/gui#game") then
+		-- Обновление полоски волны в GUI (не каждый кадр: GUI все равно плавно анимирует)
+		self.progress_sync_timer = self.progress_sync_timer - dt
+		if self.progress_sync_timer <= 0 then
+			self.progress_sync_timer = PROGRESS_SYNC_INTERVAL
+			local progress = math.min(1.0, math.max(0, 1.0 - (self.wave_time_left / self.wave_duration)))
 			msg.post("main:/gui#game", "update_wave_progress", { ratio = progress })
 		end
 
@@ -181,7 +277,7 @@ function update(self, dt)
 				self.current_wave = self.current_wave + 1
 				self.cards_shown = false
 				self.boss_spawned = false
-				self.wave_duration = 20.0 + (self.current_wave * 2.0)
+				self.wave_duration = balance.get_wave_duration(self.current_wave)
 				self.wave_time_left = self.wave_duration
 				self.spawn_timer = 0.6
 				self.state = "SPAWNING"
@@ -205,5 +301,8 @@ end
 function on_message(self, message_id, message, sender)
 	if message_id == hash("enemy_died") then
 		self.active_enemies = math.max(0, self.active_enemies - 1)
+	elseif message_id == hash("enemy_spawned") then
+		-- Враги, рожденные не менеджером (осколки сплиттера), тоже должны держать волну
+		self.active_enemies = self.active_enemies + (message.count or 1)
 	end
 end

@@ -25,7 +25,6 @@ embedded_components {
   "friction: 0.1\n"
   "restitution: 0.5\n"
   "group: \"planet\"\n"
-  "mask: \"enemy\"\n"
   "mask: \"enemy_bulet\"\n"
   "embedded_collision_shape {\n"
   "  shapes {\n"

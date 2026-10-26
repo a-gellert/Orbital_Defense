@@ -2420,10 +2420,11 @@ nodes {
 }
 nodes {
   position {
+    x: -95.0
     y: -310.0
   }
   size {
-    x: 200.0
+    x: 175.0
     y: 70.0
   }
   color {
@@ -2438,6 +2439,10 @@ nodes {
   size_mode: SIZE_MODE_AUTO
 }
 nodes {
+  scale {
+    x: 0.85
+    y: 0.85
+  }
   size {
     x: 200.0
     y: 70.0
@@ -2447,6 +2452,42 @@ nodes {
   font: "druid_text_bold"
   id: "text1"
   parent: "btn_restart"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    x: 95.0
+    y: -310.0
+  }
+  size {
+    x: 175.0
+    y: 70.0
+  }
+  color {
+    x: 0.85
+    y: 0.55
+    z: 0.1
+  }
+  type: TYPE_BOX
+  id: "btn_revive"
+  parent: "defeat_root"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  scale {
+    x: 0.7
+    y: 0.7
+  }
+  size {
+    x: 240.0
+    y: 70.0
+  }
+  type: TYPE_TEXT
+  text: "2ND CHANCE"
+  font: "druid_text_bold"
+  id: "revive_txt"
+  parent: "btn_revive"
   inherit_alpha: true
 }
 nodes {

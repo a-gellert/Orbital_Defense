@@ -1,111 +1,232 @@
 -- enemy.script
 local prog = require "main.progression"
 local config = require "main.game_config"
+local balance = require "main.balance"
+local registry = require "main.enemy_registry"
+local vfx_budget = require "main.vfx_budget"
 
 go.property("type", hash("kamikaze"))
 go.property("hp_multiplier", 1.0)
 go.property("reward_multiplier", 1.0)
+go.property("damage_multiplier", 1.0)
+go.property("knockback_multiplier", 1.0)
 go.property("is_boss", false)
 
 local types = {
-	KAMIKAZE      = hash("kamikaze"),
-	SWARMER       = hash("swarmer"),
-	SWING         = hash("swing"),
-	SHOOTER       = hash("shooter"),
-	TANK          = hash("tank"),
 	SPLITTER      = hash("splitter"),
 	MINI_SPLITTER = hash("mini_splitter"),
-	WARP          = hash("warp"),
-	SPEEDER       = hash("speeder"),
-	GHOST         = hash("ghost"),
-	SHIELD_BEARER = hash("shield_bearer"),
 	DREADNOUGHT   = hash("dreadnought"),
 	GOLD_ASTEROID = hash("gold_asteroid")
 }
 
+-- Статы по хэшу типа считаем один раз, а не перебором hash(name) при каждом спавне
+local STATS_BY_TYPE = {}
+for name, data in pairs(config.enemy_stats) do
+	STATS_BY_TYPE[hash(name)] = { name = name, anim = hash(name), stats = data }
+end
+local FALLBACK = { name = "kamikaze", anim = hash("kamikaze"), stats = { hp = 14, damage = 10, speed = 34, move = "straight", shield = 0 } }
+
+-- Размер и цвет отдельных типов
+local LOOKS = {
+	[types.DREADNOUGHT]   = { scale = 1.4 },
+	[types.MINI_SPLITTER] = { scale = 0.7 },
+	[types.GOLD_ASTEROID] = { scale = 0.24, tint = vmath.vector4(1.4, 1.2, 0.4, 1) },
+}
+local BOSS_LOOK = { scale = 1.8, tint = vmath.vector4(2.2, 0.4, 0.4, 1) }
+
+local WHITE = vmath.vector4(1, 1, 1, 1)
+local TINT_HIT = vmath.vector4(2.5, 2.5, 2.5, 1)
+local TINT_HIT_SHIELD = vmath.vector4(0.4, 1.8, 3.0, 1)
+local TINT_CRYO = vmath.vector4(0.35, 0.85, 2.5, 1)
+local TINT_STUN = vmath.vector4(3.0, 3.0, 0.5, 1)
+local TINT_TRAIL = vmath.vector4(1, 1, 1, 0.35)
+local SQUASH = vmath.vector3(1.35, 0.7, 1)
+local LABEL_OFFSET = vmath.vector3(0, 0, 0.7)
+local CENTER = vmath.vector3(0, 0, 0)
+
+local PLANET_RADIUS = 25
+local TRAIL_INTERVAL = 0.14
+
+---------------------------------------------------------------------------
+-- ДВИЖЕНИЕ: по функции на тип. Каждая возвращает новую позицию.
+---------------------------------------------------------------------------
+local MOVES = {}
+
+function MOVES.straight(self, dt, pos, dir, dist, speed)
+	local stop_dist = self.stats.is_fireable and 80 or 20
+	if dist > stop_dist then
+		return pos + dir * speed * dt
+	end
+	return pos
+end
+
+function MOVES.sinuos(self, dt, pos, dir, dist, speed)
+	self.sin_timer = self.sin_timer + dt
+	local side_dir = vmath.vector3(-dir.y, dir.x, 0)
+	self.base_pos = self.base_pos + dir * speed * dt
+	return self.base_pos + side_dir * (math.sin(self.sin_timer * 3.5) * 65)
+end
+
+function MOVES.warp(self, dt, pos, dir, dist, speed)
+	self.warp_timer = self.warp_timer + dt
+	if self.warp_timer > 2.2 then
+		self.warp_timer = 0
+		local jump_dist = math.min(dist - 30, 75)
+		if jump_dist > 15 then
+			factory.create("#fx_factory", pos)
+			pos = pos + dir * jump_dist
+		end
+	end
+	return pos + dir * speed * dt
+end
+
+function MOVES.speeder(self, dt, pos, dir, dist, speed)
+	-- Рывковое ускорение
+	self.speeder_timer = self.speeder_timer + dt
+	local surge = 1.0 + 0.6 * math.sin(self.speeder_timer * 4.0)
+	return pos + dir * (speed * surge) * dt
+end
+
+function MOVES.ghost(self, dt, pos, dir, dist, speed)
+	-- Пульсирующая полупрозрачность спектрального призрака
+	self.ghost_phase_timer = self.ghost_phase_timer + dt
+	go.set("#sprite", "tint.w", 0.35 + 0.55 * math.abs(math.sin(self.ghost_phase_timer * 2.5)))
+	return pos + dir * speed * dt
+end
+
+local TRAIL_MOVES = { speeder = true, ghost = true, warp = true }
+
+---------------------------------------------------------------------------
+-- ЭФФЕКТЫ
+---------------------------------------------------------------------------
+local function flash(self, tint, duration)
+	go.set("#sprite", "tint", tint)
+	go.animate("#sprite", "tint", go.PLAYBACK_ONCE_FORWARD, self.default_tint, go.EASING_OUTQUAD, duration)
+end
+
 local function play_hit_animation(self, has_shield)
 	-- Сочный Squash & Stretch
-	go.set_scale(vmath.vector3(1.35, 0.7, 1))
-	go.animate(".", "scale", go.PLAYBACK_ONCE_FORWARD, self.base_scale or vmath.vector3(1.0, 1.0, 1), go.EASING_OUTELASTIC, 0.22)
+	go.set_scale(vmath.mul_per_elem(self.base_scale, SQUASH))
+	go.animate(".", "scale", go.PLAYBACK_ONCE_FORWARD, self.base_scale, go.EASING_OUTELASTIC, 0.22)
+	-- Неоново-голубая вспышка, если урон поглотил щит, иначе белая
+	flash(self, has_shield and TINT_HIT_SHIELD or TINT_HIT, 0.14)
+end
 
-	-- Вспышка: неоново-голубая если щит поглотил урон, иначе ослепительно-белая
-	if has_shield then
-		go.set("#sprite", "tint", vmath.vector4(0.4, 1.8, 3.0, 1)) 
-	else
-		go.set("#sprite", "tint", vmath.vector4(2.5, 2.5, 2.5, 1)) 
+local function spawn_trail(self, pos)
+	if not vfx_budget.acquire("trail") then return end
+	local ghost_id = factory.create("#ghost_factory", pos, go.get_rotation())
+	local sprite_url = msg.url(nil, ghost_id, "sprite")
+	sprite.play_flipbook(sprite_url, self.anim)
+	go.set_scale(self.base_scale, ghost_id)
+	go.set(sprite_url, "tint", TINT_TRAIL)
+	go.animate(sprite_url, "tint.w", go.PLAYBACK_ONCE_FORWARD, 0, go.EASING_LINEAR, 0.35, 0, function()
+		go.delete(ghost_id)
+		vfx_budget.release("trail")
+	end)
+end
+
+local function spawn_damage_label(value)
+	if not vfx_budget.acquire("damage_label") then return end
+	factory.create("#damage_factory", go.get_position() + LABEL_OFFSET, nil, { value = value })
+end
+
+---------------------------------------------------------------------------
+-- СМЕРТЬ
+---------------------------------------------------------------------------
+local function die_asteroid(self, was_killed_by_player)
+	if was_killed_by_player then
+		local my_pos = go.get_position()
+		factory.create("#fx_factory", my_pos)
+		msg.post("main:/camera_root#camera_shake", "shake", { intensity = 9, duration = 0.35 })
+		msg.post("main:/gui#game", "asteroid_destroyed", { pos = my_pos, amount = math.random(40, 70) })
 	end
-	go.animate("#sprite", "tint", go.PLAYBACK_ONCE_FORWARD, self.default_tint or vmath.vector4(1, 1, 1, 1), go.EASING_OUTQUAD, 0.14)
+	go.delete()
+end
+
+local function spawn_splitter_shards(self)
+	local pos = go.get_position()
+	for i = 1, 3 do
+		local offset = vmath.vector3(math.random(-25, 25), math.random(-25, 25), 0)
+		factory.create("#enemy_factory", pos + offset, nil, {
+			type = types.MINI_SPLITTER,
+			hp_multiplier = self.hp_multiplier,
+			reward_multiplier = self.reward_multiplier,
+			damage_multiplier = self.damage_multiplier,
+			knockback_multiplier = self.knockback_multiplier
+		})
+	end
+	msg.post("/enemy_manager", "enemy_spawned", { count = 3 })
+end
+
+-- Перк Chain Reaction: труп взрывается и ранит соседей
+local function corpse_explosion(self, pos)
+	local blast_dmg = math.max(6, math.floor(self.max_health * 0.4))
+	factory.create("#fx_factory", pos)
+	local targets = registry.query_radius(pos.x, pos.y, 50, self.id)
+	for i = 1, #targets do
+		msg.post(targets[i], "take_damage", { amount = blast_dmg })
+	end
 end
 
 local function die(self, was_killed_by_player)
 	if self.is_dead then return end
 	self.is_dead = true
-	prog.active_enemies[go.get_id()] = nil
+	registry.remove(self.id)
 
 	if self.is_asteroid then
-		if was_killed_by_player then
-			local my_pos = go.get_position()
-			factory.create("#fx_factory", my_pos)
-			msg.post("main:/camera_root#camera_shake", "shake", { intensity = 9, duration = 0.35 })
-			local reward = math.random(60, 100)
-			if msg.url("main:/gui#game") then
-				msg.post("main:/gui#game", "asteroid_destroyed", { pos = my_pos, amount = reward })
-			end
-		end
-		go.delete()
+		die_asteroid(self, was_killed_by_player)
 		return
 	end
 
-	-- Если это Сплиттер, спавним 3 мелких осколка
+	local death_pos = go.get_position()
+
 	if self.type == types.SPLITTER and was_killed_by_player then
-		for i = 1, 3 do
-			local offset = vmath.vector3(math.random(-25, 25), math.random(-25, 25), 0)
-			factory.create("#enemy_factory", go.get_position() + offset, nil, { 
-				type = types.MINI_SPLITTER,
-				hp_multiplier = self.hp_multiplier or 1.0,
-				reward_multiplier = self.reward_multiplier or 1.0
-			})
-		end
+		spawn_splitter_shards(self)
 	end
 
 	msg.post("/enemy_manager", "enemy_died")
 
-	-- Chain Reaction perk: Corpse Explosion
 	if was_killed_by_player and prog.data.active_upgrades["chain_reaction"] then
-		local my_pos = go.get_position()
-		local blast_dmg = math.max(6, math.floor(self.max_health * 0.4))
-		local blast_radius = 50
-		factory.create("#fx_factory", my_pos)
-		for enemy_id, _ in pairs(prog.active_enemies) do
-			if enemy_id ~= go.get_id() and go.exists(enemy_id) then
-				local e_pos = go.get_position(enemy_id)
-				if vmath.length(e_pos - my_pos) <= blast_radius then
-					msg.post(enemy_id, "take_damage", { amount = blast_dmg })
-				end
-			end
-		end
+		corpse_explosion(self, death_pos)
 	end
 
 	if not was_killed_by_player then
 		-- Прямой урон планете при столкновении
-		msg.post("main:/planet#planet", "take_damage", { amount = self.stats.damage or 10 })
+		local contact_mult = self.is_boss and balance.boss_contact_mult or 1
+		msg.post("main:/planet#planet", "take_damage", { amount = self.stats.damage * self.damage_multiplier * contact_mult })
 	end
 
-	local intensity = self.is_boss and 18 or ((self.stats and self.stats.hp and self.stats.hp >= 50) and 9 or 4)
-	local duration = self.is_boss and 0.65 or 0.25
-	msg.post("main:/camera_root#camera_shake", "shake", { intensity = intensity, duration = duration })
+	local intensity = self.is_boss and 18 or (self.stats.hp >= 50 and 9 or 4)
+	msg.post("main:/camera_root#camera_shake", "shake", { intensity = intensity, duration = self.is_boss and 0.65 or 0.25 })
 
-	factory.create("#fx_factory", go.get_position())
-	go.delete() 
+	factory.create("#fx_factory", death_pos)
+	if self.is_boss then
+		-- Босс разлетается серией взрывов по кругу
+		for i = 1, 6 do
+			local a = i * math.pi / 3
+			factory.create("#fx_factory", death_pos + vmath.vector3(math.cos(a) * 22, math.sin(a) * 22, 0))
+		end
+	end
+	go.delete()
 end
 
-function final(self)
-	prog.active_enemies[go.get_id()] = nil
+local function on_killed(self)
+	if not self.is_asteroid then
+		local reward = math.max(1, math.floor(prog.get_gold_per_kill() * self.reward_multiplier))
+		if math.random() < prog.get_lucky_chance() then
+			reward = reward * 2
+		end
+		msg.post("main:/logic#game_manager", "enemy_killed", { amount = reward })
+		prog.add_overdrive(4)
+	end
+	die(self, true)
 end
 
+---------------------------------------------------------------------------
+-- ЖИЗНЕННЫЙ ЦИКЛ
+---------------------------------------------------------------------------
 function init(self)
-	prog.active_enemies[go.get_id()] = true
-	self.target_pos = vmath.vector3(0, 0, 0)
+	self.id = go.get_id()
 	self.is_dead = false
 	self.sin_timer = 0
 	self.warp_timer = 0
@@ -114,55 +235,69 @@ function init(self)
 	self.ghost_trail_timer = 0
 	self.base_pos = go.get_position()
 
-	-- 1. Получаем таблицу статов
-	local raw_stats = config.enemy_stats
-	self.stats = nil
+	local info = STATS_BY_TYPE[self.type] or FALLBACK
+	self.stats = info.stats
+	self.type_name = info.name
+	self.anim = info.anim
+	self.move = MOVES[self.stats.move]
+	self.has_trail = self.is_boss or TRAIL_MOVES[self.stats.move] or false
+	self.is_asteroid = (self.type == types.GOLD_ASTEROID)
 
-	for name, data in pairs(raw_stats) do
-		if hash(name) == self.type then
-			self.stats = data
-			self.type_name = name
-			break
-		end
-	end
-
-	if not self.stats then
-		self.stats = { hp = 14, damage = 10, speed = 34, move = "straight", shield = 0 }
-		self.type_name = "kamikaze"
-	end
-
-	-- 2. Задаем здоровье с учетом множителя волны
-	local base_hp = self.stats.hp or 10
-	self.health = math.max(1, math.floor(base_hp * (self.hp_multiplier or 1.0)))
+	-- Здоровье с учетом множителя волны
+	self.health = math.max(1, math.floor(self.stats.hp * self.hp_multiplier))
 	self.max_health = self.health
 	self.current_shield = self.stats.shield or 0
 
-	-- 3. Спрайт
-	sprite.play_flipbook("#sprite", hash(self.type_name))
+	sprite.play_flipbook("#sprite", self.anim)
 
-	self.base_scale = vmath.vector3(1.0, 1.0, 1.0)
-	self.default_tint = vmath.vector4(1, 1, 1, 1)
-
-	if self.is_boss then
-		self.base_scale = vmath.vector3(1.8, 1.8, 1)
-		self.default_tint = vmath.vector4(2.2, 0.4, 0.4, 1)
-		go.set_scale(self.base_scale)
-		go.set("#sprite", "tint", self.default_tint)
-	elseif self.type == types.DREADNOUGHT then
-		self.base_scale = vmath.vector3(1.4, 1.4, 1)
-		go.set_scale(self.base_scale)
-	elseif self.type == types.MINI_SPLITTER then
-		self.base_scale = vmath.vector3(0.7, 0.7, 1)
-		go.set_scale(self.base_scale)
-	elseif self.type == types.GOLD_ASTEROID then
-		self.base_scale = vmath.vector3(0.24, 0.24, 1)
-		self.is_asteroid = true
+	local look = self.is_boss and BOSS_LOOK or LOOKS[self.type]
+	local s = look and look.scale or 1.0
+	self.base_scale = vmath.vector3(s, s, 1)
+	self.default_tint = look and look.tint or WHITE
+	go.set("#sprite", "tint", self.default_tint)
+	if self.is_asteroid then
 		self.rot_speed = math.random(-35, 35)
-		go.set_scale(self.base_scale)
-		go.set("#sprite", "tint", vmath.vector4(1.4, 1.2, 0.4, 1))
 	end
 
+	-- Появление из варпа: враг "выпрыгивает" из точки
+	go.set_scale(self.base_scale * 0.1)
+	go.animate(".", "scale", go.PLAYBACK_ONCE_FORWARD, self.base_scale, go.EASING_OUTBACK, 0.35)
+
 	self.shoot_timer = self.stats.is_fireable and 1.8 or 0
+
+	registry.add(self.id, self.base_pos)
+end
+
+function final(self)
+	registry.remove(self.id)
+end
+
+local function update_asteroid(self, dt, pos)
+	-- Плавный дрифт и вращение золотого астероида
+	pos = pos + (self.drift_dir or vmath.vector3(1, 0, 0)) * self.stats.speed * dt
+	go.set_position(pos)
+	go.set_rotation(go.get_rotation() * vmath.quat_rotation_z(math.rad(self.rot_speed * dt)))
+	registry.set_pos(self.id, pos)
+
+	if math.abs(pos.x) > 260 or math.abs(pos.y) > 460 then
+		die(self, false)
+	end
+end
+
+local function try_shoot(self, dt, pos, dir, dist)
+	self.shoot_timer = self.shoot_timer - dt
+	if self.shoot_timer > 0 or dist >= 120 then return end
+
+	local rot = go.get_rotation()
+	local props = { is_enemy = true, damage = self.stats.damage * self.damage_multiplier }
+	factory.create("#bullet_factory", pos, rot, props)
+	if self.type == types.DREADNOUGHT then
+		-- Второй выстрел со смещением
+		factory.create("#bullet_factory", pos + vmath.vector3(-dir.y, dir.x, 0) * 12, rot, props)
+		self.shoot_timer = 2.2
+	else
+		self.shoot_timer = 2.6
+	end
 end
 
 function update(self, dt)
@@ -170,167 +305,95 @@ function update(self, dt)
 
 	local my_pos = go.get_position()
 
-	-- ЛОГИКА ДВИЖЕНИЯ ЗОЛОТОГО АСТЕРОИДА (плавный дрифт и вращение)
-	if self.is_asteroid or (self.stats and self.stats.move == "drift") then
-		local dir = self.drift_dir or vmath.vector3(1, 0, 0)
-		local current_speed = self.stats and self.stats.speed or 32
-		go.set_position(my_pos + dir * current_speed * dt)
-		go.set_rotation(go.get_rotation() * vmath.quat_rotation_z(math.rad((self.rot_speed or 25) * dt)))
-
-		if math.abs(my_pos.x) > 260 or math.abs(my_pos.y) > 460 then
-			die(self, false)
-		end
+	if self.is_asteroid then
+		update_asteroid(self, dt, my_pos)
 		return
 	end
 
-	local to_target = self.target_pos - my_pos
+	local to_target = CENTER - my_pos
 	local dist = vmath.length(to_target)
-	local dir = dist > 0.1 and vmath.normalize(to_target) or vmath.vector3(1, 0, 0)
+	local dir = dist > 0.1 and (to_target * (1 / dist)) or vmath.vector3(1, 0, 0)
 
-	local current_speed = self.stats.speed
-
-	-- Slow & Stun debuffs
+	-- Замедление и оглушение
+	local speed = self.stats.speed
 	if self.slow_timer and self.slow_timer > 0 then
 		self.slow_timer = self.slow_timer - dt
-		current_speed = current_speed * (self.slow_factor or 0.55)
+		speed = speed * 0.55
 	end
 	if self.stun_timer and self.stun_timer > 0 then
 		self.stun_timer = self.stun_timer - dt
-		current_speed = 0
+		speed = 0
 	end
 
-	-- ЛОГИКА ДВИЖЕНИЯ
-	if self.stats.move == "straight" then
-		local stop_dist = self.stats.is_fireable and 80 or 20
-		if dist > stop_dist then
-			go.set_position(my_pos + dir * current_speed * dt)
-		end
-
-	elseif self.stats.move == "sinuos" then
-		self.sin_timer = self.sin_timer + dt
-		local side_dir = vmath.vector3(-dir.y, dir.x, 0)
-		local wave = math.sin(self.sin_timer * 3.5) * 65
-		self.base_pos = self.base_pos + dir * current_speed * dt
-		go.set_position(self.base_pos + side_dir * wave)
-
-	elseif self.stats.move == "warp" then
-		self.warp_timer = self.warp_timer + dt
-		if self.warp_timer > 2.2 then
-			self.warp_timer = 0
-			local jump_dist = math.min(dist - 30, 75)
-			if jump_dist > 15 then
-				factory.create("#fx_factory", my_pos)
-				go.set_position(my_pos + dir * jump_dist)
-			end
-		end
-		go.set_position(go.get_position() + dir * current_speed * dt)
-
-	elseif self.stats.move == "speeder" then
-		self.speeder_timer = self.speeder_timer + dt
-		-- Рывковое ускорение
-		local surge = 1.0 + 0.6 * math.sin(self.speeder_timer * 4.0)
-		go.set_position(my_pos + dir * (current_speed * surge) * dt)
-
-	elseif self.stats.move == "ghost" then
-		self.ghost_phase_timer = self.ghost_phase_timer + dt
-		-- Пульсирующая полупрозрачность спектрального призрака
-		local alpha = 0.35 + 0.55 * math.abs(math.sin(self.ghost_phase_timer * 2.5))
-		go.set("#sprite", "tint.w", alpha)
-		go.set_position(my_pos + dir * current_speed * dt)
-	end
-
-	-- ПОВОРОТ К ПЛАНЕТЕ
+	local new_pos = self.move and self.move(self, dt, my_pos, dir, dist, speed) or my_pos
+	go.set_position(new_pos)
 	go.set_rotation(vmath.quat_rotation_z(math.atan2(dir.y, dir.x)))
+	registry.set_pos(self.id, new_pos)
 
-	-- СТРЕЛЬБА ДЛЯ СТРЕЛКОВ И ДРЕДНОУТОВ
 	if self.stats.is_fireable then
-		self.shoot_timer = self.shoot_timer - dt
-		if self.shoot_timer <= 0 and dist < 120 then
-			factory.create("#bullet_factory", my_pos, go.get_rotation(), { is_enemy = true, damage = self.stats.damage })
-			if self.type == types.DREADNOUGHT then
-				-- Второй выстрел со смещением
-				local side = vmath.vector3(-dir.y, dir.x, 0) * 12
-				factory.create("#bullet_factory", my_pos + side, go.get_rotation(), { is_enemy = true, damage = self.stats.damage })
-			end
-			self.shoot_timer = (self.type == types.DREADNOUGHT) and 2.2 or 2.6
-		end
+		try_shoot(self, dt, my_pos, dir, dist)
 	end
 
-	-- ТРЕЙЛ / ПОСЛЕСВЕЧЕНИЕ ДЛЯ БЫСТРЫХ И ОСОБЫХ ВРАГОВ
-	local should_trail = (self.is_boss or self.stats.move == "speeder" or self.stats.move == "ghost" or self.stats.move == "warp")
-	if should_trail then
+	-- Шлейф-послесвечение для быстрых и особых врагов
+	if self.has_trail then
 		self.ghost_trail_timer = self.ghost_trail_timer + dt
-		if self.ghost_trail_timer > 0.14 then
+		if self.ghost_trail_timer > TRAIL_INTERVAL then
 			self.ghost_trail_timer = 0
-			local ghost_id = factory.create("#ghost_factory", go.get_position(), go.get_rotation())
-			local sprite_url = msg.url(nil, ghost_id, "sprite")
-			sprite.play_flipbook(sprite_url, hash(self.type_name))
-			go.set_scale(self.base_scale or vmath.vector3(1, 1, 1), ghost_id)
-			go.set(sprite_url, "tint", vmath.vector4(1, 1, 1, 0.35))
-			go.animate(sprite_url, "tint.w", go.PLAYBACK_ONCE_FORWARD, 0, go.EASING_LINEAR, 0.35, 0, function()
-				go.delete(ghost_id)
-			end)
+			spawn_trail(self, new_pos)
 		end
 	end
 
-	-- СТОЛКНОВЕНИЕ С ПОВЕРХНОСТЬЮ ПЛАНЕТЫ
-	if dist < 25 then
+	-- Долетел до поверхности планеты
+	if dist < PLANET_RADIUS then
 		die(self, false)
 	end
 end
 
 function on_message(self, message_id, message, sender)
+	-- Урон по уже погибшему врагу (несколько пуль в одном кадре) не обрабатываем
+	if self.is_dead then return end
+
 	if message_id == hash("take_damage") then
-		local has_shield = (self.current_shield and self.current_shield > 0)
-		local effective_damage = message.amount / (1 + (self.current_shield or 0) * 0.4)
+		local has_shield = self.current_shield > 0
+		local effective_damage = message.amount / (1 + self.current_shield * 0.4)
 		self.health = self.health - effective_damage
 
-		-- Физический нокбэк от ядра
-		local my_pos = go.get_position()
-		local dist_sq = my_pos.x * my_pos.x + my_pos.y * my_pos.y
-		if dist_sq > 25 then
-			local dist = math.sqrt(dist_sq)
-			local push_dir = vmath.vector3(my_pos.x / dist, my_pos.y / dist, 0)
-			local knockback = has_shield and 6 or 16
-			go.set_position(my_pos + push_dir * knockback)
+		-- Нокбэк от ядра
+		local knockback = (has_shield and 6 or 16) * self.knockback_multiplier
+		if knockback > 0 then
+			local my_pos = go.get_position()
+			local d = vmath.length(my_pos)
+			if d > 5 then
+				go.set_position(my_pos + my_pos * (knockback / d))
+			end
 		end
 
-		factory.create("#damage_factory", go.get_position() + vmath.vector3(0, 0, 0.7), nil, { value = math.floor(effective_damage) })
-
+		spawn_damage_label(math.floor(effective_damage))
 		play_hit_animation(self, has_shield)
 
-		-- Cryo slow synergy
+		-- Cryo: замедление на 2.5 с
 		if prog.data.active_upgrades["cryo_rounds"] then
 			self.slow_timer = 2.5
-			self.slow_factor = 0.55
-			go.set("#sprite", "tint", vmath.vector4(0.35, 0.85, 2.5, 1))
-			go.animate("#sprite", "tint", go.PLAYBACK_ONCE_FORWARD, self.default_tint or vmath.vector4(1, 1, 1, 1), go.EASING_OUTQUAD, 0.45)
+			flash(self, TINT_CRYO, 0.45)
 		end
 
-		if self.health <= 0 and not self.is_dead then
-			if not self.is_asteroid then
-				local reward = math.max(1, math.floor(prog.get_gold_per_kill() * (self.reward_multiplier or 1.0)))
-				msg.post("main:/logic#game_manager", "enemy_killed", { amount = reward })
-				prog.add_overdrive(4)
-			end
-			die(self, true)
+		if self.health <= 0 then
+			on_killed(self)
 		end
 
 	elseif message_id == hash("stun") then
 		self.stun_timer = message.duration or 2.5
 		if message.damage and message.damage > 0 then
-			msg.post(msg.url(), "take_damage", { amount = message.damage })
+			msg.post("#", "take_damage", { amount = message.damage })
 		end
-		go.set("#sprite", "tint", vmath.vector4(3.0, 3.0, 0.5, 1))
-		go.animate("#sprite", "tint", go.PLAYBACK_ONCE_FORWARD, self.default_tint or vmath.vector4(1, 1, 1, 1), go.EASING_OUTQUAD, 0.3)
+		flash(self, TINT_STUN, 0.3)
 
 	elseif message_id == hash("gravity_pull") then
 		local my_pos = go.get_position()
 		local dist = vmath.length(my_pos)
 		if dist > 35 then
-			local dir = vmath.normalize(-my_pos)
 			local pull = math.min(message.strength or 55, dist - 30)
-			go.animate(".", "position", go.PLAYBACK_ONCE_FORWARD, my_pos + dir * pull, go.EASING_OUTQUAD, 0.35)
+			go.animate(".", "position", go.PLAYBACK_ONCE_FORWARD, my_pos - my_pos * (pull / dist), go.EASING_OUTQUAD, 0.35)
 		end
 	end
 end

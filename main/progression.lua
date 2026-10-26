@@ -2,7 +2,7 @@ local config = require "main.game_config"
 
 local M = {}
 M.data = {
-	gold = 200,
+	gold = 250,
 	diamonds = 0,
 	is_paused = true,
 	has_free_slot = true,
@@ -13,9 +13,9 @@ M.data = {
 		blaster = { unlocked = true, level_dmg = 1, level_rate = 1, price = 100, base_price = 100 },
 		pulse   = { unlocked = true, level_dmg = 1, level_rate = 1, price = 250, base_price = 250 },
 		rocket  = { unlocked = true, level_dmg = 1, level_rate = 1, price = 600, base_price = 600 },
-		laser   = { unlocked = true, level_dmg = 1, level_rate = 1, price = 1500, base_price = 1500 },
-		plasma  = { unlocked = true, level_dmg = 1, level_rate = 1, price = 3500, base_price = 3500 },
-		tesla   = { unlocked = true, level_dmg = 1, level_rate = 1, price = 8000, base_price = 8000 }
+		laser   = { unlocked = true, level_dmg = 1, level_rate = 1, price = 1400, base_price = 1400 },
+		plasma  = { unlocked = true, level_dmg = 1, level_rate = 1, price = 3000, base_price = 3000 },
+		tesla   = { unlocked = true, level_dmg = 1, level_rate = 1, price = 6000, base_price = 6000 }
 	},
 
 	orbits = {
@@ -25,11 +25,11 @@ M.data = {
 
 	orbits_data = {
 		or1 = { id = hash("/orbit_1"), radius = 75,  speed = 1.5, slots = 4,  price = 0,     unlocked = true },
-		or2 = { id = hash("/orbit_2"), radius = 105, speed = 1,   slots = 6,  price = 1000,  unlocked = true },
-		or3 = { id = hash("/orbit_3"), radius = 135, speed = 0.8, slots = 10, price = 5000,  unlocked = false },
-		or4 = { id = hash("/orbit_4"), radius = 165, speed = 0.6, slots = 16, price = 15000, unlocked = false },
-		or5 = { id = hash("/orbit_5"), radius = 195, speed = 0.4, slots = 24, price = 50000, unlocked = false },
-		or6 = { id = hash("/orbit_6"), radius = 225, speed = 0.2, slots = 32, price = 150000,unlocked = false }
+		or2 = { id = hash("/orbit_2"), radius = 105, speed = 1,   slots = 6,  price = 600,   unlocked = true },
+		or3 = { id = hash("/orbit_3"), radius = 135, speed = 0.8, slots = 10, price = 2500,  unlocked = false },
+		or4 = { id = hash("/orbit_4"), radius = 165, speed = 0.6, slots = 16, price = 8000,  unlocked = false },
+		or5 = { id = hash("/orbit_5"), radius = 195, speed = 0.4, slots = 24, price = 25000, unlocked = false },
+		or6 = { id = hash("/orbit_6"), radius = 225, speed = 0.2, slots = 32, price = 80000, unlocked = false }
 	},
 	active_upgrades = {},
 	rarity_colors = {},
@@ -38,20 +38,19 @@ M.data = {
 	economy = {
 		level_gpk = 1,     
 		level_hp = 1,
-		base_gold_per_kill = 12,
-		gold_per_kill = 12,
+		base_gold_per_kill = 10,
+		gold_per_kill = 10,
 		passive_income = 0,
-		shield_max = 10,
-		shield = 10,
-		planet_max_hp = 120,
-		planet_hp = 120,
+		shield_max = 20,
+		shield = 20,
+		planet_max_hp = 150,
+		planet_hp = 150,
 		planet_dmg = 15,
 		planet_damage_radius = 165
 	}
 }
 
 M.data.active_upgrades = {}
-M.active_enemies = {}
 M.rarity_colors = {
 	[1] = vmath.vector4(0.8, 0.8, 0.8, 1), -- Common (Gray)
 	[2] = vmath.vector4(0.2, 0.8, 0.2, 1), -- Elite (Green)
@@ -147,19 +146,24 @@ function M.get_chain_count()
 	return math.floor(M.get_upgrade_value("chain_lightning", 0))
 end
 
+-- Шанс удвоить золото за убийство (перк LUCKY DROP: 1.05 -> 5%)
+function M.get_lucky_chance()
+	return math.max(0, M.get_upgrade_value("lucky_drop", 1.0) - 1.0)
+end
+
 function M.get_gold_per_kill()
 	local mult = M.get_upgrade_value("gold_per_kill", 1.0)
 	return math.floor(M.data.economy.base_gold_per_kill * mult)
 end
 
 function M.get_max_hp()
-	local base_hp = M.data.economy.planet_max_hp or 120
+	local base_hp = M.data.economy.planet_max_hp or 150
 	local mult = M.get_upgrade_value("planet_hp", 1.0)
 	return math.floor(base_hp * mult)
 end
 
 function M.get_max_shield()
-	local base_shield = M.data.economy.shield_max or 10
+	local base_shield = M.data.economy.shield_max or 20
 	local mult = M.get_upgrade_value("planet_shield", 1.0)
 	return math.floor(base_shield * mult)
 end
@@ -244,7 +248,7 @@ M.meta_upgrades_def = {
 		sprite = "m_shield",
 		prices = { 20, 50, 110 },
 		get_info = function(lvl)
-			local sh = 10 + (lvl - 1) * 15
+			local sh = 20 + (lvl - 1) * 15
 			return string.format("%d Max Shield", sh)
 		end
 	},
@@ -424,7 +428,6 @@ end
 
 function M.reset_progress()
 	M.data.active_upgrades = {}
-	M.active_enemies = {}
 	M.overdrive = 0
 	M.is_overdrive = false
 	M.overdrive_timer = 0
@@ -450,12 +453,12 @@ function M.reset_progress()
 		orbit.speed = orbit.base_speed * orbit_speed_mult
 	end
 
-	local base_hp = 120 + (meta_u.planet_hp or 0) * 30 + (M.meta.hp_level or 0) * 30
-	local base_shield = 10 + (meta_u.planet_shield or 0) * 15
+	local base_hp = 150 + (meta_u.planet_hp or 0) * 30 + (M.meta.hp_level or 0) * 30
+	local base_shield = 20 + (meta_u.planet_shield or 0) * 15
 	local base_dmg = math.floor((15 + (M.meta.dmg_level or 0) * 4) * (1 + (meta_u.planet_dmg or 0) * 0.25))
 	local base_range = math.floor(165 * (1 + (meta_u.planet_range or 0) * 0.15))
 
-	local start_gold = 200 + (M.meta.gold_level or 0) * 100
+	local start_gold = 250 + (M.meta.gold_level or 0) * 100
 
 	M.data.gold = start_gold
 	M.data.economy.shield_max = base_shield
@@ -469,6 +472,9 @@ function M.reset_progress()
 	M.data.economy.level_hp = 1
 	M.data.economy.level_gpk = 1
 	M.data.economy.level_radar = 1
+	M.data.economy.repair_count = 0
+	M.data.economy.base_gold_per_kill = 10
+	M.data.economy.gold_per_kill = 10
 
 	for id, turret in pairs(M.data.turrets) do
 		turret.owned = false

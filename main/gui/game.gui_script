@@ -10,6 +10,7 @@ local MAX_TEXT_WIDTH = 70
 local time_for_refresh = 2
 local current_time = 2
 local show_event_banner = nil
+local hide_hint = nil
 
 local function update_dynamic_ui_scaling(self)
 	local window_w, window_h = window.get_size()
@@ -269,7 +270,7 @@ local function build_turret_upgrades(self)
 	for _, id in ipairs(turret_order) do
 		local turret = prog.data.turrets[id]
 		if turret and turret.owned then
-			local dmg_price = math.floor(turret.price * 0.5 * (1.2 ^ (turret.level_dmg or 1)))
+			local dmg_price = config.turret_dmg_upgrade_price(turret.base_price or turret.price, turret.level_dmg or 1)
 			local title = locale.t("turret_dmg", id:upper(), (turret.level_dmg or 1))
 			add_upgrade_item(self, title, dmg_price, function()
 				if prog.data.gold >= dmg_price then
@@ -482,6 +483,10 @@ end
 local function toggle_menu(self)
 	if prog.is_paused then return end
 	self.is_menu_open = not self.is_menu_open
+	if self.is_menu_open then
+		self.upgrades_hint_done = true
+		hide_hint(self)
+	end
 	local root = gui.get_node("root")
 	gui.set_enabled(root, self.is_menu_open)
 	gui.set_visible(root, self.is_menu_open)
@@ -512,11 +517,14 @@ local function buy_turret(self, turret_id)
 		prog.data.gold = prog.data.gold - turret.price
 		turret.owned = true
 		turret.count = (turret.count or 0) + 1
-		turret.price = math.floor(turret.price * 1.35)
+		turret.price = math.floor(turret.price * config.turret_price_growth)
 		msg.post("main:/orbit_controller#orbit_controller", "upgrade_purchased", { id = turret_id })
 		self:update_purchase_panel() 
 		if self.is_menu_open then self:refresh_tab(self.current_tab) end
 		self:update_balance()
+
+		self.shop_hint_done = true
+		hide_hint(self)
 
 		local q_rew = prog.check_quest("turret")
 		if q_rew then
@@ -537,6 +545,49 @@ local function hide_tutorial(self)
 		gui.animate(hint, "scale", vmath.vector3(0.01, 0.01, 1), gui.EASING_INBACK, 0.25, 0, function()
 			gui.set_enabled(hint, false)
 		end)
+	end
+end
+
+-- Подсказка в плашке туториала (переиспользуем ноду tutorial_hint)
+local function show_hint(self, text, duration)
+	local hint = gui.get_node("tutorial_hint")
+	gui.set_text(gui.get_node("tutorial_txt"), text)
+	gui.cancel_animations(hint, "scale")
+	gui.set_enabled(hint, true)
+	gui.set_scale(hint, vmath.vector3(0.75, 0.75, 1))
+	gui.animate(hint, "scale", vmath.vector3(0.85, 0.85, 1), gui.EASING_INOUTSINE, 0.7, 0, nil, gui.PLAYBACK_LOOP_PINGPONG)
+	self.hint_timer = duration
+end
+
+hide_hint = function(self)
+	if not self.hint_timer then return end
+	self.hint_timer = nil
+	local hint = gui.get_node("tutorial_hint")
+	gui.cancel_animations(hint, "scale")
+	gui.animate(hint, "scale", vmath.vector3(0.01, 0.01, 1), gui.EASING_INBACK, 0.25, 0, function()
+		gui.set_enabled(hint, false)
+	end)
+end
+
+-- Новички не замечали магазин и меню улучшений: подсказываем один раз за забег
+local function update_shop_hints(self, dt)
+	if self.hint_timer then
+		self.hint_timer = self.hint_timer - dt
+		if self.hint_timer <= 0 then hide_hint(self) end
+		return
+	end
+	if self.tutorial_active or prog.is_paused then return end
+
+	self.shop_hint_delay = (self.shop_hint_delay or 0) + dt
+	if self.shop_hint_delay < 8 then return end
+
+	local gold = prog.data.gold or 0
+	if not self.shop_hint_done and prog.has_free_slot and gold >= prog.data.turrets.blaster.price then
+		self.shop_hint_done = true
+		show_hint(self, locale.t("tutorial_shop"), 5)
+	elseif not self.upgrades_hint_done and not prog.has_free_slot and not self.is_menu_open and gold >= 150 then
+		self.upgrades_hint_done = true
+		show_hint(self, locale.t("tutorial_upgrades"), 5)
 	end
 end
 
@@ -839,6 +890,29 @@ function init(self)
 		end)
 	end)
 
+	-- Второй шанс за рекламу: один раз за забег
+	gui.set_text(gui.get_node("revive_txt"), locale.t("revive"))
+	self.druid:new_button("btn_revive", function()
+		if not self.defeat_active or self.revive_used then return end
+		poki.rewarded_break(function()
+			self.revive_used = true
+			-- Награду за поражение откатываем: она начислится заново, когда забег действительно закончится
+			local award = self.last_award or {}
+			prog.meta.diamonds = math.max(0, (prog.meta.diamonds or 0) - (award.diamonds or 0))
+			prog.meta.total_coins = math.max(0, (tonumber(prog.meta.total_coins) or 0) - (award.coins or 0))
+			prog.save_progress()
+			self.last_award = nil
+
+			clear_meta_hub(self)
+			gui.set_enabled(gui.get_node("defeat_root"), false)
+			self.defeat_active = false
+			prog.is_paused = false
+			poki.gameplay_start()
+			msg.post("main:/planet#planet", "revive")
+			show_event_banner(self, locale.t("revive"))
+		end)
+	end)
+
 	if not prog.is_paused then
 		gui.set_enabled(gui.get_node("play_panel"), false)
 	else 
@@ -846,7 +920,9 @@ function init(self)
 		self:refresh_meta_hub()
 	end
 
-	gui.set_enabled(gui.get_node("btn_toggle_menu"), false)
+	-- Меню улучшений (орбиты, урон турелей, ремонт) - единственный способ тратить золото,
+	-- когда слоты первой орбиты заняты. Без него золото копилось впустую.
+	gui.set_enabled(gui.get_node("btn_toggle_menu"), true)
 	gui.set_enabled(gui.get_node("tabs"), true)
 	gui.set_enabled(gui.get_node("view_port"), true)
 
@@ -891,6 +967,8 @@ function update(self, dt)
 		end
 	end
 
+	update_shop_hints(self, dt)
+
 	current_time = current_time + dt
 	if (current_time <= time_for_refresh) then return end
 	
@@ -909,15 +987,17 @@ function on_input(self, action_id, action)
 				if gui.pick_node(node, action.x, action.y) then
 					local choice = self.current_options[i]
 
+					local old_max = prog.get_max_hp()
 					local current_lvl = prog.data.active_upgrades[choice.id] or 0
 					prog.data.active_upgrades[choice.id] = current_lvl + 1
 
 					if choice.id == "planet_hp" then
-						local old_max = prog.data.economy.planet_max_hp or 100
+						-- get_max_hp() уже умножает базу на перк; базу не трогаем, иначе бонус копится дважды
 						local new_max = prog.get_max_hp()
-						prog.data.economy.planet_max_hp = new_max
 						prog.data.economy.planet_hp = prog.data.economy.planet_hp + math.max(0, new_max - old_max)
 						update_progress_bar("health_fill", prog.data.economy.planet_hp, new_max)
+					elseif choice.id == "planet_orbit" then
+						msg.post("main:/orbit_controller#orbit_controller", "unlock_next_orbit")
 					end
 
 					gui.animate(node, "scale", vmath.vector3(1.15, 1.15, 1), gui.EASING_OUTBACK, 0.14, 0, function()
@@ -967,6 +1047,9 @@ function on_message(self, message_id, message, sender)
 			prog.meta.diamonds = (prog.meta.diamonds or 0) + earned_diamonds
 			prog.meta.total_coins = (tonumber(prog.meta.total_coins) or 0) + earned_gold
 			prog.save_progress()
+			self.last_award = { diamonds = earned_diamonds, coins = earned_gold }
+
+			gui.set_enabled(gui.get_node("btn_revive"), not self.revive_used)
 
 			local txt_node = gui.get_node("game_over_txt")
 			if txt_node then

@@ -71,14 +71,6 @@ instances {
     z: -0.5
   }
 }
-instances {
-  id: "area_trigger"
-  prototype: "/entities/planet/area_trigger.go"
-  scale3 {
-    x: 3.0
-    y: 3.0
-  }
-}
 scale_along_z: 0
 embedded_instances {
   id: "orbit_1"
@@ -94,6 +86,12 @@ embedded_instances {
   "  id: \"enemy_factory\"\n"
   "  type: \"factory\"\n"
   "  data: \"prototype: \\\"/entities/enemy/enemy.go\\\"\\n"
+  "\"\n"
+  "}\n"
+  "embedded_components {\n"
+  "  id: \"debris_factory\"\n"
+  "  type: \"factory\"\n"
+  "  data: \"prototype: \\\"/entities/enemy/ghost.go\\\"\\n"
   "\"\n"
   "}\n"
   ""

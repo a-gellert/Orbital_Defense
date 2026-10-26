@@ -64,8 +64,7 @@ local function place_station(self, slot_id, slot_data, turret_type)
 
 	-- Создаем объект станции
 	local station_id = factory.create("#station_factory", nil, nil, {
-		turret_type = hash(turret_type),
-		level = 1
+		turret_type = hash(turret_type)
 	})
 
 	if station_id then
@@ -97,6 +96,19 @@ function init(self)
 		end
 	end
 
+	-- Стартовая турель: без нее новичок, не заметивший магазин, погибал на 2-4 волне
+	-- Ставим через кадр, чтобы слоты, созданные фабрикой выше, успели инициализироваться
+	timer.delay(0.05, false, function()
+		local starter_slot, starter_data = find_free_slot(self)
+		if starter_slot then
+			place_station(self, starter_slot, starter_data, "blaster")
+			local blaster = prog.data.turrets.blaster
+			blaster.owned = true
+			blaster.count = (blaster.count or 0) + 1
+		end
+		prog.has_free_slot = (find_free_slot(self) ~= nil)
+	end)
+
 	prog.has_free_slot = (find_free_slot(self) ~= nil)
 
 	print("✅ Orbit Controller Ready. Active slots:", table_size(self.slot_map))
@@ -117,14 +129,26 @@ function on_message(self, message_id, message, sender)
 		end
 
 		-- Покупка ОРБИТЫ (активация нового круга)
-	elseif message_id == hash("unlock_orbit") then
+	elseif message_id == hash("unlock_orbit") or message_id == hash("unlock_next_orbit") then
 		local key = message.key
-		local orbit = prog.data.orbits_data[key]
+		if message_id == hash("unlock_next_orbit") then
+			-- Карта FREE ORBIT: открываем ближайшую закрытую орбиту
+			key = nil
+			for i = 1, 6 do
+				local orbit = prog.data.orbits_data["or" .. i]
+				if orbit and not orbit.unlocked then
+					key = "or" .. i
+					break
+				end
+			end
+		end
+		local orbit = key and prog.data.orbits_data[key]
 		if orbit and not orbit.unlocked then
 			orbit.unlocked = true
 			spawn_orbit_slots(self, key, orbit)
 			prog.has_free_slot = true
 			msg.post("main:/camera_root#camera_shake", "shake", { intensity = 6, duration = 0.3 })
+			msg.post("main:/gui#game", "turret_spawned", { success = true })
 		end
 	end
 end

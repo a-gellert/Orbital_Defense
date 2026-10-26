@@ -1,81 +1,74 @@
 -- turret.script
 local config = require "main.game_config"
 local prog = require "main.progression"
+local registry = require "main.enemy_registry"
 
 go.property("turret_type", hash("blaster"))
 go.property("level", 1)
 
--- Таблица паттернов стрельбы для всех 6 турелей
+-- Поиск ближайшей цели не каждый кадр: раз в RETARGET_INTERVAL или сразу, если цель погибла
+local RETARGET_INTERVAL = 0.15
+
+local TYPE_NAMES = {
+	[hash("blaster")] = { name = "blaster", anim = "t_blaster" },
+	[hash("pulse")]   = { name = "pulse",   anim = "t_pulse" },
+	[hash("rocket")]  = { name = "rocket",  anim = "t_racket" },
+	[hash("laser")]   = { name = "laser",   anim = "t_laser" },
+	[hash("plasma")]  = { name = "plasma",  anim = "t_plasma" },
+	[hash("tesla")]   = { name = "tesla",   anim = "t_tesla" }
+}
+
+local BLASTER = hash("blaster")
+local Z_OFFSET = vmath.vector3(0, 0, 0.2)
+
+local function shoot_bullet(self, pos, rot, props)
+	factory.create("#bullet_factory", pos + Z_OFFSET, rot, props)
+	self.out = factory.create("#bullet_out_factory", pos, rot)
+	go.set_parent(self.out, go.get_id(), true)
+end
+
+-- Паттерны стрельбы для всех 6 турелей
 local PATTERNS = {
 	[hash("blaster")] = function(self, pos, rot, speed, pierce)
-		factory.create("#bullet_factory", pos + vmath.vector3(0, 0, 0.2), rot, {
-			damage = self.damage,
-			speed = speed,
-			pierce = pierce,
-			bullet_type = hash("blaster"),
-			max_range = (self.stats.range or 150) * 1.3
+		shoot_bullet(self, pos, rot, {
+			damage = self.damage, speed = speed, pierce = pierce,
+			bullet_type = hash("blaster"), max_range = self.stats.range * 1.3
 		})
-		self.out = factory.create("#bullet_out_factory", pos, rot)
-		go.set_parent(self.out, go.get_id(), true)
 	end,
 
 	[hash("pulse")] = function(self, pos, rot, speed, pierce)
-		factory.create("#bullet_factory", pos + vmath.vector3(0, 0, 0.2), rot, {
-			damage = self.damage,
-			speed = speed,
-			pierce = pierce,
-			bullet_type = hash("pulse"),
-			max_range = (self.stats.range or 140) * 1.3
+		shoot_bullet(self, pos, rot, {
+			damage = self.damage, speed = speed, pierce = pierce,
+			bullet_type = hash("pulse"), max_range = self.stats.range * 1.3
 		})
-		self.out = factory.create("#bullet_out_factory", pos, rot)
-		go.set_parent(self.out, go.get_id(), true)
 	end,
 
 	[hash("rocket")] = function(self, pos, rot, speed, pierce)
-		factory.create("#rocket_factory", pos + vmath.vector3(0, 0, 0.2), rot, {
-			damage = self.damage, 
-			speed = speed,
-			target_id = self.current_target
+		factory.create("#rocket_factory", pos + Z_OFFSET, rot, {
+			damage = self.damage, speed = speed, target_id = self.current_target
 		})
 	end,
 
 	[hash("laser")] = function(self, pos, rot, speed, pierce)
-		factory.create("#bullet_factory", pos + vmath.vector3(0, 0, 0.2), rot, {
-			damage = self.damage,
-			speed = speed,
-			pierce = 3 + pierce,
-			bullet_type = hash("laser"),
-			max_range = (self.stats.range or 160) * 1.4
+		shoot_bullet(self, pos, rot, {
+			damage = self.damage, speed = speed, pierce = 3 + pierce,
+			bullet_type = hash("laser"), max_range = self.stats.range * 1.4
 		})
-		self.out = factory.create("#bullet_out_factory", pos, rot)
-		go.set_parent(self.out, go.get_id(), true)
 	end,
 
 	[hash("plasma")] = function(self, pos, rot, speed, pierce)
-		factory.create("#bullet_factory", pos + vmath.vector3(0, 0, 0.2), rot, {
-			damage = self.damage,
-			speed = speed,
-			pierce = pierce,
-			bullet_type = hash("plasma"),
-			splash_radius = 70,
-			max_range = (self.stats.range or 150) * 1.3
+		shoot_bullet(self, pos, rot, {
+			damage = self.damage, speed = speed, pierce = pierce,
+			bullet_type = hash("plasma"), splash_radius = 70, max_range = self.stats.range * 1.3
 		})
-		self.out = factory.create("#bullet_out_factory", pos, rot)
-		go.set_parent(self.out, go.get_id(), true)
 	end,
 
 	[hash("tesla")] = function(self, pos, rot, speed, pierce)
-		local extra_chains = prog.get_chain_count and prog.get_chain_count() or 0
-		factory.create("#bullet_factory", pos + vmath.vector3(0, 0, 0.2), rot, {
-			damage = self.damage,
-			speed = speed,
-			pierce = 0,
-			bullet_type = hash("tesla"),
-			chain_count = 2 + extra_chains,
-			max_range = (self.stats.range or 150) * 1.3
+		shoot_bullet(self, pos, rot, {
+			damage = self.damage, speed = speed, pierce = 0,
+			bullet_type = hash("tesla"), chain_count = 2 + prog.get_chain_count(),
+			max_range = self.stats.range * 1.3
 		})
-		self.out = factory.create("#bullet_out_factory", pos, rot)
-		go.set_parent(self.out, go.get_id(), true)
 	end
 }
 
@@ -85,64 +78,43 @@ local function update_damage(self)
 	self.damage = self.stats.damage * config.level_multiplier(lvl)
 end
 
-function init(self)
-	self.type_str = "blaster"
-	local anim = "t_blaster"
+local function fire(self, pos, rot, target_angle)
+	self.cooldown = self.stats.rate / prog.get_fire_rate_multiplier()
 
-	if self.turret_type == hash("pulse") then 
-		self.type_str = "pulse"
-		anim = "t_pulse"
-	elseif self.turret_type == hash("rocket") then 
-		self.type_str = "rocket"
-		anim = "t_racket"
-	elseif self.turret_type == hash("laser") then 
-		self.type_str = "laser"
-		anim = "t_laser"
-	elseif self.turret_type == hash("plasma") then 
-		self.type_str = "plasma"
-		anim = "t_plasma"
-	elseif self.turret_type == hash("tesla") then 
-		self.type_str = "tesla"
-		anim = "t_tesla"
+	update_damage(self)
+	if prog.is_overdrive then
+		self.damage = self.damage * prog.get_damage_multiplier()
 	end
-
-	sprite.play_flipbook("#sprite", anim)
-
-	local stats = config.turret_stats[self.type_str] or config.turret_stats.blaster
-	self.stats = stats
-	self.cooldown = 0
-	self.current_target = nil
-	update_damage(self)
-end
-
-function fire(self, pos, rot, target_angle)
-	local fire_rate_mult = prog.get_fire_rate_multiplier()
-	self.cooldown = self.stats.rate / fire_rate_mult
-
-	update_damage(self)
 
 	-- Отдача выстрела турели (Recoil Punch)
 	go.set("#sprite", "scale", vmath.vector3(0.12, 0.17, 1))
 	go.animate("#sprite", "scale", go.PLAYBACK_ONCE_FORWARD, vmath.vector3(0.15, 0.15, 1), go.EASING_OUTELASTIC, 0.18)
 
 	local speed = self.stats.bullet_speed * prog.get_projectile_speed_multiplier()
-	local pierce = (self.turret_type == hash("blaster")) and prog.get_pierce_count() or 0
+	local pierce = (self.turret_type == BLASTER) and prog.get_pierce_count() or 0
 
-	-- Бонус урона в режиме Overdrive
-	if prog.is_overdrive then
-		self.damage = self.damage * prog.get_damage_multiplier()
-	end
-
-	local shoot_func = PATTERNS[self.turret_type] or PATTERNS[hash("blaster")]
+	local shoot_func = PATTERNS[self.turret_type] or PATTERNS[BLASTER]
 	shoot_func(self, pos, rot, speed, pierce)
 
-	-- Механика Мультишота: шанс выстрелить дополнительным снарядом
+	-- Мультишот: шанс выстрелить дополнительным снарядом
 	local multi_chance = prog.get_multishot_chance()
 	if multi_chance > 0 and math.random() < multi_chance then
-		local spread = 0.18
-		local rot_extra = vmath.quat_rotation_z(target_angle + (math.random() > 0.5 and spread or -spread))
-		shoot_func(self, pos, rot_extra, speed, pierce)
+		local spread = math.random() > 0.5 and 0.18 or -0.18
+		shoot_func(self, pos, vmath.quat_rotation_z(target_angle + spread), speed, pierce)
 	end
+end
+
+function init(self)
+	local info = TYPE_NAMES[self.turret_type] or TYPE_NAMES[BLASTER]
+	self.type_str = info.name
+	sprite.play_flipbook("#sprite", info.anim)
+
+	self.stats = config.turret_stats[self.type_str]
+	self.cooldown = 0
+	self.current_target = nil
+	-- Случайный сдвиг, чтобы турели не искали цели в одном и том же кадре
+	self.retarget_timer = math.random() * RETARGET_INTERVAL
+	update_damage(self)
 end
 
 function update(self, dt)
@@ -150,34 +122,37 @@ function update(self, dt)
 
 	if self.cooldown > 0 then self.cooldown = self.cooldown - dt end
 
-	if self.current_target and go.exists(self.current_target) then
-		local my_pos = go.get_world_position()
-		local target_pos = go.get_world_position(self.current_target)
-		local dir = target_pos - my_pos
-		local target_angle = math.atan2(dir.y, dir.x) 
+	local my_pos = go.get_world_position()
 
-		-- Прямой поворот к цели вдоль направления стрельбы
-		local target_quat = vmath.quat_rotation_z(target_angle)
-		local parent = go.get_parent()
-		if parent then
-			local parent_quat = go.get_world_rotation(parent)
-			go.set_rotation(vmath.conj(parent_quat) * target_quat)
-		else
-			go.set_rotation(target_quat)
-		end
+	self.retarget_timer = self.retarget_timer - dt
+	if self.retarget_timer <= 0 or not registry.has(self.current_target) then
+		self.retarget_timer = RETARGET_INTERVAL
+		self.current_target = registry.find_closest(my_pos.x, my_pos.y, self.stats.range)
+	end
 
-		if self.cooldown <= 0 then
-			fire(self, my_pos, target_quat, target_angle)
-		end
-	else
+	local tx, ty = registry.get_pos(self.current_target)
+	if not tx then
 		self.current_target = nil
+		return
+	end
+
+	-- Поворот к цели с учетом вращения орбиты-родителя
+	local target_angle = math.atan2(ty - my_pos.y, tx - my_pos.x)
+	local target_quat = vmath.quat_rotation_z(target_angle)
+	local parent = go.get_parent()
+	if parent then
+		go.set_rotation(vmath.conj(go.get_world_rotation(parent)) * target_quat)
+	else
+		go.set_rotation(target_quat)
+	end
+
+	if self.cooldown <= 0 then
+		fire(self, my_pos, target_quat, target_angle)
 	end
 end
 
 function on_message(self, message_id, message, sender)
-	if message_id == hash("set_target") then
-		self.current_target = message.target_id
-	elseif message_id == hash("upgrade_turret") then
+	if message_id == hash("upgrade_turret") then
 		self.level = self.level + 1
 		update_damage(self)
 	end

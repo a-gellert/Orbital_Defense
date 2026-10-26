@@ -1,4 +1,6 @@
 -- damage_label.script
+local vfx_budget = require "main.vfx_budget"
+
 go.property("value", 0)
 go.property("color", vmath.vector4(1, 1, 1, 1))
 
@@ -29,10 +31,12 @@ function init(self)
 
 	go.animate(".", "position", go.PLAYBACK_ONCE_FORWARD, target_p, go.EASING_OUTQUAD, 0.6)
 
-	-- Плавное растворение
-	timer.delay(0.35, false, function()
-		go.animate("#label", "color.w", go.PLAYBACK_ONCE_FORWARD, 0, go.EASING_INSINE, 0.25, 0, function()
-			go.delete()
-		end)
+	-- Плавное растворение (задержка анимации вместо отдельного таймера)
+	go.animate("#label", "color.w", go.PLAYBACK_ONCE_FORWARD, 0, go.EASING_INSINE, 0.25, 0.35, function()
+		go.delete()
 	end)
+end
+
+function final(self)
+	vfx_budget.release("damage_label")
 end

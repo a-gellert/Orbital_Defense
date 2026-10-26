@@ -1,5 +1,6 @@
 -- bullet.script
 local prog = require "main.progression"
+local registry = require "main.enemy_registry"
 
 go.property("speed", 300)
 go.property("damage", 10)
@@ -10,6 +11,20 @@ go.property("bullet_type", hash("blaster"))
 go.property("splash_radius", 0)
 go.property("chain_count", 0)
 
+local GROUP_ENEMY = hash("enemy")
+local GROUP_PLANET = hash("planet")
+local TRIGGER_RESPONSE = hash("trigger_response")
+
+-- Внешний вид снаряда по типу: анимация и масштаб
+local LOOKS = {
+	[hash("pulse")]  = { anim = "p_green",  scale = vmath.vector3(0.9, 0.9, 1.0) },
+	[hash("laser")]  = { anim = "p_laser",  scale = vmath.vector3(1.3, 0.85, 1.0) },
+	[hash("plasma")] = { anim = "p_plasma", scale = vmath.vector3(1.4, 1.4, 1.0), spin = true },
+	[hash("tesla")]  = { anim = "p_tesla",  scale = vmath.vector3(1.0, 1.0, 1.0) },
+}
+local LOOK_DEFAULT = { anim = "p_blue", scale = vmath.vector3(1.0, 1.0, 1.0) }
+local LOOK_ENEMY = { anim = "p_red", scale = vmath.vector3(1.0, 1.0, 1.0) }
+
 function init(self)
 	self.life = 3.5
 	self.traveled_dist = 0
@@ -19,36 +34,19 @@ function init(self)
 	local pos = go.get_position()
 	go.set_position(vmath.vector3(pos.x, pos.y, 0.4))
 
-	local base_scale = vmath.vector3(1.0, 1.0, 1.0)
+	-- Снаряды летят по прямой: скорость считаем один раз, а не каждый кадр
+	self.velocity = vmath.rotate(go.get_rotation(), vmath.vector3(1, 0, 0)) * self.speed
 
-	if self.is_enemy then
-		sprite.play_flipbook("#sprite", "p_red")
-		base_scale = vmath.vector3(1.0, 1.0, 1.0)
-	else
-		local b_type = self.bullet_type
-		if b_type == hash("pulse") then
-			sprite.play_flipbook("#sprite", "p_green")
-			base_scale = vmath.vector3(0.9, 0.9, 1.0)
-		elseif b_type == hash("laser") then
-			sprite.play_flipbook("#sprite", "p_laser")
-			base_scale = vmath.vector3(1.3, 0.85, 1.0)
-		elseif b_type == hash("plasma") then
-			sprite.play_flipbook("#sprite", "p_plasma")
-			base_scale = vmath.vector3(1.4, 1.4, 1.0)
-			-- Вращение сгустка плазмы
-			go.animate(".", "euler.z", go.PLAYBACK_LOOP_FORWARD, 360, go.EASING_LINEAR, 1.2)
-		elseif b_type == hash("tesla") then
-			sprite.play_flipbook("#sprite", "p_tesla")
-			base_scale = vmath.vector3(1.0, 1.0, 1.0)
-		else
-			sprite.play_flipbook("#sprite", "p_blue")
-			base_scale = vmath.vector3(1.0, 1.0, 1.0)
-		end
+	local look = self.is_enemy and LOOK_ENEMY or (LOOKS[self.bullet_type] or LOOK_DEFAULT)
+	sprite.play_flipbook("#sprite", look.anim)
+	local base_scale = look.scale
+	if look.spin then
+		go.animate(".", "euler.z", go.PLAYBACK_LOOP_FORWARD, 360, go.EASING_LINEAR, 1.2)
+	end
 
-		if prog.is_overdrive then
-			go.set("#sprite", "tint", vmath.vector4(2.5, 1.8, 0.4, 1.0))
-			base_scale = base_scale * 1.35
-		end
+	if not self.is_enemy and prog.is_overdrive then
+		go.set("#sprite", "tint", vmath.vector4(2.5, 1.8, 0.4, 1.0))
+		base_scale = base_scale * 1.35
 	end
 
 	-- Сочный вылет: пуля вытягивается как комета при старте
@@ -57,15 +55,12 @@ function init(self)
 end
 
 function update(self, dt)
-	local rot = go.get_rotation()
-	local direction = vmath.rotate(rot, vmath.vector3(1, 0, 0)) 
-	local pos = go.get_position()
-	local step = self.speed * dt
+	if prog.is_paused then return end
 
-	go.set_position(pos + direction * step)
+	go.set_position(go.get_position() + self.velocity * dt)
 
 	if self.max_range > 0 then
-		self.traveled_dist = self.traveled_dist + step
+		self.traveled_dist = self.traveled_dist + self.speed * dt
 		if self.traveled_dist >= self.max_range then
 			go.delete()
 			return
@@ -76,86 +71,46 @@ function update(self, dt)
 	if self.life < 0 then go.delete() end
 end
 
-local function apply_tesla_chain(self, primary_target, hit_pos)
-	if self.chain_count <= 0 or not prog.active_enemies then return end
-
-	local chained = 0
-	local chain_range = 120
-	local chain_dmg = math.max(1, math.floor(self.damage * 0.75))
-
-	for enemy_id, _ in pairs(prog.active_enemies) do
-		if enemy_id ~= primary_target and go.exists(enemy_id) then
-			local e_pos = go.get_world_position(enemy_id)
-			local dist = vmath.length(e_pos - hit_pos)
-			if dist <= chain_range then
-				msg.post(enemy_id, "take_damage", { amount = chain_dmg })
-				chained = chained + 1
-				if chained >= self.chain_count then break end
-			end
-		end
+local function damage_area(primary_target, hit_pos, radius, amount, max_targets)
+	local targets = registry.query_radius(hit_pos.x, hit_pos.y, radius, primary_target, max_targets)
+	for i = 1, #targets do
+		msg.post(targets[i], "take_damage", { amount = amount })
 	end
-end
-
-local function apply_plasma_splash(self, primary_target, hit_pos)
-	local radius = self.splash_radius
-	if radius <= 0 or not prog.active_enemies then return end
-
-	local splash_mult = prog.get_splash_radius_mult and prog.get_splash_radius_mult() or 1.0
-	local actual_radius = radius * splash_mult
-	local area_dmg = math.max(1, math.floor(self.damage * 0.7))
-
-	for enemy_id, _ in pairs(prog.active_enemies) do
-		if enemy_id ~= primary_target and go.exists(enemy_id) then
-			local e_pos = go.get_world_position(enemy_id)
-			local dist = vmath.length(e_pos - hit_pos)
-			if dist <= actual_radius then
-				msg.post(enemy_id, "take_damage", { amount = area_dmg })
-			end
-		end
-	end
-	msg.post("main:/camera_root#camera_shake", "shake", { intensity = 6, duration = 0.25 })
 end
 
 function on_message(self, message_id, message, sender)
-	if message_id == hash("trigger_response") and message.enter then
-		local target_group = message.other_group
+	if message_id ~= TRIGGER_RESPONSE or not message.enter then return end
+	local target_group = message.other_group
 
-		-- 1. Пуля ИГРОКА попадает во ВРАГА
-		if not self.is_enemy and target_group == hash("enemy") then
-			local enemy_id = message.other_id
-			if not self.hit_enemies[enemy_id] then
-				self.hit_enemies[enemy_id] = true
-				local hit_pos = go.get_world_position()
+	-- 1. Пуля ИГРОКА попадает во ВРАГА
+	if not self.is_enemy and target_group == GROUP_ENEMY then
+		local enemy_id = message.other_id
+		if self.hit_enemies[enemy_id] then return end
+		self.hit_enemies[enemy_id] = true
 
-				msg.post(enemy_id, "take_damage", { amount = self.damage or 10 })
+		msg.post(enemy_id, "take_damage", { amount = self.damage })
+		local hit_pos = go.get_world_position()
 
-				-- Эффект Tesla цепной молнии
-				if self.chain_count > 0 then
-					apply_tesla_chain(self, enemy_id, hit_pos)
-				end
-
-				-- Эффект Plasma сплеш взрыва
-				if self.splash_radius > 0 then
-					apply_plasma_splash(self, enemy_id, hit_pos)
-				end
-
-				if self.pierce > 0 then
-					self.pierce = self.pierce - 1
-				else
-					go.delete()
-					return
-				end
-			end
+		-- Tesla: цепная молния на ближайших соседей
+		if self.chain_count > 0 then
+			damage_area(enemy_id, hit_pos, 120, math.max(1, math.floor(self.damage * 0.75)), self.chain_count)
 		end
 
-		-- 2. Пуля ВРАГА попадает в ПЛАНЕТУ
-		if self.is_enemy and target_group == hash("planet") then
-			msg.post(message.other_id, "take_damage", { 
-				amount = self.damage or 5,
-				attacker_id = go.get_id()
-			})
+		-- Plasma и тап ядра: взрыв по площади
+		if self.splash_radius > 0 then
+			damage_area(enemy_id, hit_pos, self.splash_radius * prog.get_splash_radius_mult(), math.max(1, math.floor(self.damage * 0.7)))
+			msg.post("main:/camera_root#camera_shake", "shake", { intensity = 6, duration = 0.25 })
+		end
+
+		if self.pierce > 0 then
+			self.pierce = self.pierce - 1
+		else
 			go.delete()
-			return
 		end
+
+	-- 2. Пуля ВРАГА попадает в ПЛАНЕТУ
+	elseif self.is_enemy and target_group == GROUP_PLANET then
+		msg.post(message.other_id, "take_damage", { amount = self.damage, attacker_id = go.get_id() })
+		go.delete()
 	end
 end

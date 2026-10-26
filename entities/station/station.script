@@ -1,96 +1,45 @@
 -- station.script
-local prog = require "main.progression"
-local config = require "main.game_config"
+-- Платформа на орбите: визуал и постройка турели. Цели турель ищет сама (turret.script).
 
 go.property("min_alpha", 0.8)
 go.property("speed", 1.0)
-go.property("detection_range", 150)
 go.property("turret_type", hash("blaster"))
 
+local PLATFORM_SPRITES = {
+	[hash("pulse")]  = "s_green",
+	[hash("rocket")] = "s_yellow",
+	[hash("laser")]  = "s_purple",
+	[hash("plasma")] = "s_purple",
+	[hash("tesla")]  = "s_blue",
+}
+
+local TURRET_POS = vmath.vector3(0, 0, 0.1)
+
 function init(self)
-	self.enemies_in_range = {}
 	self.turret_id = nil
-	self.last_target = nil
-	
 	go.animate("#sprite", "tint.w", go.PLAYBACK_LOOP_PINGPONG, self.min_alpha, go.EASING_INOUTSINE, self.speed)
 end
 
-local function get_closest_enemy(self)
-	local my_pos = go.get_world_position()
-	local nearest_id = nil
-	local min_dist = self.detection_range or 150
-
-	for id, _ in pairs(prog.active_enemies) do
-		if go.exists(id) then
-			local dist = vmath.length(go.get_world_position(id) - my_pos)
-			if dist < min_dist then
-				min_dist = dist
-				nearest_id = id
-			end
-		else
-			prog.active_enemies[id] = nil
-		end
-	end
-	return nearest_id
-end
-
-function update(self, dt)
-	if self.turret_id and go.exists(self.turret_id) then
-		local target = get_closest_enemy(self)
-		if target ~= self.last_target then
-			self.last_target = target
-			msg.post(self.turret_id, "set_target", { target_id = target })
-		end
-	end
-end
-
 local function build_turret(self, turret_type)
-	if self.turret_id and go.exists(self.turret_id) then return end
+	if self.turret_id then return end
 	self.turret_type = turret_type or hash("blaster")
+	sprite.play_flipbook("#sprite", PLATFORM_SPRITES[self.turret_type] or "s_blue")
 
-	if self.turret_type == hash("pulse") then
-		sprite.play_flipbook("#sprite", "s_green")
-		self.detection_range = 140
-	elseif self.turret_type == hash("rocket") then
-		sprite.play_flipbook("#sprite", "s_yellow")
-		self.detection_range = 170
-	elseif self.turret_type == hash("laser") then
-		sprite.play_flipbook("#sprite", "s_purple")
-		self.detection_range = 160
-	elseif self.turret_type == hash("plasma") then
-		sprite.play_flipbook("#sprite", "s_purple")
-		self.detection_range = 150
-	elseif self.turret_type == hash("tesla") then
-		sprite.play_flipbook("#sprite", "s_blue")
-		self.detection_range = 150
-	else
-		sprite.play_flipbook("#sprite", "s_blue")
-		self.detection_range = 150
-	end
-
-	-- Создаем турель строго по центру платформы станции
-	self.turret_id = factory.create("#turret_factory", vmath.vector3(0, 0, 0.1), nil, {
+	-- Турель строго по центру платформы станции
+	self.turret_id = factory.create("#turret_factory", TURRET_POS, nil, {
 		turret_type = self.turret_type,
 		level = 1
 	})
 
 	if self.turret_id then
 		go.set_parent(self.turret_id, go.get_id(), false)
-		go.set_position(vmath.vector3(0, 0, 0.1), self.turret_id)
+		go.set_position(TURRET_POS, self.turret_id)
 		go.set_scale(vmath.vector3(1, 1, 1), self.turret_id)
 	end
 end
 
 function on_message(self, message_id, message, sender)
-	if message_id == hash("trigger_response") then
-		if message.enter then
-			if message.other_group == hash("enemy") then
-				self.enemies_in_range[message.other_id] = true
-			end
-		else
-			self.enemies_in_range[message.other_id] = nil
-		end
-	elseif message_id == hash("build_turret") then
+	if message_id == hash("build_turret") then
 		build_turret(self, message.turret_type or self.turret_type)
 	elseif message_id == hash("build_default_turret") then
 		build_turret(self, hash("blaster"))
